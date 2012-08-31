@@ -1,0 +1,14 @@
+
+GenomicConsensus provides one tool, variantCaller.py, which performs
+variant calling for PacBio sequence data.
+
+INSTALLING:
+
+    Make sure you have set up and activated your virtualenv, and
+    installed pbcore and ConsensusCore (which cannot be installed
+    automatically by pip or setuptools).  Then:
+
+    % python setup.py install
+
+
+
