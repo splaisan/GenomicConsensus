@@ -139,6 +139,13 @@ class NoMergeQVModel(Model):
                              "SubstitutionQV",
                              "DeletionQV",
                              "DeletionTag"])
+
+    @classmethod
+    def extractFeatures(cls, aln):
+        features = Model.extractFeatures(aln)
+        features.MergeQv = asFloatFeature([15.] * aln.readLength)
+        return features
+
     #
     # Parameter sets have not yet been trained for this model.
     #
