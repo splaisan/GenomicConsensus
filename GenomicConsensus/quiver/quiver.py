@@ -240,7 +240,7 @@ name = "Quiver"
 additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "variantCoverageThreshold"   : 11,
                              "variantConfidenceThreshold" : 20,
-                             "coverage"                   : 30,
+                             "coverage"                   : 100,
                              "parameters"                 : "AllQVsModel.trainedParams1" }
 
 def compatibilityWithCmpH5(cmpH5):

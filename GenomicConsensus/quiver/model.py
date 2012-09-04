@@ -151,11 +151,11 @@ class NoMergeQVModel(Model):
     #
     @classmethod
     def trainedParams1(cls):
-        return AllQVsModel.trainedParams1()
+        return ParameterSet(cls, AllQVsModel.trainedParams1().qvModelParams)
 
     @classmethod
     def trainedParams2(cls):
-        return AllQVsModel.trainedParams2()
+        return ParameterSet(cls, AllQVsModel.trainedParams2().qvModelParams)
 
 
 class PartialQVsModel(Model):

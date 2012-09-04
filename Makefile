@@ -10,14 +10,16 @@ install:
 develop:
 	python setup.py develop
 
-check:
+tests:
 	# Unit tests
 	nosetests tests/unit
 	# End-to-end tests
-	PATH=`pwd`:$(PATH) cram tests/integration/*.t
+	PATH=`pwd`:$(PATH) cram `find tests/integration ! -name "internal*" -name "*.t"`
 
-test: check
-tests: check
+internal-tests:
+	# Tests that depend on files located on PacBio internal NFS
+	# servers
+	PATH=`pwd`:$(PATH) cram tests/integration/internal*.t
 
 doc:
 	cd doc; make html
