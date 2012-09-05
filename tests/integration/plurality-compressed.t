@@ -11,7 +11,7 @@ Check the gzip compressed output.
   $ gunzip variants.gff.gz
   $ head variants.gff
   ##gff-version 3
-  ##pacbio-variant-version 1.3.3
+  ##pacbio-variant-version 1.4
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus v0.2.0

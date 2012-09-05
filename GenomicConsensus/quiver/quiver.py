@@ -202,7 +202,7 @@ class QuiverResultCollector(object):
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
         writer = GffWriter(options.gffOutputFilename)
-        writer.writeMetaData("pacbio-variant-version", "1.3.3")
+        writer.writeMetaData("pacbio-variant-version", "1.4")
         writer.writeMetaData("date", time.ctime())
         writer.writeMetaData("feature-ontology",
                              "http://song.cvs.sourceforge.net/*checkout*/song/ontology/" +

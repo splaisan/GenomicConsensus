@@ -25,6 +25,7 @@ which looks like the following:
 ::
 
     ##gff-version 3
+    ##pacbio-variant-version 1.4
     ##date Tue Feb 28 17:44:18 2012
     ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
     ##source GenomicConsensus v0.1.0
@@ -46,6 +47,9 @@ local identifier will always be purely alphanumeric.
 There can be many reference groups and regions present in the file.
 They will always represented as the last portion of the header block,
 in the order *sequence-header*, corresponding *sequence-regions*.
+
+``pacbio-variant-version`` reflects the specification version that the
+file contents should adhere to.
 
 
 

@@ -101,7 +101,7 @@ def variantsGffConsumer(file, **kwargs):
     confidenceThreshold = kwargs["confidenceThreshold"]
     writer = GffWriter(file)
     # Headers.
-    writer.writeMetaData("pacbio-variant-version", "1.3.3")
+    writer.writeMetaData("pacbio-variant-version", "1.4")
     writer.writeMetaData("date", time.ctime())
     writer.writeMetaData("feature-ontology", 
                          "http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?" +
