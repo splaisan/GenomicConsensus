@@ -14,6 +14,7 @@ Contents:
    VariantCallerFunctionalSpecification
    VariantsGffSpecification
    VariantCallerKnownIssues
+   HowToQuiver
 
 Indices and tables
 ==================
