@@ -43,15 +43,15 @@ Now, the consensus.csv:
 
   $ head consensus.csv
   referenceId,referencePos,coverage,consensus,consensusConfidence,consensusFrequency
-  ref000001,0,2,G,15,2
-  ref000001,1,2,G,15,2
-  ref000001,2,2,G,15,2
-  ref000001,3,2,C,15,2
-  ref000001,4,2,G,15,2
-  ref000001,5,2,G,3,1
-  ref000001,6,2,C,15,2
-  ref000001,7,2,GG,3,1
-  ref000001,8,2,A,15,2
+  lambda_NEB3011,0,2,G,15,2
+  lambda_NEB3011,1,2,G,15,2
+  lambda_NEB3011,2,2,G,15,2
+  lambda_NEB3011,3,2,C,15,2
+  lambda_NEB3011,4,2,G,15,2
+  lambda_NEB3011,5,2,G,3,1
+  lambda_NEB3011,6,2,C,15,2
+  lambda_NEB3011,7,2,GG,3,1
+  lambda_NEB3011,8,2,A,15,2
   $ md5sum consensus.csv
-  ecdf6213d7132b5c178854ba35ad69c5  consensus.csv
+  d50a46c789125f063dda072afe399d0a  consensus.csv
 

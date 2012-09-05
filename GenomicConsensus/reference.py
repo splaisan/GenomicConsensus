@@ -27,6 +27,9 @@ def idToName(_id):
 def nameToId(name):
     return byName[name].id
 
+def idToHeader(_id):
+    return byId[_id].header
+
 def isLoaded():
     return bool(byMD5)
 

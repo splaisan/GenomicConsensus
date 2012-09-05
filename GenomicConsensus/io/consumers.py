@@ -52,11 +52,11 @@ def csvConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refName = reference.idToName(refId)
+            refHeader = reference.idToHeader(refId)
             coverage = tbl.view(np.recarray).coverage
-            logging.info("Writing CSV output for %s." % refName)
+            logging.info("Writing CSV output for %s." % refHeader)
             for record in tbl[coverage > 0, :]:
-                writer.writerow((refName,) + record.item())
+                writer.writerow((refHeader,) + record.item())
     except Exception:
         printErrorMessage("csvConsumer")
     finally:
@@ -69,10 +69,10 @@ def fastaConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refName = reference.idToName(refId)
+            refHeader = reference.idToHeader(refId)
             seqArray = tbl["consensus"]
-            logging.info("Writing FASTA output for %s." % refName)
-            writer.writeRecord(refName, seqArray)
+            logging.info("Writing FASTA output for %s." % refHeader)
+            writer.writeRecord(refHeader, seqArray)
     except Exception:
         printErrorMessage("fastaConsumer")
     finally:
@@ -85,11 +85,11 @@ def fastqConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refName = reference.idToName(refId)
+            refHeader = reference.idToHeader(refId)
             seqArray = tbl["consensus"]
             qvArray = tbl["consensusConfidence"]
-            logging.info("Writing FASTQ output for %s." % refName)
-            writer.writeRecord(refName, seqArray, qvArray)
+            logging.info("Writing FASTQ output for %s." % refHeader)
+            writer.writeRecord(refHeader, seqArray, qvArray)
     except Exception:
         printErrorMessage("fastqConsumer")
     finally:
@@ -120,8 +120,9 @@ def variantsGffConsumer(file, **kwargs):
 
             vl = VariantList()
             refName = reference.idToName(refId)
+            refHeader = reference.idToHeader(refId)
             refSeq = reference.byId[refId].sequence
-            logging.info("Calculating variants from consensus for %s." % refName)
+            logging.info("Calculating variants from consensus for %s." % refHeader)
 
             loci = locusIterForGff(tbl, refSeq, confidenceThreshold)
             
