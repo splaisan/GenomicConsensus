@@ -1,4 +1,6 @@
 import numpy as np, itertools, logging
+from collections import Counter
+
 from GenomicConsensus.variants import *
 import ConsensusCore as cc
 
@@ -131,14 +133,20 @@ def variantsFromAlignment(a, refWindow):
     tbl = zip(a.Transcript(),
               a.Target(),
               a.Query())
-    runs = itertools.groupby(tbl, fst)
+
+    # We don't call variants where either the reference or css is 'N'
+    grouper = lambda row: "N" if (row[1]=="N" or row[2]=="N") else row[0]
+    runs = itertools.groupby(tbl, grouper)
+
     for code, run in runs:
-        assert code in "RIDM"
+        assert code in "RIDMN"
         run = list(run)
         ref = "".join(map(snd, run))
+        refLen = len(ref) - Counter(ref)["-"]
         read = "".join(map(third, run))
-        if code == "M":
-            refPos += len(ref)
+
+        if code == "M" or code == "N":
+            pass
         elif code == "R":
             assert len(read)==len(ref)
             variants.append(Substitution(refId, refPos, refPos+len(read), ref, read))
@@ -146,7 +154,9 @@ def variantsFromAlignment(a, refWindow):
             variants.append(Insertion(refId, refPos, refPos, "", read))
         elif code == "D":
             variants.append(Deletion(refId, refPos, refPos + len(ref), ref, ""))
-            refPos += len(ref)
+
+        refPos += refLen
+
     return variants
 
 def referenceSpanWithinWindow(referenceWindow, aln):
