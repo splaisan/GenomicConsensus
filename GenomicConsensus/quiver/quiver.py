@@ -82,6 +82,18 @@ class QuiverWorker(object):
                                                                    for a in consideredAlns])
         clippedAlns = [a.clippedTo(refStart, refEnd) for a in consideredAlns]
 
+        # Remove "stumps", where for example the aligner may have
+        # inserted a large gap, such that while the alignment
+        # technically spans the window, it may not have any read
+        # content therein:
+        #
+        #   Ref   ATGATCCAGTTACTCCGATAAA
+        #   Read  ATG---------------TA-A
+        #   Win.     [              )
+        #
+        minimumReadLength = 0.1*(refEnd-refStart)
+        clippedAlns = filter(lambda a: a.readLength >= minimumReadLength, clippedAlns)
+
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
                                   for a in clippedAlns
