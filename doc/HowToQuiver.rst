@@ -14,19 +14,19 @@ sequence.
 with C# and Python bindings.  To experiment with Quiver from Python,
 you will need to install three packages in your Python environment:
 
- - `pbcore`, a package providing access to PacBio data files
- - `ConsensusCore`, containing Quiver
- - `GenomicConsensus`, containing convenience routines and command-line tools
+- `pbcore`, a package providing access to PacBio data files
+- `ConsensusCore`, containing Quiver
+- `GenomicConsensus`, containing convenience routines and command-line tools
 
 Step 1: Install required libraries
 ----------------------------------
 
 The following are required:
 
-  - Boost  >= 1.4.7   (standard C++ libraries)
-  - SWIG   >= 2.0.7   (library wrapper generator)
-  - Python >= 2.7.2
-  - virtualenv        (builds isolated Python environments)
+- Boost  >= 1.4.7   (standard C++ libraries)
+- SWIG   >= 2.0.7   (library wrapper generator)
+- Python >= 2.7.2
+- virtualenv        (builds isolated Python environments)
 
 If you within PacBio, these requirements are already installed within
 the cluster environment.

@@ -40,11 +40,11 @@ invocation is::
                          aligned_reads.cmp.h5   
 
 which requests that variant calling proceed,
-        - using 8 worker processes,
-        - employing the **quiver** algorithm,
-        - taking input from the file ``aligned_reads.cmp.h5``,
-        - using the FASTA file ``lambdaNEB.fa`` as the reference,
-        - and writing output to ``variants.gff``.
+- using 8 worker processes,
+- employing the **quiver** algorithm,
+- taking input from the file ``aligned_reads.cmp.h5``,
+- using the FASTA file ``lambdaNEB.fa`` as the reference,
+- and writing output to ``variants.gff``.
 
 A particularly useful option is ``--referenceWindow/-w``: this option
 allows the user to direct the tool to perform variant calling
@@ -66,8 +66,8 @@ Input and output
 ````````````````
 ``variantCaller.py`` requires two input files:
 
-    - A file of reference-aligned reads in PacBio's standard cmp.h5 format;
-    - A FASTA file that has been processed by ReferenceUploader.
+- A file of reference-aligned reads in PacBio's standard cmp.h5 format;
+- A FASTA file that has been processed by ReferenceUploader.
 
 The tool's output is formatted in the GFF format, as described in (how
 to link to other file?).  External tools can be used to convert the
