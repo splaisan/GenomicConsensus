@@ -119,16 +119,16 @@ this is not a streamlined workflow---we are working on this right now.
 Here are the current steps needed to get a high-accuracy assembly
 using Quiver:
 
- - Start with a rough assembly---from any platform or assembly
-   technique; PacBio users can use the `Allora` or `CeleraAssembler`
-   workflows to generate a rough assembly.
+- Start with a rough assembly---from any platform or assembly
+  technique; PacBio users can use the `Allora` or `CeleraAssembler`
+  workflows to generate a rough assembly.
 
- - The output of the assembly is a FASTA file; at the present time the
-   user must download this FASTA file and then import it as a new
-   reference into SMRTPortal.
+- The output of the assembly is a FASTA file; at the present time the
+  user must download this FASTA file and then import it as a new
+  reference into SMRTPortal.
 
- - Run a `Resequencing_QVs` job using the original data files, and the
-   rough assembly FASTA file as a reference.
+- Run a `Resequencing_QVs` job using the original data files, and the
+  rough assembly FASTA file as a reference.
 
 The output of the Resequencing_QVs job is the cmp.h5 file you will now
 feed to Quiver::
