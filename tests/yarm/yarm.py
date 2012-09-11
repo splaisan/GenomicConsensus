@@ -110,17 +110,22 @@ def compare():
     # if they're located close to an expected call of the same type.
     putativeFalseIndels = [x for x in act - exp if x.typ == 'd' or x.typ == 'i']
     trueIndels = groundTruth.mutations
+
     # Locate closest true indels. If less than 5 bases away and same call, set 
     # to true indel call. NOTE: this does not adjust multiple close calls, only
     # the closest.
     for indel in putativeFalseIndels:
         idx = bisect(trueIndels, indel)
         # Watch for boundaries
-        if idx == 0: idx = 1
+        if idx == 0: 
+            idx = 1
+        if idx == len(trueIndels): 
+            idx -= 1
+
         left = trueIndels[idx-1]
         right = trueIndels[idx]
         nearest = min([left,right], key=lambda m: abs(m.offs-indel.offs))
-        if abs(nearest.offs - indel.offs) < 5 and nearest.mut == indel.mut:
+        if abs(nearest.offs - indel.offs) < 5 and nearest.mut == indel.mut and nearest.typ == indel.typ:
             act.discard(indel)
             act.add(nearest)
             # ammend the gff map to reflect
@@ -220,6 +225,7 @@ def main():
         usage()
     except IndexError, e:
         print cmds[cmd].__doc__
+        if bool(getenv('stack')): raise
     except Exception, e:
         sys.stderr.write("%s! %s\n" % (random.choice(hip), e))
         if bool(getenv('stack')): raise
