@@ -37,7 +37,7 @@ class ToolRunner(object):
         elif options.verbosity == 1:
             logLevel = logging.INFO
         else:
-            logLevel = logging.ERROR
+            logLevel = logging.WARNING
         logFormat = '%(asctime)s [%(levelname)s] %(message)s'
         logging.basicConfig(level=logLevel, format=logFormat)
 
