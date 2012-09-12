@@ -105,20 +105,12 @@ For example, ::
 will use 8 CPUs to run Quiver on ``aligned_reads.cmp.h5``, outputting
 the consensus sequence and variants.
 
-NOTE: the above command assumes your cmp.h5 was generated using the
-``ResequencingQVs`` workflow in smrtportal.  If you have not run this
-workflow, your cmp.h5 will not have the full complement of QV metrics
-and therefore a different model will need to be used.  To use a model
-that requires no QV metrics, try ::
-
-    $ variantCaller.py -j8 --algorithm=quiver         \
-    >    --parameters=NoQVsModel.trainedParams1       \
-    >    aligned_reads.cmp.h5 -r path/to/lambda.fasta \
-    >    -o variants.gff -o consensus.fasta
-
-The QVs enable the highest accuracy consensus, especially in low
-coverage regions, so we do not recommend using this
-
+Note that if you have not used the `ResequencingQVs` protocol to
+generate the cmp.h5 file---or if the source bas.h5 file was generated
+by pre-1.3.1 instrument software---the cmp.h5 will not contain the
+full battery of QV metrics required for optimal Quiver accuracy.  the
+command will still work, but it will give a warning that its accuracy
+will be suboptimal.
 
 
 Step 4: Highly-accurate assembly consensus
