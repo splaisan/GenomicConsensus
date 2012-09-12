@@ -16,7 +16,6 @@ class ParameterSet(object):
 
     @staticmethod
     def fromString(s):
-        # FIXME: make this more flexible
         if   s == "NoQVsModel.trainedParams1":  return NoQVsModel.trainedParams1()
         elif s == "AllQVsModel.trainedParams1": return AllQVsModel.trainedParams1()
         elif s == "AllQVsModel.trainedParams2": return AllQVsModel.trainedParams2()

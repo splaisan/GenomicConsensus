@@ -57,8 +57,26 @@ def domain(referenceWindow):
 class QuiverWorker(object):
 
     def onStart(self):
-        self.params = ParameterSet.fromString(options.parameters)
+        if options.parameters == "best":
+            if AllQVsModel.isCompatibleWithCmpH5(self._inCmpH5):
+                self.params = AllQVsModel.trainedParams1()
+            elif NoMergeQVModel.isCompatibleWithCmpH5(self._inCmpH5):
+                self.params = NoMergeQVModel.trainedParams1()
+            else:
+                self.params = NoQVsModel.trainedParams1()
+        else:
+            self.params = ParameterSet.fromString(options.parameters)
         self.model  = self.params.model
+
+        # If the parameter set was chosen automatically by "best" and
+        # the model is not AllQVs, we should warn the user that this
+        # could result in a degradation in performance.
+        if options.parameters=="best" and self.model != AllQVsModel:
+            logging.warn("This .cmp.h5 file lacks some of the QV data tracks that are required " +
+                         "for optimal performance of the Quiver algorithm.  For optimal results" +
+                         " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
+                         "from an instrument using software version 1.3.1 or later.")
+
 
     def onChunk(self, referenceWindow, alnHits):
         refId, refStart, refEnd = referenceWindow
@@ -254,11 +272,11 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "variantCoverageThreshold"   : 11,
                              "variantConfidenceThreshold" : 20,
                              "coverage"                   : 100,
-                             "parameters"                 : "AllQVsModel.trainedParams1" }
+                             "parameters"                 : "best" }
 
 def compatibilityWithCmpH5(cmpH5):
-    model = ParameterSet.fromString(options.parameters).model
-    if model.isCompatibleWithCmpH5(cmpH5):
+    if (options.parameters == "best" or
+        ParameterSet.fromString(options.parameters).model.isCompatibleWithCmpH5(cmpH5)):
         return (True, "OK")
     else:
         return (False, "This Quiver parameter set requires QV features not available in this .cmp.h5 file")
