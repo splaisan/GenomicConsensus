@@ -4,13 +4,7 @@ import argparse, gzip, numpy as np, sys
 from collections import namedtuple
 
 from pbcore.io import GffReader, GffWriter, Gff3Record, parseGffLine
-
-consensusCsvDtypes =  [("referenceId"         , np.uint32),
-                       ("referencePos"        , np.uint32),
-                       ("coverage"            , np.uint32),
-                       ("consensus"           , np.object),
-                       ("consensusConfidence" , np.uint8),
-                       ("consensusFrequency"  , np.uint32)]
+from GenomicConsensus.utils import error_probability_to_qv
 
 #
 # Note: GFF-style coordinates
@@ -23,14 +17,10 @@ def lookup(key, alist):
         if k == key:
             return v
 
-def refNameToId(s):
-    # remove 'ref'
-    return int(s[3:])
-
 def main():
     headers = [
         ("source", "GenomicConsensus 0.2.0"),
-        ("pacbio-alignment-summary-version", "0.5"),
+        ("pacbio-alignment-summary-version", "0.6"),
         ("source-commandline", " ".join(sys.argv)),
         ]
 
@@ -39,10 +29,6 @@ def main():
     parser.add_argument("--variantsGff",
                         type=str,
                         help="Input variants.gff or variants.gff.gz filename",
-                        required=True)
-    parser.add_argument("--consensusCsv",
-                        type=str,
-                        help="Input consensus.csv or consensus.csv.gz filename",
                         required=True)
     parser.add_argument("--output",
                         "-o",
@@ -55,20 +41,11 @@ def main():
     options = parser.parse_args()
 
     inputVariantsGff = GffReader(options.variantsGff)
-    if options.consensusCsv.endswith(".gz"):
-        f = gzip.open(options.consensusCsv)
-    else:
-        f = open(options.consensusCsv)
-    inputConsensusCsv = np.loadtxt(f, dtype=consensusCsvDtypes, delimiter=",",
-                                   skiprows=1, converters={0 : refNameToId})
-    inputConsensusCsv = inputConsensusCsv.view(np.recarray)
-
-
     inputAlignmentSummaryGff = GffReader(options.inputAlignmentSummaryGff)
 
     summaries = {}
     for gffRecord in inputAlignmentSummaryGff:
-        region = Region(refNameToId(gffRecord.seqid), gffRecord.start, gffRecord.end)
+        region = Region(gffRecord.seqid, gffRecord.start, gffRecord.end)
         summaries[region] = { "ins" : 0,
                               "del" : 0,
                               "sub" : 0,
@@ -76,28 +53,19 @@ def main():
                              }
     inputAlignmentSummaryGff.close()
 
-    for region in summaries:
-        regionTbl = inputConsensusCsv[(inputConsensusCsv.referenceId == region.seqid) &
-                                      (region.start-1 <= inputConsensusCsv.referencePos) &
-                                      (inputConsensusCsv.referencePos < region.end)]
-        regionQuality = regionTbl.consensusConfidence
-        if len(regionQuality) > 0:
-            summaries[region]["cQv"] = (np.min(regionQuality),
-                                        np.median(regionQuality),
-                                        np.max(regionQuality))
-
     counterNames = { "insertion"    : "ins",
                      "deletion"     : "del",
                      "substitution" : "sub" }
     for variantGffRecord in inputVariantsGff:
-        variantGffRecordRefId = refNameToId(variantGffRecord.seqid)
         for region in summaries:
-            if (region.seqid == variantGffRecordRefId and
+            summary = summaries[region]
+            if (region.seqid == variantGffRecord.seqid and
                 region.start <= variantGffRecord.start <= region.end):
-                summary = summaries[region]
                 counterName = counterNames[variantGffRecord.type]
                 variantLength = int(lookup("length", variantGffRecord.attributes))
                 summary[counterName] += variantLength
+            # TODO: base consensusQV on effective coverage
+            summary["cQv"] = (20, 20, 20)
 
     inputAlignmentSummaryGff = open(options.inputAlignmentSummaryGff)
     outputAlignmentSummaryGff = open(options.output, "w")
@@ -122,7 +90,7 @@ def main():
         rec = parseGffLine(line)
 
         if rec.type == "region":
-            summary = summaries[Region(refNameToId(rec.seqid), rec.start, rec.end)]
+            summary = summaries[(rec.seqid, rec.start, rec.end)]
             if "cQv" in summary:
                 cQvTuple = summary["cQv"]
                 line += ";%s=%s" % ("cQv", ",".join(str(int(f)) for f in cQvTuple))
@@ -133,5 +101,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

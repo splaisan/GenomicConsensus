@@ -1,14 +1,12 @@
 
 Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.py
 
-  $ export DATA=$TESTDIR/../data   
+  $ export DATA=$TESTDIR/../data
   $ export PATH=$TESTDIR/..:$PATH
   $ export VARIANTSGFF=$DATA/lambda/variants.gff.gz
-  $ export CONSENSUSCSV=$DATA/lambda/consensus.csv.gz
   $ export ALIGNMENTSUMMARYGFF=$DATA/lambda/alignment_summary.gff
   $ summarizeConsensus.py           \
   >   --variantsGff $VARIANTSGFF    \
-  >   --consensusCsv $CONSENSUSCSV  \
   >   $ALIGNMENTSUMMARYGFF          \
   >   -o alignment_summary.out.gff
 
@@ -22,17 +20,17 @@ Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.
   ##sequence-header ref000001 lambda_NEB3011
   ##sequence-region ref000001 1 48502
   ##source GenomicConsensus 0.2.0
-  ##pacbio-alignment-summary-version 0.5
+  ##pacbio-alignment-summary-version 0.6
   ##source-commandline * (glob)
-  ref000001\t.\tregion\t1\t100\t0.00\t+\t.\tcov2=150.440,26.772;gaps=0,0;cov=51,160,171;cQv=3,15,15;del=0;ins=19;sub=0 (esc)
-  ref000001\t.\tregion\t101\t200\t0.00\t+\t.\tcov2=168.700,1.780;gaps=0,0;cov=166,168,173;cQv=3,15,15;del=0;ins=16;sub=0 (esc)
-  ref000001\t.\tregion\t201\t300\t0.00\t+\t.\tcov2=167.860,1.732;gaps=0,0;cov=165,168,171;cQv=3,15,15;del=1;ins=17;sub=1 (esc)
-  ref000001\t.\tregion\t301\t400\t0.00\t+\t.\tcov2=177.690,2.587;gaps=0,0;cov=168,179,181;cQv=0,8,8;del=2;ins=8;sub=0 (esc)
-  ref000001\t.\tregion\t401\t500\t0.00\t+\t.\tcov2=179.730,1.248;gaps=0,0;cov=177,180,182;cQv=0,0,0;del=0;ins=0;sub=0 (esc)
-  ref000001\t.\tregion\t501\t600\t0.00\t+\t.\tcov2=186.670,4.907;gaps=0,0;cov=177,188,195;cQv=0,0,0;del=0;ins=0;sub=0 (esc)
-  ref000001\t.\tregion\t601\t700\t0.00\t+\t.\tcov2=200.160,4.051;gaps=0,0;cov=192,200,206;cQv=0,0,0;del=0;ins=0;sub=0 (esc)
-  ref000001\t.\tregion\t701\t800\t0.00\t+\t.\tcov2=213.630,7.634;gaps=0,0;cov=200,215,226;cQv=0,0,0;del=0;ins=0;sub=0 (esc)
-  ref000001\t.\tregion\t801\t900\t0.00\t+\t.\tcov2=244.290,12.954;gaps=0,0;cov=224,243,262;cQv=0,0,0;del=0;ins=0;sub=0 (esc)
+  ref000001\t.\tregion\t1\t100\t0.00\t+\t.\tcov2=150.440,26.772;gaps=0,0;cov=51,160,171;cQv=20,20,20;del=0;ins=19;sub=0 (esc)
+  ref000001\t.\tregion\t101\t200\t0.00\t+\t.\tcov2=168.700,1.780;gaps=0,0;cov=166,168,173;cQv=20,20,20;del=0;ins=16;sub=0 (esc)
+  ref000001\t.\tregion\t201\t300\t0.00\t+\t.\tcov2=167.860,1.732;gaps=0,0;cov=165,168,171;cQv=20,20,20;del=1;ins=17;sub=1 (esc)
+  ref000001\t.\tregion\t301\t400\t0.00\t+\t.\tcov2=177.690,2.587;gaps=0,0;cov=168,179,181;cQv=20,20,20;del=2;ins=8;sub=0 (esc)
+  ref000001\t.\tregion\t401\t500\t0.00\t+\t.\tcov2=179.730,1.248;gaps=0,0;cov=177,180,182;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
+  ref000001\t.\tregion\t501\t600\t0.00\t+\t.\tcov2=186.670,4.907;gaps=0,0;cov=177,188,195;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
+  ref000001\t.\tregion\t601\t700\t0.00\t+\t.\tcov2=200.160,4.051;gaps=0,0;cov=192,200,206;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
+  ref000001\t.\tregion\t701\t800\t0.00\t+\t.\tcov2=213.630,7.634;gaps=0,0;cov=200,215,226;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
+  ref000001\t.\tregion\t801\t900\t0.00\t+\t.\tcov2=244.290,12.954;gaps=0,0;cov=224,243,262;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
 
   $ grep -v '\#.*' alignment_summary.out.gff | md5sum
-  af873f7a5cf0414c6b6e5ad52e95fd6f  -
+  a9f3b8e0a75ac38b9abd15c6c0dd6f7e  -
