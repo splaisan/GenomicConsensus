@@ -210,7 +210,8 @@ class QuiverResultCollector(object):
                 for refId, unsortedChunks in self.consensusChunks.iteritems():
                     chunks = sorted(unsortedChunks)
                     css = "".join(chunk.consensus for chunk in chunks)
-                    writer.writeRecord(reference.idToHeader(refId), css)
+                    quiverHeader = reference.idToHeader(refId) + "|quiver"
+                    writer.writeRecord(quiverHeader, css)
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
         writer = GffWriter(options.gffOutputFilename)
