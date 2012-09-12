@@ -105,12 +105,15 @@ For example, ::
 will use 8 CPUs to run Quiver on ``aligned_reads.cmp.h5``, outputting
 the consensus sequence and variants.
 
-Note that if you have not used the `ResequencingQVs` protocol to
+Note that if you have not used the `Resequencing\_QVs` protocol to
 generate the cmp.h5 file---or if the source bas.h5 file was generated
 by pre-1.3.1 instrument software---the cmp.h5 will not contain the
 full battery of QV metrics required for optimal Quiver accuracy.  the
 command will still work, but it will give a warning that its accuracy
-will be suboptimal.
+will be suboptimal.  The `Resequencing\_QVs` protocol is available
+internally on ``mp-f017``; to install it on an external SMRTPortal
+installation, copy the file `Resequencing_QVs.1.xml`_ into the
+``common/protocols`` directory.
 
 
 Step 4: Highly-accurate assembly consensus
@@ -130,10 +133,10 @@ using Quiver:
   user must download this FASTA file and then import it as a new
   reference into SMRTPortal.
 
-- Run a `ResequencingQVs` job using the original data files, and
+- Run a `Resequencing\_QVs` job using the original data files, and
   the rough assembly FASTA file as a reference.
 
-The output of the `ResequencingQVs` job is the cmp.h5 file you will now
+The output of the `Resequencing\_QVs` job is the cmp.h5 file you will now
 feed to Quiver::
 
     $ variantCaller.py -j8 --algorithm=quiver                 \
@@ -160,3 +163,4 @@ consensus accuracy.  After understanding the demo code, look at
 
 
 .. _presentation: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/BrownBag2012/presentation.pdf
+.. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
