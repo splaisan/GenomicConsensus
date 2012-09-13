@@ -4,10 +4,9 @@ import ConsensusCore as cc
 
 __all__ = [ "ParameterSet",
             "AllQVsModel",
-            "PartialQVsModel",
             "NoMergeQVModel",
-            "NoQVsModel",
-            "PartialQVsModel" ]
+            "NoQVsModel"      ]
+
 
 class ParameterSet(object):
     def __init__(self, model, qvModelParams):
@@ -20,7 +19,6 @@ class ParameterSet(object):
         elif s == "AllQVsModel.trainedParams1": return AllQVsModel.trainedParams1()
         elif s == "AllQVsModel.trainedParams2": return AllQVsModel.trainedParams2()
         elif s == "NoMergeQVModel.trainedParams1" : return NoMergeQVModel.trainedParams1()
-        elif s == "NoMergeQVModel.trainedParams2" : return NoMergeQVModel.trainedParams2()
         else: raise Exception, "Unrecognized parameter set"
 
 class Model(object):
@@ -139,32 +137,6 @@ class NoMergeQVModel(Model):
                              "DeletionQV",
                              "DeletionTag"])
 
-    @classmethod
-    def extractFeatures(cls, aln):
-        features = Model.extractFeatures(aln)
-        features.MergeQv = asFloatFeature([15.] * aln.readLength)
-        return features
-
-    #
-    # Parameter sets have not yet been trained for this model.
-    #
-    @classmethod
-    def trainedParams1(cls):
-        return ParameterSet(cls, AllQVsModel.trainedParams1().qvModelParams)
-
-    @classmethod
-    def trainedParams2(cls):
-        return ParameterSet(cls, AllQVsModel.trainedParams2().qvModelParams)
-
-
-class PartialQVsModel(Model):
-    """
-    This model is designed to work with the set of QVs loaded by the
-    standard pre-1.4 workflow.
-    """
-    requiredFeatures = set(["InsertionQV",
-                            "DeletionQV"])
-
     freeParamIdx = [ 1,  # Mismatch
                      3,  # Branch
                      4,  # BranchS
@@ -172,18 +144,30 @@ class PartialQVsModel(Model):
                      6,  # DeletionWithTag
                      7,  # DeletionWithTagS
                      8,  # Nce
-                     9 ] # NceS
+                     9,  # NceS
+                    10 ] # Merge
 
     fixedParamIdx = [ i for i in xrange(14) if i not in freeParamIdx ]
     fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
     numFreeParams = len(freeParamIdx)
-
-    fullStart = -10*np.array(~np.array(fixedParamMask), dtype=np.float32)
+    fullStart = AllQVsModel.fullStart
 
     """
     Starting point for training.
     """
     start = fullStart[freeParamIdx]
+
+    """
+    Parameters from training against ref000001:10000-40000 @ 11x in
+    job 038537, using the logsigmoid objective function.
+    """
+    @classmethod
+    def trainedParams1(cls):
+        return cls.paramsFromArray(
+            [ -3.90937113e+01,  -2.52056402e+01,  -1.38876854e+00,
+              -3.07886177e+01,  -1.51443235e-02,  -1.01846311e+00,
+              -8.63561305e+00,  -1.86460591e+00,  -4.13471617e+01])
+
 
 class NoQVsModel(Model):
 

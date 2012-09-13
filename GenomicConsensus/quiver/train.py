@@ -137,7 +137,7 @@ parser.add_argument("--model",
                     default="AllQVsModel",
                     choices=["AllQVsModel",
                              "NoQVsModel",
-                             "PartialQVsModel"])
+                             "NoMergeQVModel"])
 
 options = parser.parse_args()
 
