@@ -2,6 +2,7 @@ import numpy as np, itertools, logging
 from collections import Counter
 
 from GenomicConsensus.variants import *
+from GenomicConsensus.utils import error_probability_to_qv
 import ConsensusCore as cc
 
 # Some lisp functions we want
@@ -70,16 +71,18 @@ def bestSubset(mutationsAndScores, separation):
 
     return output
 
-def refineConsensus(mms, maxRounds=10, verbose=False):
-    #
-    # Given a MultiReadMutationScorer, identify and apply favorable
-    # template mutations.  Return the consensus string.
-    #
+def refineConsensus(mms, computeAllQVs=False, maxRounds=10):
+    """
+    Given a MultiReadMutationScorer, identify and apply favorable
+    template mutations.  Return:
+      - consensusString                if computeAllQVs=False;
+      - (consensusString, consensusQV) if computeAllQVs=True .
+    """
     SEPARATION = 7
     NEIGHBORHOOD = 15
     favorableMutationsAndScores = None
 
-    for round in range(1, maxRounds):
+    for round_ in range(1, maxRounds):
 
         if favorableMutationsAndScores == None:
             mutationsToTry = uniqueSingleBaseMutations(mms.Template())
@@ -98,8 +101,26 @@ def refineConsensus(mms, maxRounds=10, verbose=False):
         else:
             # If we can't find any favorable mutations, our work is done.
             break
-    logging.debug("Quiver: %d rounds" % round)
-    return mms.Template()
+
+    css = mms.Template()
+    if computeAllQVs:
+        # One more round: a full sweep, to identify the QVs
+        allMutations = uniqueSingleBaseMutations(css)
+        cssQv = np.empty(len(css), dtype=np.uint8)
+        for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
+            # HACK: score a no-op mutation to get score at this column
+            # Augment CC API to make this more sensible
+            noopMutation = cc.Mutation(cc.SUBSTITUTION, pos, css[pos])
+            thisScore = mms.Score(noopMutation)
+            allScores = [thisScore] + [mms.Score(m) for m in muts]
+            errProb = 1. - (np.exp(thisScore) / sum(np.exp(allScores)))
+            cssQv[pos] = error_probability_to_qv(errProb)
+        logging.debug("Quiver: %d rounds + 1" % round_)
+        return (css, cssQv)
+    else:
+        logging.debug("Quiver: %d rounds" % round_)
+        return css
+
 
 def inverseMutations(windowStart, variant):
     """
@@ -167,5 +188,3 @@ def referenceSpanWithinWindow(referenceWindow, aln):
     _, winStart, winEnd = referenceWindow
     return min(winEnd, aln.referenceEnd) - \
            max(winStart, aln.referenceStart)
-
-

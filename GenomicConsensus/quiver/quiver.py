@@ -7,7 +7,7 @@ from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from pbcore.io import rangeQueries, GffWriter
-from ..io.fastx import FastaWriter
+from ..io.fastx import FastaWriter, FastqWriter
 
 try:
     import ConsensusCore as cc
@@ -37,6 +37,7 @@ QuiverWindowSummary = collections.namedtuple("QuiverWindowSummary",
                                               "referenceStart",
                                               "referenceEnd",
                                               "consensus",      # string
+                                              "qv",             # numpy array of uint8
                                               "variants"))      # list of Variant
 
 def domain(referenceWindow):
@@ -72,10 +73,11 @@ class QuiverWorker(object):
         # the model is not AllQVs, we should warn the user that this
         # could result in a degradation in performance.
         if options.parameters=="best" and self.model != AllQVsModel:
-            logging.warn("This .cmp.h5 file lacks some of the QV data tracks that are required " +
-                         "for optimal performance of the Quiver algorithm.  For optimal results" +
-                         " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
-                         "from an instrument using software version 1.3.1 or later.")
+            logging.warn(
+                "This .cmp.h5 file lacks some of the QV data tracks that are required " +
+                "for optimal performance of the Quiver algorithm.  For optimal results" +
+                " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
+                "from an instrument using software version 1.3.1 or later.")
 
 
     def onChunk(self, referenceWindow, alnHits):
@@ -162,7 +164,10 @@ class QuiverWorker(object):
             mms.AddRead(mr)
 
         # Test mutations, improving the consensus
-        css = refineConsensus(mms)
+        if options.fastqOutputFilename:
+            css, cssQv = refineConsensus(mms, computeAllQVs=True)
+        else:
+            css = refineConsensus(mms)
 
         # Collect variants---only consider those within our domain of control.
         ga = cc.Align(refSequence, css)
@@ -181,6 +186,10 @@ class QuiverWorker(object):
         cssDomainStart = targetPositions[domainStart-refStart]
         cssDomainEnd   = targetPositions[domainEnd-refStart]
         domainCss = css[cssDomainStart:cssDomainEnd]
+        if options.fastqOutputFilename:
+            domainQv = cssQv[cssDomainStart:cssDomainEnd]
+        else:
+            domainQv = None
 
         poaReport    = "POA unavailable" if numPoaVariants==None \
                        else ("%d POA variants" % numPoaVariants)
@@ -188,11 +197,11 @@ class QuiverWorker(object):
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
 
-        return QuiverWindowSummary(refId, refStart, refEnd, domainCss, variants)
+        return QuiverWindowSummary(refId, refStart, refEnd, domainCss, domainQv, variants)
 
 
 ContigConsensusChunk = collections.namedtuple("ContigConsensusChunk",
-                                              ("refStart", "refEnd", "consensus"))
+                                              ("refStart", "refEnd", "consensus", "qv"))
 
 class QuiverResultCollector(object):
 
@@ -206,7 +215,8 @@ class QuiverResultCollector(object):
         self.allVariants += result.variants
         cssChunk = ContigConsensusChunk(result.referenceStart,
                                         result.referenceEnd,
-                                        result.consensus)
+                                        result.consensus,
+                                        result.qv)
         self.consensusChunks[result.referenceId].append(cssChunk)
 
     def onFinish(self):
@@ -230,6 +240,18 @@ class QuiverResultCollector(object):
                     css = "".join(chunk.consensus for chunk in chunks)
                     quiverHeader = reference.idToHeader(refId) + "|quiver"
                     writer.writeRecord(quiverHeader, css)
+
+        # 3. FASTQ output
+        if options.fastqOutputFilename:
+            with open(options.fastqOutputFilename, "w") as outfile:
+                writer = FastqWriter(outfile)
+                for refId, unsortedChunks in self.consensusChunks.iteritems():
+                    chunks = sorted(unsortedChunks)
+                    css = "".join(chunk.consensus for chunk in chunks)
+                    qv = np.concatenate([chunk.qv for chunk in chunks])
+                    quiverHeader = reference.idToHeader(refId) + "|quiver"
+                    writer.writeRecord(quiverHeader, css, qv)
+
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
         writer = GffWriter(options.gffOutputFilename)
@@ -287,4 +309,3 @@ def slaveFactories(threaded):
         return (QuiverWorkerThread,  QuiverResultCollectorThread)
     else:
         return (QuiverWorkerProcess, QuiverResultCollectorProcess)
-
