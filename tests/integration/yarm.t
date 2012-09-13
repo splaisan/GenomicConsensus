@@ -17,10 +17,7 @@ Insertions
   TP: 56 FP: 19 FN: 30 TN: 4639617  TPR: 0.651163 FPR: 0.000004 FDR: 0.253333
   TP: 65 FP: 1 FN: 21 TN: 4639635  TPR: 0.755814 FPR: 0.000000 FDR: 0.015152
   TP: 64 FP: 1 FN: 22 TN: 4639635  TPR: 0.744186 FPR: 0.000000 FDR: 0.015385
-  
-      Compares a ground-truth strain to a variations file
-          [typ=[s|i|d]] [id=] [verbose=0] yarm compare <strains> <variants>
-      
+  TP: 63 FP: 1 FN: 23 TN: 4639635  TPR: 0.732558 FPR: 0.000000 FDR: 0.015625
   TP: 68 FP: 1 FN: 18 TN: 4639635  TPR: 0.790698 FPR: 0.000000 FDR: 0.014493
 
 
