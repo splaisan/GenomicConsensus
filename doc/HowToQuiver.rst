@@ -149,8 +149,9 @@ should be quite high.  Note that Quiver does *not* join contigs---it
 merely refines their accuracy.
 
 
-Step 5: Learn about Quiver
-``````````````````````````
+Learn About Quiver
+------------------
+
 There is currently a presentation_ available describing some of the
 details of how Quiver works.  More documentation is in the works.
 
@@ -164,3 +165,10 @@ consensus accuracy.  After understanding the demo code, look at
 
 .. _presentation: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/BrownBag2012/presentation.pdf
 .. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
+
+
+Known Issues
+------------
+
+``ConsensusCore`` doesn't compile with Boost 1.48.  1.47 and 1.51 are
+fine.
