@@ -105,5 +105,5 @@ class FastqWriter(FastxWriter):
         for (seqChunk, qualityChunk) in itertools.izip(chunks(OUTPUT_CHUNK_SIZE, sequenceArray),
                                                        chunks(OUTPUT_CHUNK_SIZE, qualityArray)):
             lens = [len(s) for s in seqChunk]
-            consensusQvs = np.repeat(qualityArray, lens)
+            consensusQvs = np.repeat(qualityChunk, lens)
             self._append(self._qvArrayToString(consensusQvs))
