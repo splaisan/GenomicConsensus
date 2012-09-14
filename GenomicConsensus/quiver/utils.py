@@ -108,12 +108,10 @@ def refineConsensus(mms, computeAllQVs=False, maxRounds=10):
         allMutations = uniqueSingleBaseMutations(css)
         cssQv = np.empty(len(css), dtype=np.uint8)
         for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
-            # HACK: score a no-op mutation to get score at this column
-            # Augment CC API to make this more sensible
-            noopMutation = cc.Mutation(cc.SUBSTITUTION, pos, css[pos])
-            thisScore = mms.Score(noopMutation)
-            allScores = [thisScore] + [mms.Score(m) for m in muts]
-            errProb = 1. - (np.exp(thisScore) / sum(np.exp(allScores)))
+            # Current score is '0'; exp(0) = 1
+            altScores = [mms.Score(m) for m in muts]
+            with np.errstate(over="ignore", under="ignore"):
+                errProb = 1. - 1. / (1. + sum(np.exp(altScores)))
             cssQv[pos] = error_probability_to_qv(errProb)
         logging.debug("Quiver: %d rounds + 1" % round_)
         return (css, cssQv)
