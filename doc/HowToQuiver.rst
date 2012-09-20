@@ -1,6 +1,11 @@
 
-How-to install and use Quiver
+How to install and use Quiver
 =============================
+
+*Note: please install this software on an isolated machine that does
+not have SMRTanalysis installed.  Older versions of SMRTanalysis
+pollute the ``PYTHONPATH``, which has the undesirable effect of
+overriding ``virtualenv``-installed modules.*
 
 Background
 ----------
