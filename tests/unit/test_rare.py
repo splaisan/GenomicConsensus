@@ -1,9 +1,10 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from nose.tools import assert_equal
-from GenomicConsensus.rare.rare import *
+from GenomicConsensus.rare import *
+from GenomicConsensus.plurality.plurality import PluralityLocusSummary
 from AlignmentHitStubs import *
 
-class TestRareVariants:
+class TestRareVariants(object):
     """Battery of tests for the rare variant algorithm. """
 
     snpsfreqs = ['T',19,   # < 1%
@@ -12,7 +13,7 @@ class TestRareVariants:
                  'A',2000] # dominant allele (putative wild-type) 
 
     def test_consensus(self):
-        """[RareAlignmentColum.consensus] The core rare variant algo. """
+        """[RareAlignmentColumn.consensus] The core rare variant algo. """
         algCol = RareAlignmentColumn('test',1,'A')
         j = 0
         for i in range(1,2000):
@@ -50,6 +51,7 @@ class TestRareVariants:
     def test_consumer_entry(self):
         """Tests the consumer entry point. """
         # some local imports that we'll be 'mocking'
+        from md5 import md5
         from GenomicConsensus import reference
         from GenomicConsensus.io.consumers import consumer
         from GenomicConsensus.options import options
@@ -63,8 +65,10 @@ class TestRareVariants:
             return 1
 
         reference.numChunks = testNumChunks
-        reference.byId['test'] = reference.ReferenceEntry('test','test',
-                                                          'test','AAAA',16)
+        seq = 'AAAA'
+        chk = md5(seq).hexdigest()
+        reference.byId['test'] = reference.ReferenceContig('test', 'test', 
+                                                           'test', chk, seq,16)
 
         # now we're getting somewhere, define consumer so we can inspect on
         # the way in.  This is the actual unit test.  Note the deletion should
