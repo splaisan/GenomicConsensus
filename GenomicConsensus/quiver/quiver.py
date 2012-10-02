@@ -87,6 +87,9 @@ def extractClippedAlignments(referenceWindow, coverage, alnHits):
         minimumReadLength = 0.1*(refEnd-refStart)
         return (a.readLength < minimumReadLength)
 
+    # Some ugly logic for taking the best reads available until we
+    # reach the desired coverage. Couldn't get this to fit into a nice
+    # takewhile/filter functional style.
     clippedSpanningAlns = []
     clippedNonSpanningAlns = []
     for aln in spanningAlns:
@@ -101,6 +104,25 @@ def extractClippedAlignments(referenceWindow, coverage, alnHits):
             clippedNonSpanningAlns.append(ca)
 
     return (clippedSpanningAlns, clippedNonSpanningAlns)
+
+def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
+                          cssQvInWindow=None, siteCoverage=None):
+    """
+    Compare the consensus and the reference in this window, returning
+    a list of variants.
+    """
+    refId, refStart, refEnd = refWindow
+    ga = cc.Align(refSequenceInWindow, cssSequenceInWindow)
+    variants =  variantsFromAlignment(ga, refWindow)
+
+    cssPosition = cc.TargetToQueryPositions(ga)
+
+    for v in variants:
+        cssStart = cssPosition[v.refStart-refStart]
+        if siteCoverage  != None: v.coverage   = siteCoverage[v.refStart-refStart]
+        if cssQvInWindow != None: v.confidence = cssQvInWindow[cssStart]
+
+    return variants
 
 
 class QuiverWorker(object):
@@ -185,40 +207,35 @@ class QuiverWorker(object):
             mms.AddRead(mr)
 
         # Test mutations, improving the consensus
-        if options.fastqOutputFilename:
-            css, cssQv = refineConsensus(mms, computeAllQVs=True)
-        else:
-            css = refineConsensus(mms)
+        css = refineConsensus(mms)
+        cssQv = consensusConfidence(mms)  # This is pretty slow right now.  Need to cap scores.
 
-        # Collect variants---only consider those within our domain of control.
         ga = cc.Align(refSequence, css)
-        variants = [v for v in variantsFromAlignment(ga, referenceWindow)
-                    if domainStart <= v.refStart < domainEnd]
-        for v in variants:
-            v.coverage = siteCoverage[v.refStart-refStart]
-            rawConfidence = np.median([-mms.Score(invMut)
-                                        for invMut in inverseMutations(refStart, v)])
-            v.confidence = min(93, int(rawConfidence))
+        targetPositions = cc.TargetToQueryPositions(ga)
+
+        # Calculate variants
+        variants = variantsFromConsensus(referenceWindow, refSequence, css,
+                                         cssQv, siteCoverage)
 
         numQuiverVariants = len(variants)
 
-        # Excise the portion of the consensus clipped to the domain
-        targetPositions = cc.TargetToQueryPositions(ga)
+        # Restrict the consensus and variants to the domain.
         cssDomainStart = targetPositions[domainStart-refStart]
         cssDomainEnd   = targetPositions[domainEnd-refStart]
         domainCss = css[cssDomainStart:cssDomainEnd]
-        if options.fastqOutputFilename:
-            domainQv = cssQv[cssDomainStart:cssDomainEnd]
-        else:
-            domainQv = None
+        domainQv = cssQv[cssDomainStart:cssDomainEnd]
+        domainVariants = [ v for v in variants
+                           if domainStart <= v.refStart < domainEnd ]
 
         poaReport    = "POA unavailable" if numPoaVariants==None \
                        else ("%d POA variants" % numPoaVariants)
         quiverReport = "%d Quiver variants" % numQuiverVariants
+
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
 
-        return QuiverWindowSummary(refId, refStart, refEnd, domainCss, domainQv, variants)
+        return QuiverWindowSummary(refId, refStart, refEnd,
+                                   domainCss, domainQv, domainVariants)
 
 
 ContigConsensusChunk = collections.namedtuple("ContigConsensusChunk",

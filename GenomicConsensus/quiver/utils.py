@@ -71,12 +71,10 @@ def bestSubset(mutationsAndScores, separation):
 
     return output
 
-def refineConsensus(mms, computeAllQVs=False, maxRounds=10):
+def refineConsensus(mms, maxRounds=10):
     """
     Given a MultiReadMutationScorer, identify and apply favorable
-    template mutations.  Return:
-      - consensusString                if computeAllQVs=False;
-      - (consensusString, consensusQV) if computeAllQVs=True .
+    template mutations.  Return consensus (string).
     """
     SEPARATION = 7
     NEIGHBORHOOD = 15
@@ -102,22 +100,29 @@ def refineConsensus(mms, computeAllQVs=False, maxRounds=10):
             # If we can't find any favorable mutations, our work is done.
             break
 
+    logging.debug("Quiver: %d rounds" % round_)
+    return mms.Template()
+
+
+def consensusConfidence(mms, positions=None):
+    """
+    Returns an array of QV values reflecting the consensus confidence
+    at each position specified.  If the `positions` argument is
+    omitted, confidence values are returned for all positions in the
+    consensus (mms.Template()).
+    """
     css = mms.Template()
-    if computeAllQVs:
-        # One more round: a full sweep, to identify the QVs
-        allMutations = uniqueSingleBaseMutations(css)
-        cssQv = np.empty(len(css), dtype=np.uint8)
-        for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
-            # Current score is '0'; exp(0) = 1
-            altScores = [mms.Score(m) for m in muts]
-            with np.errstate(over="ignore", under="ignore"):
-                errProb = 1. - 1. / (1. + sum(np.exp(altScores)))
-            cssQv[pos] = error_probability_to_qv(errProb)
-        logging.debug("Quiver: %d rounds + 1" % round_)
-        return (css, cssQv)
-    else:
-        logging.debug("Quiver: %d rounds" % round_)
-        return css
+    allMutations = uniqueSingleBaseMutations(css, positions)
+    cssQv = []
+
+    for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
+        # Current score is '0'; exp(0) = 1
+        altScores = [mms.Score(m) for m in muts]
+        with np.errstate(over="ignore", under="ignore"):
+            errProb = 1. - 1. / (1. + sum(np.exp(altScores)))
+        cssQv.append(error_probability_to_qv(errProb))
+
+    return np.array(cssQv, dtype=np.uint8)
 
 
 def inverseMutations(windowStart, variant):
