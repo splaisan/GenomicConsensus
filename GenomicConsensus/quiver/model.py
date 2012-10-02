@@ -21,6 +21,16 @@ class ParameterSet(object):
         elif s == "NoMergeQVModel.trainedParams1" : return NoMergeQVModel.trainedParams1()
         else: raise Exception, "Unrecognized parameter set"
 
+    @staticmethod
+    def bestAvailable(cmpH5):
+        if AllQVsModel.isCompatibleWithCmpH5(cmpH5):
+            params = AllQVsModel.trainedParams1()
+        elif NoMergeQVModel.isCompatibleWithCmpH5(cmpH5):
+            params = NoMergeQVModel.trainedParams1()
+        else:
+            params = NoQVsModel.trainedParams1()
+        return params
+
 class Model(object):
     @classmethod
     def paramsFromArray(cls, arr):

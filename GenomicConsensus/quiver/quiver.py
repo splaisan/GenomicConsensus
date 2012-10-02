@@ -55,16 +55,59 @@ def domain(referenceWindow):
     return (domainStart, domainEnd)
 
 
+def extractClippedAlignments(referenceWindow, coverage, alnHits):
+    """
+    Extract up to `coverage` clipped alignments from alnHits, where
+    spanning alignments are used first and then long nonspanning
+    alignments.  The return value is a tuple of the lists,
+      (clippedSpanningAlns, clippedNonSpanningAlns).
+    """
+    refId, refStart, refEnd = referenceWindow
+    spanningAlns = [a for a in alnHits
+                     if a.spansReferenceRange(refStart, refEnd)]
+    # HACK below is to work around bug 21232 until it can be properly fixed
+    nonSpanningAlns = [a for a in alnHits
+                       if not a.spansReferenceRange(refStart, refEnd)
+                       if referenceSpanWithinWindow(referenceWindow, a) > 0]  # <- HACK
+
+    # We always prefer spanning reads, and among partial passes,
+    # we favor those with a longer read length within the window.
+    nonSpanningAlns.sort(key=lambda aln: -referenceSpanWithinWindow(referenceWindow, aln))
+
+    def isStumpy(clippedAln):
+        # Predicate for "stumps", where for example the aligner may
+        # have inserted a large gap, such that while the alignment
+        # technically spans the window, it may not have any read
+        # content therein:
+        #
+        #   Ref   ATGATCCAGTTACTCCGATAAA
+        #   Read  ATG---------------TA-A
+        #   Win.     [              )
+        #
+        minimumReadLength = 0.1*(refEnd-refStart)
+        return (a.readLength < minimumReadLength)
+
+    clippedSpanningAlns = []
+    clippedNonSpanningAlns = []
+    for aln in spanningAlns:
+        if len(clippedSpanningAlns) == coverage: break
+        ca = aln.clippedTo(refStart, refEnd)
+        if not isStumpy(ca):
+            clippedSpanningAlns.append(ca)
+    for aln in nonSpanningAlns:
+        if len(clippedSpanningAlns) + len(clippedNonSpanningAlns) == coverage: break
+        ca = aln.clippedTo(refStart, refEnd)
+        if not isStumpy(ca):
+            clippedNonSpanningAlns.append(ca)
+
+    return (clippedSpanningAlns, clippedNonSpanningAlns)
+
+
 class QuiverWorker(object):
 
     def onStart(self):
         if options.parameters == "best":
-            if AllQVsModel.isCompatibleWithCmpH5(self._inCmpH5):
-                self.params = AllQVsModel.trainedParams1()
-            elif NoMergeQVModel.isCompatibleWithCmpH5(self._inCmpH5):
-                self.params = NoMergeQVModel.trainedParams1()
-            else:
-                self.params = NoQVsModel.trainedParams1()
+            self.params = ParameterSet.bestAvailable(self._inCmpH5)
         else:
             self.params = ParameterSet.fromString(options.parameters)
         self.model  = self.params.model
@@ -85,35 +128,14 @@ class QuiverWorker(object):
         domainStart, domainEnd = domain(referenceWindow)
         refSequence = reference.byId[refId].sequence[refStart:refEnd].tostring()
 
-        spanningAlns = [a for a in alnHits
-                         if a.spansReferenceRange(refStart, refEnd)]
-        # HACK below is to work around bug 21232 until it can be properly fixed
-        nonSpanningAlns = [a for a in alnHits
-                           if not a.spansReferenceRange(refStart, refEnd)
-                           if referenceSpanWithinWindow(referenceWindow, a) > 0]  # <- HACK
-        coverageReport = "[span=%d, nonspan=%d]" % (len(spanningAlns), len(nonSpanningAlns))
-
-        # We always prefer spanning reads, and among partial passes,
-        # we favor those with a longer read length within the window.
-        nonSpanningAlns.sort(key=lambda aln: -referenceSpanWithinWindow(referenceWindow, aln))
-        consideredAlns = (spanningAlns + nonSpanningAlns)[:options.coverage]
+        clippedSpanningAlns, clippedNonSpanningAlns = \
+            extractClippedAlignments(referenceWindow, options.coverage, alnHits)
+        clippedAlns = clippedSpanningAlns + clippedNonSpanningAlns
+        coverageReport = "[span=%d, nonspan=%d]" % \
+            (len(clippedSpanningAlns), len(clippedNonSpanningAlns))
         siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5, referenceWindow,
                                                        rowNumbers=[a.rowNumber
-                                                                   for a in consideredAlns])
-        clippedAlns = [a.clippedTo(refStart, refEnd) for a in consideredAlns]
-
-        # Remove "stumps", where for example the aligner may have
-        # inserted a large gap, such that while the alignment
-        # technically spans the window, it may not have any read
-        # content therein:
-        #
-        #   Ref   ATGATCCAGTTACTCCGATAAA
-        #   Read  ATG---------------TA-A
-        #   Win.     [              )
-        #
-        minimumReadLength = 0.1*(refEnd-refStart)
-        clippedAlns = filter(lambda a: a.readLength >= minimumReadLength, clippedAlns)
-
+                                                                   for a in clippedAlns])
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
                                   for a in clippedAlns
@@ -129,8 +151,7 @@ class QuiverWorker(object):
         # consensus as a starting point.  If there are no spanning
         # reads, we use the reference.
 
-        #if True:
-        if len(spanningAlns) == 0:
+        if len(clippedSpanningAlns) == 0:
             css = refSequence
             numPoaVariants = None
         else:
