@@ -212,7 +212,10 @@ class PluralityResult(object):
             tbl = np.zeros(shape=refEntry.length,
                            dtype=self.LOCUS_SUMMARY_DTYPE)
             ra = tbl.view(np.recarray)
-            ra.consensus[:] = "N"
+            if options.noEvidenceConsensusCall=="nocall":
+                ra.consensus[:] = "N"
+            else:
+                ra.consensus[:] = refEntry.sequence
             self.consensusByRefId[refId] = tbl
 
     def installInTable(self, locusSummary, tbl, rowNumber):

@@ -135,7 +135,10 @@ def parseOptions():
                         action="store",
                         dest="referenceChunkOverlap",
                         type=int)
-
+    parser.add_argument("--noEvidenceConsensusCall",
+                        action="store",
+                        choices=["nocall", "reference"],
+                        default="nocall")
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
@@ -177,7 +180,3 @@ def importAdditionalDefaulOptions(additionalDefaults):
     for k, v in additionalDefaults.iteritems():
         if k not in optionsDictView or optionsDictView[k] == None:
             optionsDictView[k] = v
-
-
-
-

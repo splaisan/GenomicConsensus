@@ -148,7 +148,9 @@ class QuiverWorker(object):
     def onChunk(self, referenceWindow, alnHits):
         refId, refStart, refEnd = referenceWindow
         domainStart, domainEnd = domain(referenceWindow)
+        domainLen = domainEnd - domainStart
         refSequence = reference.byId[refId].sequence[refStart:refEnd].tostring()
+        domainRefSequence = reference.byId[refId].sequence[domainStart:domainEnd].tostring()
 
         clippedSpanningAlns, clippedNonSpanningAlns = \
             extractClippedAlignments(referenceWindow, options.coverage, alnHits)
@@ -158,6 +160,29 @@ class QuiverWorker(object):
         siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5, referenceWindow,
                                                        rowNumbers=[a.rowNumber
                                                                    for a in clippedAlns])
+
+        # In the case where there are no spanning reads, we really
+        # cannot come up with a good consensus if the sequence is
+        # highly divergent from the reference.  By default, the
+        # behavior is to "nocall" the window in question, but if the
+        # user sets
+
+        if len(clippedSpanningAlns) == 0:
+            if options.noEvidenceConsensusCall == "nocall":
+                domainCss = "N"*domainLen
+                domainQv  = np.zeros(domainLen, dtype=np.uint8)
+                domainVariants = []
+                return QuiverWindowSummary(refId, refStart, refEnd,
+                                           domainCss, domainQv, domainVariants)
+            elif len(clippedNonSpanningAlns) == 0:
+                domainCss = domainRefSequence
+                domainQv  = np.zeros(domainLen, dtype=np.uint8)
+                domainVariants = []
+                return QuiverWindowSummary(refId, refStart, refEnd,
+                                           domainCss, domainQv, domainVariants)
+            # ... otherwise, we continue, using the reference as the
+            # starting point for quiver's estimation.
+
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
                                   for a in clippedAlns
@@ -172,7 +197,6 @@ class QuiverWorker(object):
         # If there are any spanning reads, we can construct a POA
         # consensus as a starting point.  If there are no spanning
         # reads, we use the reference.
-
         if len(clippedSpanningAlns) == 0:
             css = refSequence
             numPoaVariants = None
