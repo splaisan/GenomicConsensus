@@ -49,18 +49,22 @@ class WrappedWriter(object):
         self.close()
 
 
-class FastxWriter(object):
+class FastaWriter(object):
 
     def __init__(self, fileObj):
         self.wrappedWriter = WrappedWriter(fileObj, 60)
 
-    def _beginRecord(self, header):
+    def writeRecord(self, sequenceHeader, sequenceArray):
+        """
+        Sequence array is understood to be a string, or a numpy array
+        containing strings which must be concatenated.
+        """
         self.wrappedWriter.newline()
-        self.wrappedWriter.writeUnwrapped(header)
+        self.wrappedWriter.writeUnwrapped(">" + sequenceHeader)
         self.wrappedWriter.newline()
+        for chunk in chunks(OUTPUT_CHUNK_SIZE, sequenceArray):
+            self.wrappedWriter.write("".join(chunk))
 
-    def _append(self, partialSequence):
-        self.wrappedWriter.write(partialSequence)
 
     def close(self):
         self.wrappedWriter.close()
@@ -68,23 +72,14 @@ class FastxWriter(object):
     def __del__(self):
         self.close()
 
-
-class FastaWriter(FastxWriter):
-
-    def writeRecord(self, sequenceHeader, sequenceArray):
-        """
-        Sequence array is understood to be a string, or a numpy array
-        containing strings which must be concatenated.
-        """
-        self._beginRecord(">" + sequenceHeader)
-        for chunk in chunks(OUTPUT_CHUNK_SIZE, sequenceArray):
-            self._append("".join(chunk))
-
-class FastqWriter(FastxWriter):
+class FastqWriter(object):
     """
     For encoding details see:
     http://en.wikipedia.org/wiki/FASTQ_format#Encoding
     """
+    def __init__(self, fileObj):
+        self.file = fileObj
+
     @staticmethod
     def _qvArrayToString(qvArray):
         assert qvArray.dtype == np.uint8
@@ -98,12 +93,22 @@ class FastqWriter(FastxWriter):
         each entry in sequenceArray.
         """
         assert len(sequenceArray) == len(qualityArray)
-        self._beginRecord("@" + sequenceHeader)
+        self.file.write("@" + sequenceHeader + "\n")
         for chunk in chunks(OUTPUT_CHUNK_SIZE, sequenceArray):
-            self._append("".join(chunk))
-        self._beginRecord("+")
+            self.file.write("".join(chunk))
+        self.file.write("\n")
+        self.file.write("+")
+        self.file.write("\n")
         for (seqChunk, qualityChunk) in itertools.izip(chunks(OUTPUT_CHUNK_SIZE, sequenceArray),
                                                        chunks(OUTPUT_CHUNK_SIZE, qualityArray)):
             lens = [len(s) for s in seqChunk]
             consensusQvs = np.repeat(qualityChunk, lens)
-            self._append(self._qvArrayToString(consensusQvs))
+            self.file.write(self._qvArrayToString(consensusQvs))
+        self.file.write("\n")
+
+    def close(self):
+        if not self.file.closed:
+            self.file.close()
+
+    def __del__(self):
+        self.close()

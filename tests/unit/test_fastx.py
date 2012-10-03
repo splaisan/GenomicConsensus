@@ -38,20 +38,20 @@ def testFastqWriter():
 
     expected = """\
 @foo
-GATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATT
-ACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAG
-ATTACAGATTACAGATTACA
+GATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACAGATTACA
 +
-"#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%
-&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("
-#$%&'("#$%&'("#$%&'(
+"#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'("#$%&'(
 @bar
+
 +
+
 @baz
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 +
-]^_`abcdefghijklmnopqrstuvwxyz{|}~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+]^_`abcdefghijklmnopqrstuvwxyz{|}~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
 
     print expected
+    print s.getvalue()
     assert_equal(expected, s.getvalue())
     w.close()
