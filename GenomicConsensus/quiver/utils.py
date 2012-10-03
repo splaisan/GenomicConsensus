@@ -117,7 +117,7 @@ def consensusConfidence(mms, positions=None):
 
     for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
         # Current score is '0'; exp(0) = 1
-        altScores = [mms.Score(m) for m in muts]
+        altScores = [mms.FastScore(m) for m in muts]
         with np.errstate(over="ignore", under="ignore"):
             errProb = 1. - 1. / (1. + sum(np.exp(altScores)))
         cssQv.append(error_probability_to_qv(errProb))
