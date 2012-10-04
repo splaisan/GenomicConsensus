@@ -21,8 +21,8 @@ First, the variants.gff:
   ##source-commandline * (glob)
   ##sequence-header ref000001 lambda_NEB3011
   ##sequence-region ref000001 1 48502
-  ref000001\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
-  ref000001\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
+  lambda_NEB3011\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
+  lambda_NEB3011\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
 
 We expect 17 insertions, 8 deletions, and 0 SNVs.
 
@@ -36,7 +36,7 @@ We expect 17 insertions, 8 deletions, and 0 SNVs.
 Now make sure nothing else has changed on us!
 
   $ grep -v '\#.*' variants.gff | md5sum
-  4322c060d417e904abf1beba21a612c3  -
+  ce2c2321ca1e4917efc75623b0a4badc  -
 
 
 Now, the consensus.csv:

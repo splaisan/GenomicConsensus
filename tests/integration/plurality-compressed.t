@@ -18,8 +18,8 @@ Check the gzip compressed output.
   ##source-commandline * (glob)
   ##sequence-header ref000001 lambda_NEB3011
   ##sequence-region ref000001 1 48502
-  ref000001\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
-  ref000001\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
+  lambda_NEB3011\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
+  lambda_NEB3011\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
   $ gunzip consensus.csv.gz
   $ head consensus.csv
   referenceId,referencePos,coverage,consensus,consensusConfidence,consensusFrequency

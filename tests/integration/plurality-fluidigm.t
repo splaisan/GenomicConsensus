@@ -16,6 +16,6 @@ There are two true SNVs (and one diploid SNV that we miss right now).
   $ grep deletion variants.gff | wc | awk '{print $1}'
   0
   $ grep substitution variants.gff
-  ref000022\t.\tsubstitution\t48\t48\t.\t.\t.\tvariantSeq=C;reference=T;coverage=248;confidence=93;frequency=239;length=1 (esc)
+  EGFR_Exon_23\t.\tsubstitution\t48\t48\t.\t.\t.\tvariantSeq=C;reference=T;coverage=248;confidence=93;frequency=239;length=1 (esc)
 
 

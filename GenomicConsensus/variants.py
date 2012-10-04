@@ -61,7 +61,7 @@ class Variant(object):
 
     def toGffRecord(self):
         record = Gff3Record()
-        record.seqid = reference.byId[self.refId].name
+        record.seqid = reference.byId[self.refId].header
         record.score = "."
         record.strand = "."
 

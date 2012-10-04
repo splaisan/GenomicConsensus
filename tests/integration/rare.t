@@ -25,13 +25,13 @@ First, the variants.gff:
   ##source-commandline * (glob)
   ##sequence-header ref000001 bcr_abl_amplicon
   ##sequence-region ref000001 1 862
-  ref000001\t.\tsubstitution\t99\t99\t.\t.\t.\tvariantSeq=C;reference=T;coverage=2964;confidence=93;frequency=197;length=1 (esc)
-  ref000001\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=T;reference=A;coverage=2971;confidence=93;frequency=193;length=1 (esc)
-  ref000001\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=93;frequency=1307;length=1 (esc)
-  ref000001\t.\tsubstitution\t286\t286\t.\t.\t.\tvariantSeq=G;reference=C;coverage=2971;confidence=93;frequency=125;length=1 (esc)
-  ref000001\t.\tsubstitution\t286\t286\t.\t.\t.\tvariantSeq=T;reference=C;coverage=2971;confidence=93;frequency=716;length=1 (esc)
-  ref000001\t.\tsubstitution\t297\t297\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=93;frequency=211;length=1 (esc)
-  ref000001\t.\tsubstitution\t301\t301\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=4;frequency=30;length=1 (esc)
-  ref000001\t.\tsubstitution\t406\t406\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=93;frequency=309;length=1 (esc)
-  ref000001\t.\tsubstitution\t408\t408\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=5;frequency=32;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t99\t99\t.\t.\t.\tvariantSeq=C;reference=T;coverage=2964;confidence=93;frequency=197;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=T;reference=A;coverage=2971;confidence=93;frequency=193;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=93;frequency=1307;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t286\t286\t.\t.\t.\tvariantSeq=G;reference=C;coverage=2971;confidence=93;frequency=125;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t286\t286\t.\t.\t.\tvariantSeq=T;reference=C;coverage=2971;confidence=93;frequency=716;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t297\t297\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=93;frequency=211;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t301\t301\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=4;frequency=30;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t406\t406\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=93;frequency=309;length=1 (esc)
+  bcr_abl_amplicon\t.\tsubstitution\t408\t408\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=5;frequency=32;length=1 (esc)
 
