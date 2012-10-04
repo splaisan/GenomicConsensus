@@ -66,36 +66,36 @@ the 9th column is a flexible semicolon-delimited list of mappings
 
 The 8 predefined columns are as follows:
 
-+------+-------+--------------------------------+----------------+
-|Column|Name   |Description                     |Example         |
-|Number|       |                                |                |
-+------+-------+--------------------------------+----------------+
-|1     |seqId  |The local identifier for the    |``ref000022``   |
-|      |       |reference group containing this |                |
-|      |       |variant.                        |                |
-+------+-------+--------------------------------+----------------+
-|2     |source |(unused; always populated with  |``.``           |
-|      |       |``.``)                          |                |
-+------+-------+--------------------------------+----------------+
-|3     |type   |the type of variant.  One of    |``substitution``|
-|      |       |``insertion``, ``deletion``, or |                |
-|      |       |``substitution``.               |                |
-|      |       |                                |                |
-+------+-------+--------------------------------+----------------+
-|4     |start  |1-based start coordinate for the|200             |
-|      |       |variant.                        |                |
-+------+-------+--------------------------------+----------------+
-|5     |end    |1-based end coordinate for the  |215             |
-|      |       |variant.  start<=end always     |                |
-|      |       |obtains, regardless of strand.  |                |
-+------+-------+--------------------------------+----------------+
-|6     |score  |unused; populated with ``.``    |``.``           |
-+------+-------+--------------------------------+----------------+
-|7     |strand |unused; populated with ``.``    |``.``           |
-|      |       |                                |                |
-+------+-------+--------------------------------+----------------+
-|8     |phase  |unused; populated with ``.``    |``.``           |
-+------+-------+--------------------------------+----------------+
++------+-------+--------------------------------+------------------+
+|Column|Name   |Description                     |Example           |
+|Number|       |                                |                  |
++------+-------+--------------------------------+------------------+
+|1     |seqId  |The full FASTA header for the   |``lambda_NEB3011``|
+|      |       |reference contig.               |                  |
+|      |       |                                |                  |
++------+-------+--------------------------------+------------------+
+|2     |source |(unused; always populated with  |``.``             |
+|      |       |``.``)                          |                  |
++------+-------+--------------------------------+------------------+
+|3     |type   |the type of variant.  One of    |``substitution``  |
+|      |       |``insertion``, ``deletion``, or |                  |
+|      |       |``substitution``.               |                  |
+|      |       |                                |                  |
++------+-------+--------------------------------+------------------+
+|4     |start  |1-based start coordinate for the|200               |
+|      |       |variant.                        |                  |
++------+-------+--------------------------------+------------------+
+|5     |end    |1-based end coordinate for the  |215               |
+|      |       |variant.  start<=end always     |                  |
+|      |       |obtains, regardless of strand.  |                  |
++------+-------+--------------------------------+------------------+
+|6     |score  |unused; populated with ``.``    |``.``             |
++------+-------+--------------------------------+------------------+
+|7     |strand |unused; populated with ``.``    |``.``             |
+|      |       |                                |                  |
++------+-------+--------------------------------+------------------+
+|8     |phase  |unused; populated with ``.``    |``.``             |
++------+-------+--------------------------------+------------------+
 
 
 The attributes in the 9th (final) column are as follows:
