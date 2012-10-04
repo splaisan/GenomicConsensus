@@ -111,6 +111,9 @@ def consensusConfidence(mms, positions=None):
     omitted, confidence values are returned for all positions in the
     consensus (mms.Template()).
     """
+    # TODO: We should be using all mutations here, not just all
+    # mutations leading to unique templates.  This should be a trivial
+    # fix, post-1.4.
     css = mms.Template()
     allMutations = uniqueSingleBaseMutations(css, positions)
     cssQv = []

@@ -118,7 +118,12 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
     cssPosition = cc.TargetToQueryPositions(ga)
 
     for v in variants:
-        cssStart = cssPosition[v.refStart-refStart]
+        # HACK ALERT: we are not really handling the scoring of
+        # deletions at the end of the window correctly here.  The
+        # correct fix will be to test an insertion at the end of the
+        # template, lengthening the consensusQv by one.
+        cssStart = min(cssPosition[v.refStart-refStart], len(cssQvInWindow)-1)
+
         if siteCoverage  != None: v.coverage   = siteCoverage[v.refStart-refStart]
         if cssQvInWindow != None: v.confidence = cssQvInWindow[cssStart]
 
@@ -232,7 +237,7 @@ class QuiverWorker(object):
 
         # Test mutations, improving the consensus
         css = refineConsensus(mms)
-        cssQv = consensusConfidence(mms)  # This is pretty slow right now.  Need to cap scores.
+        cssQv = consensusConfidence(mms)
 
         ga = cc.Align(refSequence, css)
         targetPositions = cc.TargetToQueryPositions(ga)
