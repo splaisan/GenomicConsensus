@@ -23,7 +23,10 @@ options = argparse.Namespace()
 
 VERSION = "0.2.0"
 
-def parseOptions():
+def parseOptions(relax=False):
+    """Parse the options and perform some due diligence on them, allowing for
+    unit tests to relax things a bit.
+    """
     desc = "Compute genomic consensus and call variants relative to the reference.."
     parser = argparse.ArgumentParser(description=desc)
 
@@ -43,9 +46,10 @@ def parseOptions():
                         help="The input cmp.h5 file")
     parser.add_argument("-o", "--outputFilename",
                         dest="outputFilenames",
-                        required=True,
+                        required=not relax,
                         type=str,
                         action="append",
+                        default=[],
                         help="The output filename(s), as a comma-separated list.")
     parser.add_argument("--verbose",
                         "-v",
@@ -67,7 +71,7 @@ def parseOptions():
                         action="store",
                         dest="referenceFilename",
                         type=str,
-                        required=True,
+                        required=not relax,
                         help="The filename of the reference FASTA file")
 
     # Since the reference isn't loaded at options processing time, we
@@ -157,12 +161,16 @@ def parseOptions():
     options.fastaOutputFilename = None
     options.fastqOutputFilename = None
     options.csvOutputFilename   = None
+
     for outputFilename in options.outputFilenames:
         fmt = fileFormat(outputFilename)
         if   fmt == "GFF":   options.gffOutputFilename   = outputFilename
         elif fmt == "FASTA": options.fastaOutputFilename = outputFilename
         elif fmt == "FASTQ": options.fastqOutputFilename = outputFilename
         elif fmt == "CSV":   options.csvOutputFilename   = outputFilename
+
+    # chill-out, stop worrying so much
+    if relax: return
 
     for path in (options.inputFilename, options.referenceFilename):
         if path != None:

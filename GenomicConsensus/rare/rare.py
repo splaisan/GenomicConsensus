@@ -7,6 +7,7 @@ from collections import defaultdict, namedtuple, OrderedDict
 from bisect import bisect_left, bisect_right
 from itertools import izip
 from ..utils import error_probability_to_qv
+from ..options import options
 from .. import (io,
                 reference)
 from ..Worker import WorkerProcess, WorkerThread
@@ -71,8 +72,7 @@ class RareAlignmentColumn(AlignmentColumn):
         # alleles (i.e., 50% < freq) are also detected and reported.
         for snippet, count in self.orderedSnippetsAndFrequencies:
             freq = count / float(coverage)
-            # TODO: probably should be configurable
-            if coverage > 500 and freq > 0.01:
+            if coverage > options.variantCoverageThreshold and freq > 0.01:
                 # TODO: modify to use QV values (defaults to nominal CCS error rate)
                 pval = binom.sf(count, coverage, 0.01)
                 loci.append(PluralityLocusSummary(
@@ -187,9 +187,8 @@ __all__ = [ "name",
 
 name = "Rare variant analysis"
 
-# TODO: what defaults do we want here?
 additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
-                             "variantCoverageThreshold"   : 3,
+                             "variantCoverageThreshold"   : 500,
                              "variantConfidenceThreshold" : 20 }
 
 def compatibilityWithCmpH5(cmpH5):
