@@ -19,7 +19,7 @@ tests:
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
 	# servers
-	PATH=`pwd`:$(PATH) cram tests/integration/internal*.t
+	PATH=`pwd`:$(PATH) qrsh -V -q secondary -cwd cram tests/integration/internal*.t
 
 doc:
 	cd doc; make html
