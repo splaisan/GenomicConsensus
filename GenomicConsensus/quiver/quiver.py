@@ -85,7 +85,7 @@ def extractClippedAlignments(referenceWindow, coverage, alnHits):
         #   Win.     [              )
         #
         minimumReadLength = 0.1*(refEnd-refStart)
-        return (a.readLength < minimumReadLength)
+        return (clippedAln.readLength < minimumReadLength)
 
     # Some ugly logic for taking the best reads available until we
     # reach the desired coverage. Couldn't get this to fit into a nice
@@ -100,8 +100,7 @@ def extractClippedAlignments(referenceWindow, coverage, alnHits):
     for aln in nonSpanningAlns:
         if len(clippedSpanningAlns) + len(clippedNonSpanningAlns) == coverage: break
         ca = aln.clippedTo(refStart, refEnd)
-        if not isStumpy(ca):
-            clippedNonSpanningAlns.append(ca)
+        clippedNonSpanningAlns.append(ca)
 
     return (clippedSpanningAlns, clippedNonSpanningAlns)
 
@@ -190,8 +189,7 @@ class QuiverWorker(object):
 
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
-                                  for a in clippedAlns
-                                  if a.spansReferenceRange(refStart, refEnd)]
+                                  for a in clippedSpanningAlns]
         # Load the bits that quiver cares about
         mappedReads = [self.model.extractMappedRead(ca, refStart)
                        for ca in clippedAlns]
