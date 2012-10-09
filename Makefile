@@ -19,7 +19,14 @@ tests:
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
 	# servers
-	PATH=`pwd`:$(PATH) qrsh -V -q secondary -cwd cram tests/integration/internal*.t
+
+	# FIXME: since the `jenkins` user does not have a shared NFS
+	# home directory there is no easy way for us to set up ssh
+	# keys and have it work nicely on all SGE exec hosts.  Thus
+	# for the moment I am specifying one specific host.  This is
+	# obviously problematic.
+
+	PATH=`pwd`:$(PATH) qrsh -l hostname=mp-f082 -V -q secondary -cwd cram tests/integration/internal*.t
 
 doc:
 	cd doc; make html
