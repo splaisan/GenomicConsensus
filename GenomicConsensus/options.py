@@ -21,7 +21,7 @@ from .utils import fileFormat
 
 options = argparse.Namespace()
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 def parseOptions(relax=False):
     """Parse the options and perform some due diligence on them, allowing for

@@ -19,7 +19,7 @@ Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.
   ##source-commandline mono ConsensusStats.exe /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/jobs/016/016789/data/variants.gff /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/jobs/016/016789/data/aligned_reads.cmp.h5
   ##sequence-header ref000001 lambda_NEB3011
   ##sequence-region ref000001 1 48502
-  ##source GenomicConsensus 0.2.0
+  ##source GenomicConsensus * (glob)
   ##pacbio-alignment-summary-version 0.6
   ##source-commandline * (glob)
   ref000001\t.\tregion\t1\t100\t0.00\t+\t.\tcov2=150.440,26.772;gaps=0,0;cov=51,160,171;cQv=20,20,20;del=0;ins=19;sub=0 (esc)

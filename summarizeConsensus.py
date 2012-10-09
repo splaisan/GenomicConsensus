@@ -19,7 +19,7 @@ def lookup(key, alist):
 
 def main():
     headers = [
-        ("source", "GenomicConsensus 0.2.0"),
+        ("source", "GenomicConsensus 0.3.0"),
         ("pacbio-alignment-summary-version", "0.6"),
         ("source-commandline", " ".join(sys.argv)),
         ]

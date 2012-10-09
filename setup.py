@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'GenomicConsensus',
-    version='0.2.0',
+    version='0.3.0',
     author='Pacific Biosciences',
     author_email='pbiDevNet@pacificbiosciences.com',
     license=open('LICENSES').read(),

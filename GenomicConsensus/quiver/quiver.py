@@ -331,7 +331,7 @@ class QuiverResultCollector(object):
         writer.writeMetaData("feature-ontology",
                              "http://song.cvs.sourceforge.net/*checkout*/song/ontology/" +
                              "sofa.obo?revision=1.12")
-        writer.writeMetaData("source", "GenomicConsensus v0.2.0")
+        writer.writeMetaData("source", "GenomicConsensus 0.3.0")
         writer.writeMetaData("source-commandline",  " ".join(sys.argv))
 
         # Reference groups.

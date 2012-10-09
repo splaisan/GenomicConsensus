@@ -7,7 +7,7 @@
   ##pacbio-variant-version 1.4
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
-  ##source GenomicConsensus v0.2.0
+  ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
   ##sequence-header ref000001 ref000001|lambda_NEB3011
   ##sequence-region ref000001 1 48502
