@@ -13,10 +13,10 @@ try:
     import ConsensusCore as cc
     from GenomicConsensus.quiver.utils import *
     from GenomicConsensus.quiver.model import *
-    if cc.Version.IsAtLeast(0, 2, 1):
+    if cc.Version.IsAtLeast(0, 3, 0):
         availability = (True, "OK")
     else:
-        availability = (False, "Need ConsensusCore >= 0.2.1")
+        availability = (False, "Need ConsensusCore >= 0.3.0")
 except ImportError:
     availability = (False, "ConsensusCore not installed---required for Quiver algorithm")
 
