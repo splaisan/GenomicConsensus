@@ -105,13 +105,19 @@ def extractClippedAlignments(referenceWindow, coverage, alnHits):
     return (clippedSpanningAlns, clippedNonSpanningAlns)
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
-                          cssQvInWindow=None, siteCoverage=None):
+                          cssQvInWindow=None, siteCoverage=None, aligner="affine"):
     """
     Compare the consensus and the reference in this window, returning
     a list of variants.
     """
     refId, refStart, refEnd = refWindow
-    ga = cc.Align(refSequenceInWindow, cssSequenceInWindow)
+
+    if aligner == "affine":
+        align = cc.AlignWithAffineGapPenalty
+    else:
+        align = cc.Align
+
+    ga = align(refSequenceInWindow, cssSequenceInWindow)
     variants =  variantsFromAlignment(ga, refWindow)
 
     cssPosition = cc.TargetToQueryPositions(ga)
@@ -242,7 +248,7 @@ class QuiverWorker(object):
 
         # Calculate variants
         variants = variantsFromConsensus(referenceWindow, refSequence, css,
-                                         cssQv, siteCoverage)
+                                         cssQv, siteCoverage, options.aligner)
 
         numQuiverVariants = len(variants)
 

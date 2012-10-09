@@ -142,7 +142,14 @@ def parseOptions(relax=False):
     parser.add_argument("--noEvidenceConsensusCall",
                         action="store",
                         choices=["nocall", "reference"],
-                        default="nocall")
+                        default="nocall",
+                        help="The consensus base that will be output for sites with no effective coverage.")
+    parser.add_argument("--aligner", "-a",
+                        action="store",
+                        choices=["affine", "simple"],
+                        default="affine",
+                        help="The pairwise alignment algorithm that will be used to produce variant calls" \
+                             " from the consensus (Quiver only).")
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
