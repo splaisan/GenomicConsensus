@@ -16,7 +16,7 @@
 #  and get the loaded options dictionary.
 #
 from __future__ import absolute_import
-import argparse, os, os.path, sys
+import argparse, h5py, os, os.path, sys
 from .utils import fileFormat
 
 options = argparse.Namespace()
