@@ -1,4 +1,4 @@
 
   $ export INPUT=/mnt/secondary/Quiver/TestData/ecoli/job_044601.cmp.h5
   $ export REFERENCE=/mnt/secondary/Quiver/TestData/ecoli/ecoli_mutated.fasta
-  $ variantCaller.py -j16 --algorithm=quiver $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ variantCaller.py -j8 --algorithm=quiver $INPUT -r $REFERENCE -o variants.gff -o css.fasta

@@ -1,7 +1,7 @@
 
   $ export INPUT=/mnt/secondary/Quiver/TestData/lambda/job_038537.cmp.h5
   $ export REFERENCE=/mnt/secondary/Quiver/TestData/lambda/lambda.fasta
-  $ variantCaller.py -j16 --algorithm=quiver $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ variantCaller.py -j8 --algorithm=quiver $INPUT -r $REFERENCE -o variants.gff -o css.fasta
   $ cat variants.gff
   ##gff-version 3
   ##pacbio-variant-version 1.4
