@@ -120,7 +120,7 @@ class ToolRunner(object):
         # Compatible with selected algorithm?
         cmpH5isOK, msg = self._algorithm.compatibilityWithCmpH5(self._inCmpH5)
         if not cmpH5isOK:
-            die("CmpH5 file is incompatible with algorithm \"%s\": %s" %
+            die("Failure: CmpH5 file is incompatible with algorithm \"%s\": %s" %
                 (self._algorithm.name, msg))
 
         logging.info("Input CmpH5 data: numAlnHits=%d" % len(self._inCmpH5))

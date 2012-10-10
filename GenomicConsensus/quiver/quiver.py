@@ -368,11 +368,14 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "parameters"                 : "best" }
 
 def compatibilityWithCmpH5(cmpH5):
-    if (options.parameters == "best" or
-        ParameterSet.fromString(options.parameters).model.isCompatibleWithCmpH5(cmpH5)):
-        return (True, "OK")
+    if cmpH5.readType != "standard":
+        return (False, "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads.")
+    elif (options.parameters != "best" and
+        not ParameterSet.fromString(options.parameters).model.isCompatibleWithCmpH5(cmpH5)):
+        return (False, "This Quiver parameter set requires QV features not available in this .cmp.h5 file.")
     else:
-        return (False, "This Quiver parameter set requires QV features not available in this .cmp.h5 file")
+
+        return (True, "OK")
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
