@@ -23,6 +23,13 @@ options = argparse.Namespace()
 
 VERSION = "0.3.0"
 
+def consensusCoreVersion():
+    try:
+        import ConsensusCore
+        return ConsensusCore.Version.VersionString()
+    except:
+        return None
+
 def parseOptions(relax=False):
     """Parse the options and perform some due diligence on them, allowing for
     unit tests to relax things a bit.
@@ -153,7 +160,9 @@ def parseOptions(relax=False):
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            print "  Genomic Consensus version %s" % VERSION
+            print "  GenomicConsensus version: %s" % VERSION
+            print "  ConsensusCore version: %s" % \
+                (consensusCoreVersion() or "ConsensusCore unavailable")
             print "  h5py version: %s" % h5py.version.version
             print "  hdf5 version: %s" % h5py.version.hdf5_version
             sys.exit(0)

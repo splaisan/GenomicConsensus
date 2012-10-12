@@ -8,7 +8,8 @@ from pbcore.io import CmpH5Reader
 from GenomicConsensus import reference
 from GenomicConsensus.options import (importAdditionalDefaulOptions,
                                       options,
-                                      parseOptions)
+                                      parseOptions,
+                                      consensusCoreVersion)
 
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
@@ -191,13 +192,6 @@ class ToolRunner(object):
     def slaves(self):
         return self._slaves
 
-    def _consensusCoreVersion(self):
-        try:
-            import ConsensusCore
-            return ConsensusCore.Version.VersionString()
-        except:
-            return None
-
     def main(self):
         # This looks scary but it's not.  Python uses reference
         # counting and has a secondary, optional garbage collector for
@@ -218,7 +212,7 @@ class ToolRunner(object):
         logging.info("h5py version: %s" % h5py.version.version)
         logging.info("hdf5 version: %s" % h5py.version.hdf5_version)
         logging.info("ConsensusCore version: %s" %
-                     (self._consensusCoreVersion() or "ConsensusCore unavailable"))
+                     (consensusCoreVersion() or "ConsensusCore unavailable"))
 
         logging.info("Starting.")
         atexit.register(self._cleanup)
