@@ -171,24 +171,30 @@ merely refines their accuracy.
 Learn About Quiver
 ------------------
 
-There is currently a presentation_ available describing some of the
-details of how Quiver works.  More documentation is in the works.
+We have some presentations available giving some detail about how the
+Quiver algorithm works and how to use it:
+
+- A `practical guide`_ to using Quiver for resequencing and assembly consensus calling.
+- A `technical summary`_ of the Quiver algorithm (work in progress).
+- A PacBio brownbag_ presentation.
 
 Experimental users are welcome to learn how to use the Quiver APIs by
-read the source file ``GenomicConsensus/quiver/demo.py``
-
-However, note that this demo is optimized for didactic simplicity, not
+read the source file ``GenomicConsensus/quiver/demo.py``.  However,
+note that this demo is optimized for didactic simplicity, not
 consensus accuracy.  After understanding the demo code, look at
 ``quiver.py`` to see how we handle edge cases that limit accuracy.
-
-
-.. _presentation: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/BrownBag2012/presentation.pdf
-.. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
-.. _BLASR_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/BLASR_QVs.1.xml
 
 
 Known Issues
 ------------
 
-``ConsensusCore`` doesn't compile with Boost 1.48.  1.47 and 1.51 are
+``ConsensusCore`` doesn't compile with Boost 1.48, but 1.47 and 1.51 are
 fine.
+
+
+
+.. _`practical guide`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverPracticum/presentation.pdf
+.. _`technical summary`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverSummary/slides.pdf
+.. _brownbag: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/BrownBag2012/presentation.pdf
+.. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
+.. _BLASR_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/BLASR_QVs.1.xml
