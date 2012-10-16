@@ -10,7 +10,7 @@ overriding ``virtualenv``-installed modules.*
 Background
 ----------
 **Quiver** is an algorithm for calling highly accurate consensus from
-multiple PacBio raw reads, using a Hidden Markov Model exploiting both
+multiple PacBio reads, using a Hidden Markov Model exploiting both
 the basecalls and QV metrics to infer the true underlying DNA
 sequence.
 
