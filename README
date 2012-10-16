@@ -1,6 +1,7 @@
 
 GenomicConsensus provides one tool, variantCaller.py, which performs
-variant calling for PacBio sequence data.
+variant and consensus calling for PacBio sequence data.  It is the
+main driver program for the Quiver algorithm.
 
 INSTALLING:
 
@@ -10,3 +11,8 @@ INSTALLING:
 
     % python setup.py install
 
+
+LOOKING FOR QUIVER DOCUMENTATION?
+
+Read about it here:
+  https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
