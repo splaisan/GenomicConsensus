@@ -176,7 +176,6 @@ Quiver algorithm works and how to use it:
 
 - A `practical guide`_ to using Quiver for resequencing and assembly consensus calling.
 - A `technical summary`_ of the Quiver algorithm (work in progress).
-- A PacBio brownbag_ presentation.
 
 Experimental users are welcome to learn how to use the Quiver APIs by
 read the source file ``GenomicConsensus/quiver/demo.py``.  However,
@@ -195,6 +194,5 @@ fine.
 
 .. _`practical guide`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverPracticum/presentation.pdf
 .. _`technical summary`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverSummary/slides.pdf
-.. _brownbag: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/BrownBag2012/presentation.pdf
 .. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
 .. _BLASR_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/BLASR_QVs.1.xml
