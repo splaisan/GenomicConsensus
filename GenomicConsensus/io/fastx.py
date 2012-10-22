@@ -11,10 +11,36 @@ def chunks(n, l):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+def isFileLikeObject(o):
+    return hasattr(o, "read") and hasattr(o, "write")
+
+def getFileHandle(filenameOrFile, mode):
+    """
+    Given a filename not ending in ".gz", open the file with the
+    appropriate mode.
+
+    Given a filename ending in ".gz", return a filehandle to the
+    unzipped stream.
+
+    Given a file object, return it unless the mode is incorrect--in
+    that case, raise an exception.
+    """
+    assert mode in ("r", "w")
+
+    if isinstance(filenameOrFile, str):
+        if filenameOrFile.endswith(".gz"):
+            return gzip.open(filenameOrFile, mode)
+        else:
+            return open(filenameOrFile, mode)
+    elif isFileLikeObject(filenameOrFile):
+        return filenameOrFile
+    else:
+        raise Exception("Invalid type to getFileHandle")
+
 class WrappedWriter(object):
 
     def __init__(self, fileObj, lineWidth):
-        self.file = fileObj
+        self.file = getFileHandle(fileObj, "w")
         self.lineWidth = lineWidth
         self._currentColumn = 0
 
@@ -78,7 +104,7 @@ class FastqWriter(object):
     http://en.wikipedia.org/wiki/FASTQ_format#Encoding
     """
     def __init__(self, fileObj):
-        self.file = fileObj
+        self.file = getFileHandle(fileObj, "w")
 
     @staticmethod
     def _qvArrayToString(qvArray):

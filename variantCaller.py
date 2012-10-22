@@ -173,6 +173,11 @@ class ToolRunner(object):
             logging.info("Removing %s" % options.temporaryDirectory)
             shutil.rmtree(options.temporaryDirectory, ignore_errors=True)
 
+    def _setupEvidenceDumpDirectory(self, directoryName):
+        if os.path.exists(directoryName):
+            shutil.rmtree(directoryName)
+        os.makedirs(directoryName)
+
     @property
     def aborting(self):
         return self._aborting
@@ -218,7 +223,10 @@ class ToolRunner(object):
         atexit.register(self._cleanup)
         if options.doProfiling:
             self._makeTemporaryDirectory()
+
         self._loadReference()
+        if options.evidenceDumpDirectory:
+            self._setupEvidenceDumpDirectory(options.evidenceDumpDirectory)
 
         self._launchSlaves()
         self._readCmpH5Input()

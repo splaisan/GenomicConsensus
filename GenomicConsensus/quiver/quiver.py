@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
 
-import collections, math, logging, numpy as np, pprint, sys, time
+import collections, math, logging, numpy as np, os, pprint
+import sys, time
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
@@ -135,6 +136,51 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
     return variants
 
 
+def dumpEvidence(evidenceDumpBaseDirectory,
+                 refWindow, refSequenceInWindow,
+                 clippedSpanningAlnsInWindow, clippedNonSpanningAlnsInWindow,
+                 poaConsensusInWindow, quiverConsensusInWindow):
+    # Format of evidence dump:
+    # evidence_dump/
+    #   ref000001/
+    #     0-1005/
+    #       reference.fa
+    #       reads.fa
+    #       poa-consensus.fa
+    #       quiver-consensus.fa
+    #       quiver-scores.h5 (not yet used)
+    #     995-2005/
+    #       ...
+    join = os.path.join
+    refId, refStart, refEnd = refWindow
+    refName = reference.idToName(refId)
+    windowDirectory = join(evidenceDumpBaseDirectory,
+                           refName,
+                           "%d-%d" % (refStart, refEnd))
+    logging.info("Dumping evidence to %s" % (windowDirectory,))
+
+    if os.path.exists(windowDirectory):
+        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
+    os.makedirs(windowDirectory)
+    refFasta             = FastaWriter(join(windowDirectory, "reference.fa"))
+    readsFasta           = FastaWriter(join(windowDirectory, "reads.fa"))
+    poaConsensusFasta    = FastaWriter(join(windowDirectory, "poa-consensus.fa"))
+    quiverConsensusFasta = FastaWriter(join(windowDirectory, "quiver-consensus.fa"))
+
+    windowName = refName + (":%d-%d" % (refStart, refEnd))
+    refFasta.writeRecord(windowName, refSequenceInWindow)
+    refFasta.close()
+
+    poaConsensusFasta.writeRecord(windowName + "|poa", poaConsensusInWindow)
+    poaConsensusFasta.close()
+
+    quiverConsensusFasta.writeRecord(windowName + "|quiver", quiverConsensusInWindow)
+    quiverConsensusFasta.close()
+
+    for aln in (clippedSpanningAlnsInWindow + clippedNonSpanningAlnsInWindow):
+        readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
+    readsFasta.close()
+
 class QuiverWorker(object):
 
     def onStart(self):
@@ -218,7 +264,7 @@ class QuiverWorker(object):
             p = cc.PoaConsensus.FindConsensus(forwardStrandSequences[:POA_COVERAGE])
             ga = cc.Align(refSequence, p.Sequence())
             numPoaVariants = ga.Errors()
-            css = p.Sequence()
+            css = poaCss = p.Sequence()
 
             # Lift reference coordinates onto the POA consensus coordinates
             queryPositions = cc.TargetToQueryPositions(ga)
@@ -233,7 +279,7 @@ class QuiverWorker(object):
             mms.AddRead(mr)
 
         # Test mutations, improving the consensus
-        css = refineConsensus(mms)
+        css = quiverCss = refineConsensus(mms)
         cssQv = consensusConfidence(mms)
 
         ga = cc.Align(refSequence, css)
@@ -259,6 +305,12 @@ class QuiverWorker(object):
 
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
+
+        if options.evidenceDumpDirectory:
+            dumpEvidence(options.evidenceDumpDirectory,
+                         referenceWindow, refSequence,
+                         clippedSpanningAlns, clippedNonSpanningAlns,
+                         poaCss, quiverCss)
 
         return QuiverWindowSummary(refId, refStart, refEnd,
                                    domainCss, domainQv, domainVariants)
