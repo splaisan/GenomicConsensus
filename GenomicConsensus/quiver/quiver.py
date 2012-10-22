@@ -221,16 +221,8 @@ class QuiverWorker(object):
             css = p.Sequence()
 
             # Lift reference coordinates onto the POA consensus coordinates
-            targetPositions = cc.TargetToQueryPositions(ga)
-
-            def lifted(targetPositions, mappedRead):
-                newStart = targetPositions[mappedRead.TemplateStart]
-                newEnd   = targetPositions[mappedRead.TemplateEnd]
-                return cc.MappedRead(mappedRead.Features,
-                                     mappedRead.Strand,
-                                     newStart,
-                                     newEnd)
-            mappedReads = [lifted(targetPositions, mr) for mr in mappedReads]
+            queryPositions = cc.TargetToQueryPositions(ga)
+            mappedReads = [lifted(queryPositions, mr) for mr in mappedReads]
 
         # Load the reads, including QVs, into a MutationScorer, which is a
         # principled and fast way to test potential refinements to our

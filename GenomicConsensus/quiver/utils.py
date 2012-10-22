@@ -194,3 +194,15 @@ def referenceSpanWithinWindow(referenceWindow, aln):
     _, winStart, winEnd = referenceWindow
     return min(winEnd, aln.referenceEnd) - \
            max(winStart, aln.referenceStart)
+
+def lifted(queryPositions, mappedRead):
+    """
+    Lift a mappedRead into a new coordinate system by using the
+    position translation table `queryPositions`
+    """
+    newStart = queryPositions[mappedRead.TemplateStart]
+    newEnd   = queryPositions[mappedRead.TemplateEnd]
+    return cc.MappedRead(mappedRead.Features,
+                         mappedRead.Strand,
+                         newStart,
+                         newEnd)
