@@ -175,7 +175,8 @@ class QuiverWorker(object):
         # cannot come up with a good consensus if the sequence is
         # highly divergent from the reference.  By default, the
         # behavior is to "nocall" the window in question, but if the
-        # user sets
+        # user sets --noEvidenceConsensusCall="reference", the
+        # reference will be used instead.
 
         if len(clippedSpanningAlns) == 0:
             if options.noEvidenceConsensusCall == "nocall":
