@@ -60,8 +60,7 @@ class AlignmentHitStub(object):
             val = reverseComplement(val)
         return val.tostring()
 
-    def referencePositions(self, aligned=True, orientation="native"):
-        assert aligned == True
+    def referencePositions(self, orientation="native"):
         genomicReference = np.fromstring(self.reference(orientation="genomic"), dtype="S1")
         genomicPositions =        \
             self.referenceStart + \
