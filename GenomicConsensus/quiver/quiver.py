@@ -307,7 +307,7 @@ class QuiverWorker(object):
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
         if not quiverConverged:
-            logging.info("%s: Quiver did not converge to MLE" % referenceWindow)
+            logging.info("%s: Quiver did not converge to MLE" % (referenceWindow,))
 
         shouldDumpEvidence = \
             ((options.dumpEvidence == "all") or
