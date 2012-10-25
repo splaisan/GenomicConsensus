@@ -306,8 +306,12 @@ class QuiverWorker(object):
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
 
-        if options.evidenceDumpDirectory:
-            dumpEvidence(options.evidenceDumpDirectory,
+        shouldDumpEvidence = \
+            ((options.dumpEvidence == "all") or
+             (options.dumpEvidence == "variants") and (numQuiverVariants > 0))
+
+        if shouldDumpEvidence:
+            dumpEvidence(options.evidenceDirectory,
                          referenceWindow, refSequence,
                          clippedSpanningAlns, clippedNonSpanningAlns,
                          poaCss, quiverCss)

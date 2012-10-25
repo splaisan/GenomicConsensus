@@ -225,8 +225,8 @@ class ToolRunner(object):
             self._makeTemporaryDirectory()
 
         self._loadReference()
-        if options.evidenceDumpDirectory:
-            self._setupEvidenceDumpDirectory(options.evidenceDumpDirectory)
+        if options.dumpEvidence:
+            self._setupEvidenceDumpDirectory(options.evidenceDirectory)
 
         self._launchSlaves()
         self._readCmpH5Input()

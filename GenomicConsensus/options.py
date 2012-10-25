@@ -131,10 +131,14 @@ def parseOptions(relax=False):
                         default=False,
                         help="Run threads instead of processes (for debugging purposes only)")
     parser.add_argument("--dumpEvidence", "-d",
-                        dest="evidenceDumpDirectory",
+                        dest="dumpEvidence",
                         nargs="?",
                         default=None,
-                        const="evidence_dump")
+                        const="variants",
+                        choices=["variants", "all"])
+    parser.add_argument("--evidenceDirectory",
+                        default="evidence_dump")
+
     #
     # Default values for these arguments are algorithm specific.
     # See 'additionalDefaultOptions' in each algorithm module.
