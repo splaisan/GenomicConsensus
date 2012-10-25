@@ -74,12 +74,13 @@ def bestSubset(mutationsAndScores, separation):
 def refineConsensus(mms, maxRounds=10):
     """
     Given a MultiReadMutationScorer, identify and apply favorable
-    template mutations.  Return consensus (string).
+    template mutations.  Return (consensus, didConverge) :: (str, bool)
     """
     SEPARATION = 7
     NEIGHBORHOOD = 15
     favorableMutationsAndScores = None
 
+    converged = False
     for round_ in range(1, maxRounds):
 
         if favorableMutationsAndScores == None:
@@ -98,10 +99,11 @@ def refineConsensus(mms, maxRounds=10):
             mms.ApplyMutations(bestMutations)
         else:
             # If we can't find any favorable mutations, our work is done.
+            converged = True
             break
 
     logging.debug("Quiver: %d rounds" % round_)
-    return mms.Template()
+    return (mms.Template(), converged)
 
 
 def consensusConfidence(mms, positions=None):

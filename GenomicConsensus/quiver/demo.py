@@ -97,7 +97,7 @@ for start in xrange(0, len(refString), 1000):
     # mutations to the consensus that improve the likelihood (the
     # probability of the observed reads given the consensus as the
     # underlying template).
-    css = refineConsensus(mms)
+    css, didConverge = refineConsensus(mms)
 
     ga = cc.Align(refString[start:stop], mms.Template())
     print "  Quiver: %0.3f  (%d errors)" % (ga.Accuracy(), ga.Errors())

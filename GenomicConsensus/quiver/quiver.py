@@ -279,7 +279,8 @@ class QuiverWorker(object):
             mms.AddRead(mr)
 
         # Test mutations, improving the consensus
-        css = quiverCss = refineConsensus(mms)
+        quiverCss, quiverConverged = refineConsensus(mms)
+        css = quiverCss
         cssQv = consensusConfidence(mms)
 
         ga = cc.Align(refSequence, css)
@@ -305,6 +306,8 @@ class QuiverWorker(object):
 
         logging.info("%s: %s, %s %s" %
                      (referenceWindow, poaReport, quiverReport, coverageReport))
+        if not quiverConverged:
+            logging.info("%s: Quiver did not converge to MLE")
 
         shouldDumpEvidence = \
             ((options.dumpEvidence == "all") or
