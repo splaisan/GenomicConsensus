@@ -47,13 +47,14 @@ def loadFromFile(filename, cmpH5):
         numFastaEntries += 1
         md5sum = md5.md5(fastaEntry.sequence).hexdigest()
         fastaChecksums.add(md5sum)
+        normalizedContigSequence = fastaEntry.sequence.upper()
         if md5sum in cmpH5.referenceTable.MD5:
             cmpH5RefEntry = cmpH5.referenceInfo(md5sum)
             refId         = cmpH5RefEntry.ID
             refName       = cmpH5RefEntry.Name
             contig = ReferenceContig(refId, refName, fastaEntry.raw_name, md5sum,
-                                     np.array(fastaEntry.sequence, dtype="c"),
-                                     len(fastaEntry.sequence))
+                                     np.array(normalizedContigSequence, dtype="c"),
+                                     len(normalizedContigSequence))
             byId[refId]          = contig
             byName[refName]      = contig
             byMD5[contig.md5sum] = contig
