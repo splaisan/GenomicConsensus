@@ -2,7 +2,7 @@ import sys
 from collections import defaultdict, OrderedDict
 from nose import with_setup
 from nose.tools import assert_equal, assert_true
-from GenomicConsensus.options import options, parseOptions, importAdditionalDefaulOptions
+from GenomicConsensus.options import options, parseOptions, importAdditionalDefaultOptions
 from GenomicConsensus.rare import *
 from GenomicConsensus.plurality.plurality import PluralityLocusSummary
 from AlignmentHitStubs import *
@@ -18,7 +18,7 @@ class TestRareVariants(object):
     def setup(self):
         sys.argv = ['','']
         parseOptions(relax=True)
-        importAdditionalDefaulOptions(rare.additionalDefaultOptions)
+        importAdditionalDefaultOptions(rare.additionalDefaultOptions)
 
     def test_consensus(self):
         """[RareAlignmentColumn.consensus] The core rare variant algo. """

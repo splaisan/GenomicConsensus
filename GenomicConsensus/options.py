@@ -205,7 +205,7 @@ def parseOptions(relax=False):
         if path != None:
             checkOutputFile(path)
 
-def importAdditionalDefaulOptions(additionalDefaults):
+def importAdditionalDefaultOptions(additionalDefaults):
     # After parsing the arguments, we need to patch the options to
     # include algorithm-specific defaults, if they have not been
     # overriden on the command-line.
