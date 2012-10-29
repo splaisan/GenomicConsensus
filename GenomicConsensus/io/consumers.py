@@ -7,7 +7,7 @@ from .. import reference
 from .fastx import FastaWriter, FastqWriter
 from ..variants import VariantList
 from ..utils import fileFormat
-from pbcore.io import GffWriter
+from .VariantsGffWriter import VariantsGffWriter
 
 # The output is written by "consumer" objects (opposite of generators)
 # Each consumer consumes (refId, tbl) tuples, where the tbl is the numpy
@@ -99,21 +99,9 @@ def fastqConsumer(file, **kwargs):
 @consumer
 def variantsGffConsumer(file, **kwargs):
     confidenceThreshold = kwargs["confidenceThreshold"]
-    writer = GffWriter(file)
-    # Headers.
-    writer.writeMetaData("pacbio-variant-version", "1.4")
-    writer.writeMetaData("date", time.ctime())
-    writer.writeMetaData("feature-ontology", 
-                         "http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?" +
-                         "revision=1.12")
-    writer.writeMetaData("source", "GenomicConsensus v0.2.0")
-    writer.writeMetaData("source-commandline",  " ".join(sys.argv))
-    
-    # Reference groups.
-    for id, entry in reference.byId.iteritems():
-        writer.writeMetaData("sequence-header", "%s %s"   % (entry.name, entry.header))
-        writer.writeMetaData("sequence-region", "%s 1 %d" % (entry.name, entry.length))
-
+    writer = VariantsGffWriter(file,
+                               "".join(sys.argv),
+                               reference.byId.values())
     try:
         while True:
             (refId, tbl) = (yield)

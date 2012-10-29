@@ -17,8 +17,7 @@ Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.
   ##source ConsensusStats v0.1
   ##source-commandline summarizeCoverage.py --reference /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/references/lambda --numRegions=500 /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/jobs/016/016789/data/aligned_reads.cmp.h5
   ##source-commandline mono ConsensusStats.exe /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/jobs/016/016789/data/variants.gff /mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/jobs/016/016789/data/aligned_reads.cmp.h5
-  ##sequence-header ref000001 lambda_NEB3011
-  ##sequence-region ref000001 1 48502
+  ##sequence-region lambda_NEB3011 1 48502
   ##source GenomicConsensus * (glob)
   ##pacbio-alignment-summary-version 0.6
   ##source-commandline * (glob)
@@ -31,6 +30,7 @@ Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.
   lambda_NEB3011\t.\tregion\t601\t700\t0.00\t+\t.\tcov2=200.160,4.051;gaps=0,0;cov=192,200,206;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
   lambda_NEB3011\t.\tregion\t701\t800\t0.00\t+\t.\tcov2=213.630,7.634;gaps=0,0;cov=200,215,226;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
   lambda_NEB3011\t.\tregion\t801\t900\t0.00\t+\t.\tcov2=244.290,12.954;gaps=0,0;cov=224,243,262;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
+  lambda_NEB3011\t.\tregion\t901\t1000\t0.00\t+\t.\tcov2=267.070,3.724;gaps=0,0;cov=259,266,274;cQv=20,20,20;del=0;ins=0;sub=0 (esc)
 
   $ grep -v '\#.*' alignment_summary.out.gff | md5sum
   08f89b262b159671cdcdd8bdc8331461  -

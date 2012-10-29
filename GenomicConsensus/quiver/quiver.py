@@ -377,21 +377,12 @@ class QuiverResultCollector(object):
 
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
-        writer = GffWriter(options.gffOutputFilename)
-        writer.writeMetaData("pacbio-variant-version", "1.4")
-        writer.writeMetaData("date", time.ctime())
-        writer.writeMetaData("feature-ontology",
-                             "http://song.cvs.sourceforge.net/*checkout*/song/ontology/" +
-                             "sofa.obo?revision=1.12")
-        writer.writeMetaData("source", "GenomicConsensus 0.3.0")
-        writer.writeMetaData("source-commandline",  " ".join(sys.argv))
-
-        # Reference groups.
-        for id, entry in reference.byId.iteritems():
-            writer.writeMetaData("sequence-header", "%s %s" % (entry.name, entry.header))
-            writer.writeMetaData("sequence-region", "%s 1 %d" % (entry.name, entry.length))
+        writer = VariantsGffWriter(options.gffOutputFilename,
+                                   "".join(sys.argv),
+                                   reference.byId.values())
         for id in reference.byId:
-            for v in filteredVariantsByRefId[id]: writer.writeRecord(v.toGffRecord())
+            for v in filteredVariantsByRefId[id]:
+                writer.writeRecord(v.toGffRecord())
 
 
 #

@@ -16,10 +16,10 @@ Check the gzip compressed output.
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
-  ##sequence-header ref000001 lambda_NEB3011
-  ##sequence-region ref000001 1 48502
+  ##sequence-region lambda_NEB3011 1 48502
   lambda_NEB3011\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
   lambda_NEB3011\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
+  lambda_NEB3011\t.\tinsertion\t6143\t6143\t.\t.\t.\tvariantSeq=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
   $ gunzip consensus.csv.gz
   $ head consensus.csv
   referenceId,referencePos,coverage,consensus,consensusConfidence,consensusFrequency

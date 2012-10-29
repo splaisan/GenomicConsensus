@@ -23,8 +23,7 @@ First, the variants.gff:
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
-  ##sequence-header ref000001 bcr_abl_amplicon
-  ##sequence-region ref000001 1 862
+  ##sequence-region bcr_abl_amplicon 1 862
   bcr_abl_amplicon\t.\tsubstitution\t99\t99\t.\t.\t.\tvariantSeq=C;reference=T;coverage=2964;confidence=93;frequency=197;length=1 (esc)
   bcr_abl_amplicon\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=T;reference=A;coverage=2971;confidence=93;frequency=193;length=1 (esc)
   bcr_abl_amplicon\t.\tsubstitution\t285\t285\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=93;frequency=1307;length=1 (esc)

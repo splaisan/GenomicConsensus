@@ -30,26 +30,17 @@ which looks like the following:
     ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
     ##source GenomicConsensus v0.1.0
     ##source-commandline callVariants.py --algorithm=plurality aligned_reads.cmp.h5 -o variants.gff
-    ##sequence-header ref000022 EGFR_Exon_23
-    ##sequence-region ref000022 1 189
-    ##sequence-region ref000022 200 235
-    ##sequence-header ref000023 EGFR_Exon_24
-    ##sequence-region ref000023 1 200
+    ##sequence-region EGFR_Exon_23 1 189
+    ##sequence-header EGFR_Exon_24 1 200
 
 The ``source`` and ``source-commandline`` describe the name and
-version of the software generating the file.  ``sequence-header``
-describes a mapping between the full name of a reference group (i.e. a
-reference contig), and the local identifier that will be used to
-denote that reference group in the file.  Here, the full name is
-``EGFR_Exon_23``, while the local identifier is ``ref00022``.  The
-local identifier will always be purely alphanumeric.
-
-There can be many reference groups and regions present in the file.
-They will always represented as the last portion of the header block,
-in the order *sequence-header*, corresponding *sequence-regions*.
-
+version of the software generating the file.
 ``pacbio-variant-version`` reflects the specification version that the
 file contents should adhere to.
+
+  The ``sequence-region`` headers describe the names and extents of
+the reference groups (i.e. reference contigs) that will be refered to
+in the file.  The names are the same as the full FASTA header.
 
 
 
