@@ -9,6 +9,7 @@ from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from pbcore.io import rangeQueries, GffWriter
 from ..io.fastx import FastaWriter, FastqWriter
+from ..io.VariantsGffWriter import VariantsGffWriter
 
 try:
     import ConsensusCore as cc
