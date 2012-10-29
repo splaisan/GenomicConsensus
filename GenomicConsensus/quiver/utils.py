@@ -76,7 +76,7 @@ def refineConsensus(mms, maxRounds=10):
     Given a MultiReadMutationScorer, identify and apply favorable
     template mutations.  Return (consensus, didConverge) :: (str, bool)
     """
-    SEPARATION = 7
+    SEPARATION = 10
     NEIGHBORHOOD = 15
     favorableMutationsAndScores = None
 
