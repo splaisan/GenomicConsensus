@@ -225,7 +225,7 @@ class QuiverWorker(object):
         # user sets --noEvidenceConsensusCall="reference", the
         # reference will be used instead.
 
-        if len(clippedSpanningAlns) == 0:
+        if len(clippedSpanningAlns) < 3:
             if options.noEvidenceConsensusCall == "nocall":
                 domainCss = "N"*domainLen
                 domainQv  = np.zeros(domainLen, dtype=np.uint8)
