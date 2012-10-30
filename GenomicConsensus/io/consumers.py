@@ -100,7 +100,7 @@ def fastqConsumer(file, **kwargs):
 def variantsGffConsumer(file, **kwargs):
     confidenceThreshold = kwargs["confidenceThreshold"]
     writer = VariantsGffWriter(file,
-                               "".join(sys.argv),
+                               " ".join(sys.argv),
                                reference.byId.values())
     try:
         while True:

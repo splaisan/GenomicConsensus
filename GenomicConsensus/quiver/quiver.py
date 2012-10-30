@@ -379,7 +379,7 @@ class QuiverResultCollector(object):
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
         writer = VariantsGffWriter(options.gffOutputFilename,
-                                   "".join(sys.argv),
+                                   " ".join(sys.argv),
                                    reference.byId.values())
         for id in reference.byId:
             for v in filteredVariantsByRefId[id]:
