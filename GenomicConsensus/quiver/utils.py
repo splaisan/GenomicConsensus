@@ -71,7 +71,7 @@ def bestSubset(mutationsAndScores, separation):
 
     return output
 
-def refineConsensus(mms, maxRounds=10):
+def refineConsensus(mms, maxRounds=20):
     """
     Given a MultiReadMutationScorer, identify and apply favorable
     template mutations.  Return (consensus, didConverge) :: (str, bool)
