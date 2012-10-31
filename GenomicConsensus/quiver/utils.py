@@ -94,8 +94,8 @@ def refineConsensus(mms, maxRounds=20):
              filter(mms.FastIsFavorable, mutationsToTry)]
 
         if favorableMutationsAndScores:
-            bestMutations = map(fst,
-                                bestSubset(favorableMutationsAndScores, SEPARATION))
+            bestMutations = map(fst, bestSubset(favorableMutationsAndScores, SEPARATION))
+            logging.debug("Applying mutations: %s" % [mut.ToString() for mut in bestMutations])
             mms.ApplyMutations(bestMutations)
         else:
             # If we can't find any favorable mutations, our work is done.
