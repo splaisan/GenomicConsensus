@@ -48,3 +48,7 @@ def fileFormat(filename):
     elif ext in [".gff" ]:         return "GFF"
     elif ext in [".csv" ]:         return "CSV"
     else: raise Exception, "Unrecognized file format"
+
+def rowNumberIsInReadStratum(readStratum, rowNumber):
+    n, N = readStratum
+    return (rowNumber % N) == n

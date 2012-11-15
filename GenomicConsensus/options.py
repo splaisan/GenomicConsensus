@@ -139,6 +139,21 @@ def parseOptions(relax=False):
     parser.add_argument("--evidenceDirectory",
                         default="evidence_dump")
 
+    def parseReadStratum(s):
+        rs = map(int, s.split("/"))
+        assert len(rs) == 2
+        assert rs[0] < rs[1]
+        return rs
+
+    parser.add_argument("--readStratum",
+                        help="A string of the form 'n/N', where n, and N are integers, 0 <= n < N, designating" \
+                             " that the reads are to be deterministically split into N strata of roughly even"  \
+                             " size, and stratum n is to be used for variant and consensus calling.  This is"   \
+                             " mostly useful for Quiver development.",
+                        dest="readStratum",
+                        default=None,
+                        type=parseReadStratum)
+
     #
     # Default values for these arguments are algorithm specific.
     # See 'additionalDefaultOptions' in each algorithm module.

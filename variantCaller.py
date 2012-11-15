@@ -14,7 +14,7 @@ from GenomicConsensus.options import (importAdditionalDefaultOptions,
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
 from GenomicConsensus.rare import rare
-
+from GenomicConsensus.utils import rowNumberIsInReadStratum
 
 def die(msg):
     print msg
@@ -157,6 +157,10 @@ class ToolRunner(object):
                 # Pickle row numbers, not alnHits
                 rowNumbers = [rn for rn in self._inCmpH5.readsInRange(*chunk, justIndices=True)
                               if self._inCmpH5[rn].MapQV >= options.mapQvThreshold]
+
+                if options.readStratum:
+                    rowNumbers = [ rn for rn in rowNumbers
+                                   if rowNumberIsInReadStratum(options.readStratum, rn) ]
 
                 self._workQueue.put( (chunk, rowNumbers) )
 
