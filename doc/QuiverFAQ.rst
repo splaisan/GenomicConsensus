@@ -73,6 +73,9 @@ The name **Quiver** reflects a consensus-calling algorithm that is
 
 How do I run Quiver?
 --------------------
+For general instructions on installing and running, see the
+HowToQuiver_ document.
+
 
 
 What does Quiver put in its output files?
@@ -97,7 +100,7 @@ To enable all output files, you can run, for example::
          -o variants.gff
 
 
-The extensions are used to determine the output file format.
+The extension is used to determine the output file format.
 
 
 What does it mean that Quiver's consensus is /de novo/?
@@ -216,20 +219,55 @@ low that high-quality consensus cannot be produced, it  has two options:
 
 How do I inspect or validate the variant calls made by Quiver?
 --------------------------------------------------------------
+When in doubt, it is easiest to inspect the region in a tool like
+SMRTView®, which enables you to view the reads aligned to the region.
+Deletions and substitutions should be fairly easy to spot; to view
+insertions, right-click on the reference base and select "View
+Insertions Before...".
+
+Another approach is to use the `--dumpEvidence` flag, which will
+output a directory for each window surrounding a called variant,
+containing all the reads clipped to the window.  You can use an
+independent consensus calling approach or build and view a multiple
+alignment from these reads.
 
 
 What are the filtering parameters that Quiver uses?
 ---------------------------------------------------
 
+Quiver limits read coverage, filters reads by `MapQV`, and filters
+variants by quality and coverage.
+
+ - The overall read coverage used to call consensus in every window is
+   100x by default, but can be changed using ``-Xvalue``.
+ - The `MapQV` filter, by default, removes reads with MapQV < 20.  This
+   is configured using ``--mapQvThreshold=value`` / ``-m value``
+ - Variants are only called if the read coverage of the site exceeds
+   11x, by default---this is configurable using ``-x value``.
+   Further, they will not be called if the confidence (Phred-scaled)
+   does not exceed 20---configurable using ``-q value``.
+
+
 
 What is the best way to call consensus on an amplicon dataset?
 --------------------------------------------------------------
+In an amplicon dataset, focused regions of a genome have been
+amplified, ideally with minimal off-target amplification.  If you
+provide Quiver a reference that is the full genome, not just the
+amplified regions, it will get tripped up by the large regions
+
+To avoid this problem, it is best to split out each amplicon region of
+the reference into its own reference contig.
+
 
 
 What happens when my sample is a mixture, or diploid?
 -----------------------------------------------------
-At present, the behavior of *Quiver* on sample mixtures or
+At present, Quiver assumes a haploid sample, and the behavior of *Quiver* on sample mixtures or
 diploid/polyploid samples is /undefined/.  The program will not crash,
 but the output results are not guaranteed to accord with any one of
 the haplotypes in the sample, as opposed to a potential patchwork.  We
 are working on improvements for the 2.0 release.
+
+
+.. _HowToQuiver: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
