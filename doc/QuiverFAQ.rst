@@ -33,7 +33,7 @@ Why is Plurality a weak algorithm?
 Plurality does not perform any local realignment.  This means it is
 heavily biased by the alignment produced by the mapper (BLASR,
 typically).  It also means that it is insensitive at detecting indels.
-For example, consider this example::
+Consider this example::
 
     Reference    AAAA
                  ----
