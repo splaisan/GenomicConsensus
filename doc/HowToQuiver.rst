@@ -174,6 +174,7 @@ Learn About Quiver
 We have some presentations available giving some detail about how the
 Quiver algorithm works and how to use it:
 
+- An FAQ_ doc
 - A `practical guide`_ to using Quiver for resequencing and assembly consensus calling.
 - A `technical summary`_ of the Quiver algorithm (work in progress).
 
@@ -196,3 +197,4 @@ fine.
 .. _`technical summary`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverSummary/slides.pdf
 .. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
 .. _BLASR_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/BLASR_QVs.1.xml
+.. _FAQ: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst

@@ -59,8 +59,9 @@ likelihood template sequence given PacBio reads of the template.  We
 model PacBio reads using a conditional random field approach that
 prescribes a probability to a read given a template sequence.  In
 addition to the base sequence of each read, Quiver uses several
-additional /QV/ covariates that the basecaller provides.  Using these
-covariates provides additional information tat
+additional *QV* covariates that the basecaller provides.  Using these
+covariates provides additional information about each read, allowing
+more accurate consensus calls.
 
 Quiver does not use the alignment provided by the mapper (BLASR,
 typically), except for determining how to group reads together at the
@@ -82,12 +83,12 @@ What does Quiver put in its output files?
 -----------------------------------------
 There are three output files that you can get from Quiver:
 
-    - A consensus *FASTA* file containing the consensus sequence
-    - A consensus *FASTQ* file containing the consensus sequence with quality annotations
-    - A variants *GFF* file containing a filtered, annotated list of variants identified
+- A consensus *FASTA* file containing the consensus sequence
+- A consensus *FASTQ* file containing the consensus sequence with quality annotations
+- A variants *GFF* file containing a filtered, annotated list of variants identified
 
 It is important to note that the variants included in the output
-variants GFF file are /filtered/ by coverage and quality, so not all
+variants GFF file are *filtered* by coverage and quality, so not all
 variants that are apparent in comparing the reference to the consensus
 FASTA output will correspond to variants in the output variants GFF
 file.
@@ -103,9 +104,9 @@ To enable all output files, you can run, for example::
 The extension is used to determine the output file format.
 
 
-What does it mean that Quiver's consensus is /de novo/?
+What does it mean that Quiver's consensus is *de novo*?
 -------------------------------------------------------
-It is /de novo/ in the sense that, in its default configuration, the
+It is *de novo* in the sense that, in its default configuration, the
 reference and the reference alignment are not used to inform the
 consensus output.  Only the reads factor into the determination of the
 consensus.
@@ -140,7 +141,7 @@ use are as follows:
 
 Why is Quiver making errors in some region?
 -------------------------------------------
-The most likely cause for /true/ errors made by Quiver is that the
+The most likely cause for *true* errors made by Quiver is that the
 coverage in the region was low.  If you only have 5x coverage over a
 1000-base region, you would expect 10 errors in that region.
 
@@ -162,7 +163,7 @@ What is `MapQV` and why is it important?
 ----------------------------------------
 `MapQV` is a single scalar Phred-scaled QV per aligned read, that
 reflects the mapper's degree of certainty that the read aligned to
-/this/ part of the reference and not some other.  Unambigously mapped
+*this* part of the reference and not some other.  Unambigously mapped
 reads will have a high `MapQV` (typically 255), while a read that was
 equally likely to have come from two parts of the reference would have
 a `MapQV` of 3.
@@ -195,9 +196,10 @@ consensus output in these regions of low effective coverage.
 
 How can I turn off the `MapQV` filter and why would I want to?
 --------------------------------------------------------------
-You can disable the `MapQV` filter using the flag `--mapQvThreshold=0`
-(shorthand: `-m 0`).  You might want to do this in de novo assembly
-projects, but it is not recommended for variant calling applications.
+You can disable the `MapQV` filter using the flag
+``--mapQvThreshold=0`` (shorthand: ``-m=0``).  You might want to do
+this in de novo assembly projects, but it is not recommended for
+variant calling applications.
 
 
 How can I make Quiver output the original reference in areas of low coverage?
@@ -205,16 +207,16 @@ How can I make Quiver output the original reference in areas of low coverage?
 When Quiver is confronted with a region where effective coverage is so
 low that high-quality consensus cannot be produced, it  has two options:
 
-  - "no-call" the region, filling the consensus with "N" bases and not
-    making any variant calls in the region.  This can be enabled by
-    `--noEvidenceConsensusCall=nocall`---but it is the default.  This
-    is suitable when you believe the original reference may be
-    inaccurate.
+- "no-call" the region, filling the consensus with "N" bases and not
+  making any variant calls in the region.  This can be enabled by
+  ``--noEvidenceConsensusCall=nocall``---but it is the default.  This
+  is suitable when you believe the original reference may be
+  inaccurate.
 
-  - transfer the reference sequence in the region into the consensus
-    output, and call no variants in the region.  This can be enabled
-    by `--noEvidenceConsensusCall=reference`.  This would be a good
-    option if you bleieve your reference to be relatively accurate.
+- transfer the reference sequence in the region into the consensus
+  output, and call no variants in the region.  This can be enabled by
+  ``--noEvidenceConsensusCall=reference``.  This would be a good
+  option if you bleieve your reference to be relatively accurate.
 
 
 How do I inspect or validate the variant calls made by Quiver?
@@ -225,7 +227,7 @@ Deletions and substitutions should be fairly easy to spot; to view
 insertions, right-click on the reference base and select "View
 Insertions Before...".
 
-Another approach is to use the `--dumpEvidence` flag, which will
+Another approach is to use the ``--dumpEvidence`` flag, which will
 output a directory for each window surrounding a called variant,
 containing all the reads clipped to the window.  You can use an
 independent consensus calling approach or build and view a multiple
@@ -238,15 +240,14 @@ What are the filtering parameters that Quiver uses?
 Quiver limits read coverage, filters reads by `MapQV`, and filters
 variants by quality and coverage.
 
- - The overall read coverage used to call consensus in every window is
-   100x by default, but can be changed using ``-Xvalue``.
- - The `MapQV` filter, by default, removes reads with MapQV < 20.  This
-   is configured using ``--mapQvThreshold=value`` / ``-m value``
- - Variants are only called if the read coverage of the site exceeds
-   11x, by default---this is configurable using ``-x value``.
-   Further, they will not be called if the confidence (Phred-scaled)
-   does not exceed 20---configurable using ``-q value``.
-
+- The overall read coverage used to call consensus in every window is
+  100x by default, but can be changed using ``-X=value``.
+- The `MapQV` filter, by default, removes reads with MapQV < 20.  This
+  is configured using ``--mapQvThreshold=value`` / ``-m=value``
+- Variants are only called if the read coverage of the site exceeds
+  11x, by default---this is configurable using ``-x=value``.
+  Further, they will not be called if the confidence (Phred-scaled)
+  does not exceed 20---configurable using ``-q=value``.
 
 
 What is the best way to call consensus on an amplicon dataset?
@@ -263,11 +264,12 @@ the reference into its own reference contig.
 
 What happens when my sample is a mixture, or diploid?
 -----------------------------------------------------
-At present, Quiver assumes a haploid sample, and the behavior of *Quiver* on sample mixtures or
-diploid/polyploid samples is /undefined/.  The program will not crash,
-but the output results are not guaranteed to accord with any one of
-the haplotypes in the sample, as opposed to a potential patchwork.  We
-are working on improvements for the 2.0 release.
+At present, Quiver assumes a haploid sample, and the behavior of
+*Quiver* on sample mixtures or diploid/polyploid samples is
+*undefined*.  The program will not crash, but the output results are
+not guaranteed to accord with any one of the haplotypes in the sample,
+as opposed to a potential patchwork.  We are working on improvements
+for the 2.0 release.
 
 
 .. _HowToQuiver: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
