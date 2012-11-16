@@ -14,11 +14,11 @@ multiple PacBio reads, using a Hidden Markov Model exploiting both
 the basecalls and QV metrics to infer the true underlying DNA
 sequence.
 
-Quiver is available through the ``variantCaller.py`` script from the
-``GenomicConsensus`` package, using the ``--algorithm=quiver`` option.
-To use Quiver, the following PacBio software is required.
+Quiver is available through the ``quiver`` script from the
+``GenomicConsensus`` package.  To use Quiver, the following PacBio
+software is required.
 
-- ``GenomicConsensus``, containing ``variantCaller.py``
+- ``GenomicConsensus``, containing ``quiver``
 - ``ConsensusCore``, a C++ library containing the core computational
   routines for Quiver
 - ``pbcore``, a package providing access to PacBio data files
@@ -115,14 +115,14 @@ flags on the command line---``setup.py`` will find them).
 Step 3: Run Quiver
 ``````````````````
 Those who wish to call consensus on a resequencing job can simply use
-the ``variantCaller.py`` script that has been installed in your
+the ``quiver`` script that has been installed in your
 virtualenv (from `GenomicConsensus`).
 
 For example, ::
 
-    $ variantCaller.py -j8 --algorithm=quiver         \
-    >    aligned_reads.cmp.h5 -r path/to/lambda.fasta \
-    >    -o variants.gff -o consensus.fasta
+    $ quiver -j8 aligned_reads.cmp.h5           \
+    >        -r path/to/lambda.fasta            \
+    >        -o variants.gff -o consensus.fasta
 
 will use 8 CPUs to run Quiver on ``aligned_reads.cmp.h5``, outputting
 the consensus sequence and variants.
@@ -158,8 +158,8 @@ using Quiver:
 The output of the `Resequencing_QVs` job is the cmp.h5 file you will now
 feed to Quiver::
 
-    $ variantCaller.py -j8 --algorithm=quiver                 \
-    >    aligned_reads.cmp.h5 -r path/to/rough-assembly.fasta \
+    $ quiver -j8 aligned_reads.cmp.h5     \
+    >    -r path/to/rough-assembly.fasta  \
     >    -o quiver-assembly.fasta
 
 The ``quiver-assembly.fasta`` file contains the refined assembly. If
