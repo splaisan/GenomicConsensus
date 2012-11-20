@@ -18,10 +18,9 @@
 from __future__ import absolute_import
 import argparse, h5py, os, os.path, sys
 from .utils import fileFormat
+from . import __VERSION__
 
 options = argparse.Namespace()
-
-VERSION = "0.3.0"
 
 def consensusCoreVersion():
     try:
@@ -184,7 +183,7 @@ def parseOptions(relax=False):
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            print "  GenomicConsensus version: %s" % VERSION
+            print "  GenomicConsensus version: %s" % __VERSION__
             print "  ConsensusCore version: %s" % \
                 (consensusCoreVersion() or "ConsensusCore unavailable")
             print "  h5py version: %s" % h5py.version.version

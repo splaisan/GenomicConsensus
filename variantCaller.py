@@ -1,8 +1,37 @@
 #!/usr/bin/env python
-
 from __future__ import absolute_import
+
+__VERSION__ = "0.3.0"
+
+#
+# Verify that the correct version of the GenomicConsensus package is
+# available before proceeding any further.
+#
+import sys
+def die(msg):
+    print msg
+    sys.exit(-1)
+
+try:
+    from GenomicConsensus import __VERSION__ as packageVersion
+    versionMismatch = (__VERSION__ != packageVersion)
+except:
+    versionMismatch = True
+finally:
+    if versionMismatch:
+        die("\n"
+            "Failure: The version of variantCaller.py does not match the version \n"
+            "of the GenomicConsensus package.  The likely cause of this is       \n"
+            "either:                                                             \n"
+            "  1) You are running variantCaller.py without having activated the  \n"
+            "     virtualenv containing the associated packages.                 \n"
+            "     (Fix: activate the virtualenv)                                 \n"
+            "  2) There is an older version of SMRTanalysis in your PYTHONPATH   \n"
+            "     providing an older version of GenomicConsensus.                \n"
+            "     (Fix: 'unset PYTHONPATH' in your shell)                        \n")
+
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
-import os, pstats, random, shutil, sys, tempfile, time, threading, Queue
+import os, pstats, random, shutil, tempfile, time, threading, Queue
 from pbcore.io import CmpH5Reader
 
 from GenomicConsensus import reference
@@ -15,10 +44,6 @@ from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
 from GenomicConsensus.rare import rare
 from GenomicConsensus.utils import rowNumberIsInReadStratum
-
-def die(msg):
-    print msg
-    sys.exit(-1)
 
 class ToolRunner(object):
     """
