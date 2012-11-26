@@ -357,24 +357,22 @@ class QuiverResultCollector(object):
         # 2. FASTA output.  Currently unoptimized--will choke hard on
         # very large references.
         if options.fastaOutputFilename:
-            with open(options.fastaOutputFilename, "w") as outfile:
-                writer = FastaWriter(outfile)
-                for refId, unsortedChunks in self.consensusChunks.iteritems():
-                    chunks = sorted(unsortedChunks)
-                    css = "".join(chunk.consensus for chunk in chunks)
-                    quiverHeader = reference.idToHeader(refId) + "|quiver"
-                    writer.writeRecord(quiverHeader, css)
+            writer = FastaWriter(options.fastaOutputFilename)
+            for refId, unsortedChunks in self.consensusChunks.iteritems():
+                chunks = sorted(unsortedChunks)
+                css = "".join(chunk.consensus for chunk in chunks)
+                quiverHeader = reference.idToHeader(refId) + "|quiver"
+                writer.writeRecord(quiverHeader, css)
 
         # 3. FASTQ output
         if options.fastqOutputFilename:
-            with open(options.fastqOutputFilename, "w") as outfile:
-                writer = FastqWriter(outfile)
-                for refId, unsortedChunks in self.consensusChunks.iteritems():
-                    chunks = sorted(unsortedChunks)
-                    css = "".join(chunk.consensus for chunk in chunks)
-                    qv = np.concatenate([chunk.qv for chunk in chunks])
-                    quiverHeader = reference.idToHeader(refId) + "|quiver"
-                    writer.writeRecord(quiverHeader, css, qv)
+            writer = FastqWriter(options.fastqOutputFilename)
+            for refId, unsortedChunks in self.consensusChunks.iteritems():
+                chunks = sorted(unsortedChunks)
+                css = "".join(chunk.consensus for chunk in chunks)
+                qv = np.concatenate([chunk.qv for chunk in chunks])
+                quiverHeader = reference.idToHeader(refId) + "|quiver"
+                writer.writeRecord(quiverHeader, css, qv)
 
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import os, numpy as np, itertools
+import gzip, os, numpy as np, itertools
 
 __all__ = [ "FastaWriter",
             "FastqWriter" ]
