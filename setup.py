@@ -8,6 +8,7 @@ setup(
     license=open('LICENSES').read(),
     scripts = ['variantCaller.py',
                'summarizeConsensus.py',
+               'dumbview.py',
                'plurality',
                'quiver'],
     packages = find_packages(),
