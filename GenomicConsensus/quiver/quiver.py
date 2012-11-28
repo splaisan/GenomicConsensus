@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 
-import collections, math, logging, numpy as np, os, pprint
+import collections, h5py, math, logging, numpy as np, os, pprint
 import sys, time
 from .. import reference
 from ..options import options
@@ -140,7 +140,7 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
 def dumpEvidence(evidenceDumpBaseDirectory,
                  refWindow, refSequenceInWindow,
                  clippedSpanningAlnsInWindow, clippedNonSpanningAlnsInWindow,
-                 poaConsensusInWindow, quiverConsensusInWindow):
+                 poaConsensusInWindow, quiverConsensusInWindow, scoresMatrix):
     # Format of evidence dump:
     # evidence_dump/
     #   ref000001/
@@ -149,7 +149,7 @@ def dumpEvidence(evidenceDumpBaseDirectory,
     #       reads.fa
     #       poa-consensus.fa
     #       quiver-consensus.fa
-    #       quiver-scores.h5 (not yet used)
+    #       quiver-scores.h5
     #     995-2005/
     #       ...
     join = os.path.join
@@ -177,6 +177,11 @@ def dumpEvidence(evidenceDumpBaseDirectory,
 
     quiverConsensusFasta.writeRecord(windowName + "|quiver", quiverConsensusInWindow)
     quiverConsensusFasta.close()
+
+    # TODO: add row/col names to make the matrix interpretable
+    quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
+    ds = quiverScoreFile.create_dataset("Scores", data=scoresMatrix)
+    quiverScoreFile.close()
 
     for aln in (clippedSpanningAlnsInWindow + clippedNonSpanningAlnsInWindow):
         readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
@@ -315,10 +320,11 @@ class QuiverWorker(object):
              (options.dumpEvidence == "variants") and (numQuiverVariants > 0))
 
         if shouldDumpEvidence:
+            quiverScores = scoreMatrix(mms)
             dumpEvidence(options.evidenceDirectory,
                          referenceWindow, refSequence,
                          clippedSpanningAlns, clippedNonSpanningAlns,
-                         poaCss, quiverCss)
+                         poaCss, quiverCss, quiverScores)
 
         return QuiverWindowSummary(refId, refStart, refEnd,
                                    domainCss, domainQv, domainVariants)

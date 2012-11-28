@@ -208,3 +208,21 @@ def lifted(queryPositions, mappedRead):
                          mappedRead.Strand,
                          newStart,
                          newEnd)
+
+def scoreMatrix(mms):
+    """
+    Produce a matrix S where S_{ij} represents the score delta of
+    mutation j against read i.
+
+    TODO: add row/column names
+    """
+    css = mms.Template()
+    allMutations = sorted(uniqueSingleBaseMutations(css))
+    shape = (mms.NumReads(), len(allMutations))
+    scoreMatrix = np.zeros(shape)
+
+    for j, mut in enumerate(allMutations):
+        mutScores = mms.Scores(mut)
+        scoreMatrix[:, j] = mutScores
+
+    return scoreMatrix
