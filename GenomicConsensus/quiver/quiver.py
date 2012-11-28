@@ -15,10 +15,10 @@ try:
     import ConsensusCore as cc
     from GenomicConsensus.quiver.utils import *
     from GenomicConsensus.quiver.model import *
-    if cc.Version.IsAtLeast(0, 3, 0):
+    if cc.Version.VersionString() == "0.4.0":
         availability = (True, "OK")
     else:
-        availability = (False, "Need ConsensusCore >= 0.3.0")
+        availability = (False, "Need ConsensusCore version 0.4.0")
 except ImportError:
     availability = (False, "ConsensusCore not installed---required for Quiver algorithm")
 
@@ -280,7 +280,7 @@ class QuiverWorker(object):
         # principled and fast way to test potential refinements to our
         # consensus sequence.
         r = cc.SparseSseQvRecursor()
-        mms = cc.SparseSseQvMultiReadMutationScorer(r, self.params.qvModelParams, css)
+        mms = cc.SparseSseQvMultiReadMutationScorer(r, self.params.quiverConfig, css)
         for mr in mappedReads:
             mms.AddRead(mr)
 

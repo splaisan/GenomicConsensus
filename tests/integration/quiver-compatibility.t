@@ -6,7 +6,7 @@ First, make sure it recognizes this cmp.h5 has an imcomplete set of QVs.
   $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/lambda/aligned_reads_1.cmp.h5
   $ export REFERENCE=$DATA/lambda/lambdaNEB.fa
-  $ variantCaller.py --parameters=AllQVsModel.trainedParams1 --algorithm=quiver -r $REFERENCE -o variants.gff $INPUT
+  $ variantCaller.py --parameters=AllQVsModel.C2 --algorithm=quiver -r $REFERENCE -o variants.gff $INPUT
   Failure: CmpH5 file is incompatible with algorithm "Quiver": This Quiver parameter set requires QV features not available in this .cmp.h5 file.
   [255]
 

@@ -9,36 +9,36 @@ __all__ = [ "ParameterSet",
 
 
 class ParameterSet(object):
-    def __init__(self, model, qvModelParams):
+    def __init__(self, model, quiverConfig):
         self.model = model
-        self.qvModelParams = qvModelParams
+        self.quiverConfig = quiverConfig
 
     @staticmethod
     def fromString(s):
-        if   s == "NoQVsModel.trainedParams1":  return NoQVsModel.trainedParams1()
-        elif s == "AllQVsModel.trainedParams1": return AllQVsModel.trainedParams1()
-        elif s == "AllQVsModel.trainedParams2": return AllQVsModel.trainedParams2()
-        elif s == "NoMergeQVModel.trainedParams1" : return NoMergeQVModel.trainedParams1()
+        if   s == "NoQVsModel.C2":      return NoQVsModel.C2()
+        elif s == "AllQVsModel.C2":     return AllQVsModel.C2()
+        elif s == "NoMergeQVModel.C2" : return NoMergeQVModel.C2()
         else: raise Exception, "Unrecognized parameter set"
 
     @staticmethod
     def bestAvailable(cmpH5):
         if AllQVsModel.isCompatibleWithCmpH5(cmpH5):
-            params = AllQVsModel.trainedParams1()
+            params = AllQVsModel.C2()
         elif NoMergeQVModel.isCompatibleWithCmpH5(cmpH5):
-            params = NoMergeQVModel.trainedParams1()
+            params = NoMergeQVModel.C2()
         else:
-            params = NoQVsModel.trainedParams1()
+            params = NoQVsModel.C2()
         return params
 
 class Model(object):
     @classmethod
-    def paramsFromArray(cls, arr):
+    def paramsFromArray(cls, arr, fastScoreThreshold):
         assert len(arr) == cls.numFreeParams
         arr_ = np.zeros(shape=(14,))
         arr_[cls.freeParamIdx] = arr
         res_ = np.where(cls.fixedParamMask, cls.fullStart, arr_).astype(np.float32)
-        return ParameterSet(cls, cc.QvModelParams(*res_.tolist()))
+        qvModelParams = cc.QvModelParams(*res_.tolist())
+        return ParameterSet(cls, cc.QuiverConfig(qvModelParams, fastScoreThreshold))
 
     requiredFeatures = set([])
 
@@ -116,24 +116,12 @@ class AllQVsModel(Model):
     job 038537, using the logsigmoid objective function.
     """
     @classmethod
-    def trainedParams1(cls):
+    def C2(cls):
         return cls.paramsFromArray(
-            [ 10.51021999, -43.8755488,   -0.65519504,
-              -24.11037889,  -1.07307557, -40.00499772,
-              2.40005902,  -1.03174328,   -6.34582353,
-              -1.76146179,  -40.9595257,   -4.854102 ])
-
-    """
-    Parameters from training against ref000001:10000-40000 @ 11x in
-    job 038537, using the sigmoid objective function.
-    """
-    @classmethod
-    def trainedParams2(cls):
-        return cls.paramsFromArray(
-            [2.6291355 , -27.33168616,  -0.39203815,
-             -15.74840896, -0.55376003, -25.42894743,
-             -10.50970384,  -0.67740848, -8.86229982,
-             -1.66164741, -34.59014316,  -1.78042695])
+            np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
+                       -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
+                       -1.02398814, -0.12135255]),
+            fastScoreThreshold=-12.5)
 
 
 class NoMergeQVModel(Model):
@@ -172,11 +160,12 @@ class NoMergeQVModel(Model):
     job 038537, using the logsigmoid objective function.
     """
     @classmethod
-    def trainedParams1(cls):
+    def C2(cls):
         return cls.paramsFromArray(
             [ -3.90937113e+01,  -2.52056402e+01,  -1.38876854e+00,
               -3.07886177e+01,  -1.51443235e-02,  -1.01846311e+00,
-              -8.63561305e+00,  -1.86460591e+00,  -4.13471617e+01])
+              -8.63561305e+00,  -1.86460591e+00,  -4.13471617e+01],
+            fastScoreThreshold=-500)
 
 
 class NoQVsModel(Model):
@@ -205,8 +194,9 @@ class NoQVsModel(Model):
     job 038537, using the logsigmoid objective function.
     """
     @classmethod
-    def trainedParams1(cls):
+    def C2(cls):
         return cls.paramsFromArray(
             [-48.69212896,  -14.85421593,
               -10.00835906, -10.01483049,
-              -14.85421593])
+              -14.85421593],
+            fastScoreThreshold=-500)
