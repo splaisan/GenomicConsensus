@@ -5,6 +5,7 @@ from collections import namedtuple
 
 from pbcore.io import GffReader, GffWriter, Gff3Record, parseGffLine
 from GenomicConsensus.utils import error_probability_to_qv
+from GenomicConsensus import __VERSION__
 
 #
 # Note: GFF-style coordinates
@@ -19,7 +20,7 @@ def lookup(key, alist):
 
 def main():
     headers = [
-        ("source", "GenomicConsensus 0.3.0"),
+        ("source", "GenomicConsensus %s" % __VERSION__),
         ("pacbio-alignment-summary-version", "0.6"),
         ("source-commandline", " ".join(sys.argv)),
         ]

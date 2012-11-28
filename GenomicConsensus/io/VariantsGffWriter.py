@@ -1,7 +1,7 @@
 
 import time
 from pbcore.io import GffWriter
-
+from GenomicConsensus import __VERSION__
 
 class VariantsGffWriter(object):
 
@@ -13,7 +13,7 @@ class VariantsGffWriter(object):
         self._gffWriter.writeMetaData("pacbio-variant-version", "1.4")
         self._gffWriter.writeMetaData("date", time.ctime())
         self._gffWriter.writeMetaData("feature-ontology", self.ONTOLOGY_URL)
-        self._gffWriter.writeMetaData("source", "GenomicConsensus 0.3.0")
+        self._gffWriter.writeMetaData("source", "GenomicConsensus %s" % __VERSION__)
         self._gffWriter.writeMetaData("source-commandline",  shellCommand)
 
         # Reference groups.
