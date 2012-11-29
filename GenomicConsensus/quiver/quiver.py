@@ -279,8 +279,7 @@ class QuiverWorker(object):
         # Load the reads, including QVs, into a MutationScorer, which is a
         # principled and fast way to test potential refinements to our
         # consensus sequence.
-        r = cc.SparseSseQvRecursor()
-        mms = cc.SparseSseQvMultiReadMutationScorer(r, self.params.quiverConfig, css)
+        mms = cc.SparseSseQvMultiReadMutationScorer(self.params.quiverConfig, css)
         for mr in mappedReads:
             mms.AddRead(mr)
 

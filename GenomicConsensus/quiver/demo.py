@@ -25,7 +25,7 @@ from GenomicConsensus.quiver.model import *
 # Set up some parameters.  Don't worry about them too much for now.
 # We only use 11x POA coverage as the POA performance seems to degrade
 # beyond that.
-PARAMS          = AllQVsModel.trainedParams1().qvModelParams
+PARAMS          = AllQVsModel.C2().quiverConfig
 POA_COVERAGE    = 11
 QUIVER_COVERAGE = 30
 
@@ -38,12 +38,12 @@ snd = lambda t: t[1]
 # workflow in smrtportal.  Here are a couple canned examples.
 if len(sys.argv) > 1 and sys.argv[1] == "ecoli":
     refName   = "E. coli"
-    refFasta  = "/mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/references/ecoli_mutated/sequence/ecoli_mutated.fasta"
-    inputFile = "/mnt/secondary/Smrtanalysis/userdata/jobs/044/044601/data/aligned_reads.cmp.h5"
+    refFasta  = "/mnt/secondary/Share/Quiver/TestData/ecoli/ecoli_mutated.fasta"
+    inputFile = "/mnt/secondary/Share/Quiver/TestData/ecoli/job_044601.cmp.h5"
 else:
     refName   = "Lambda"
-    refFasta  = "/mnt/secondary/Smrtanalysis/opt/smrtanalysis/common/references/lambda/sequence/lambda.fasta"
-    inputFile = "/mnt/secondary/Smrtanalysis/userdata/jobs/038/038537/data/aligned_reads.cmp.h5"
+    refFasta  = "/mnt/secondary/Share/Quiver/TestData/lambda/lambda.fasta"
+    inputFile = "/mnt/secondary/Share/Quiver/TestData/lambda/job_038537.cmp.h5"
 
 c = CmpH5Reader(inputFile)
 refString = next(iter(FastaReader(refFasta))).sequence
@@ -87,8 +87,7 @@ for start in xrange(0, len(refString), 1000):
     # Load the reads, including QVs, into a MutationScorer, which is a
     # principled and fast way to test potential refinements to our
     # consensus sequence.
-    r = cc.SparseSseQvRecursor()
-    mms = cc.SparseSseQvMultiReadMutationScorer(r, PARAMS, roughConsensus)
+    mms = cc.SparseSseQvMultiReadMutationScorer(PARAMS, roughConsensus)
     for cr in clippedReads[:QUIVER_COVERAGE]:
         mms.AddRead(AllQVsModel.extractFeatures(cr), int(cr.RCRefStrand))
 

@@ -32,13 +32,16 @@ class ParameterSet(object):
 
 class Model(object):
     @classmethod
-    def paramsFromArray(cls, arr, fastScoreThreshold):
+    def paramsFromArray(cls, arr, bandingOptions, fastScoreThreshold):
         assert len(arr) == cls.numFreeParams
         arr_ = np.zeros(shape=(14,))
         arr_[cls.freeParamIdx] = arr
         res_ = np.where(cls.fixedParamMask, cls.fullStart, arr_).astype(np.float32)
         qvModelParams = cc.QvModelParams(*res_.tolist())
-        return ParameterSet(cls, cc.QuiverConfig(qvModelParams, fastScoreThreshold))
+        return ParameterSet(cls, cc.QuiverConfig(qvModelParams,
+                                                 cc.ALL_MOVES,
+                                                 bandingOptions,
+                                                 fastScoreThreshold))
 
     requiredFeatures = set([])
 
@@ -121,6 +124,7 @@ class AllQVsModel(Model):
             np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
                        -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
                        -1.02398814, -0.12135255]),
+            bandingOptions=cc.BandingOptions(4, 5),
             fastScoreThreshold=-12.5)
 
 
@@ -165,6 +169,7 @@ class NoMergeQVModel(Model):
             [ -3.90937113e+01,  -2.52056402e+01,  -1.38876854e+00,
               -3.07886177e+01,  -1.51443235e-02,  -1.01846311e+00,
               -8.63561305e+00,  -1.86460591e+00,  -4.13471617e+01],
+            bandingOptions=cc.BandingOptions(4, 200),
             fastScoreThreshold=-500)
 
 
@@ -199,4 +204,5 @@ class NoQVsModel(Model):
             [-48.69212896,  -14.85421593,
               -10.00835906, -10.01483049,
               -14.85421593],
+            bandingOptions=cc.BandingOptions(4, 200),
             fastScoreThreshold=-500)
