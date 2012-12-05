@@ -118,7 +118,7 @@ def parseOptions(relax=False):
                         action="store",
                         dest="referenceChunkSize",
                         type=int,
-                        default=1000)
+                        default=500)
     parser.add_argument("--queueSize", "-Q",
                         action="store",
                         dest="queueSize",
