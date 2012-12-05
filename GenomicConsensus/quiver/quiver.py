@@ -409,7 +409,7 @@ __all__ = [ "name",
 
 name = "Quiver"
 additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
-                             "variantCoverageThreshold"   : 11,
+                             "variantCoverageThreshold"   : 5,
                              "variantConfidenceThreshold" : 40,
                              "coverage"                   : 100,
                              "parameters"                 : "best" }
