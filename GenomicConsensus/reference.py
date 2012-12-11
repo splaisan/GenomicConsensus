@@ -95,7 +95,10 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
         _, start, end = referenceWindow
     else:
         start, end = (0, referenceEntry.length)
-    for chunkBegin in xrange(start, end, referenceStride):
+
+    # The last chunk only needs to reach 'end-overlap', because it will be extended to 'end' -- this prevents the generation of multiple chunks
+    # covering the last few bases of the reference (fixes bug #21940)
+    for chunkBegin in xrange(start, end-overlap, referenceStride):
         yield (refId,
                max(chunkBegin - overlap, 0),
                min(chunkBegin + referenceStride + overlap, referenceEntry.length))
