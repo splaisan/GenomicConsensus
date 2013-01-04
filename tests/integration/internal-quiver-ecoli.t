@@ -1,7 +1,3 @@
-We need a couple external tools from the `exonerate` suite and the
-`mummer` suite.  TODO: Find a more stable home for these guys.
-
-  $ export PATH=/home/UNIXHOME/dalexander/bin:$PATH
 
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/ecoli/job_044601.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/ecoli/ecoli_mutated.fasta

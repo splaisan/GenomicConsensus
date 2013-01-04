@@ -18,8 +18,9 @@ tests:
 
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
-	# servers
-	PATH=`pwd`:$(PATH) cram tests/integration/internal*.t
+	# servers, including some utilities (exonerate suite, MuMMer)
+	UTILS_PATH=/mnt/secondary/Share/Quiver/Tools
+	PATH=`pwd`:$(UTILS_PATH):$(PATH) cram tests/integration/internal*.t
 
 doc:
 	cd doc; make html
