@@ -5,7 +5,7 @@ We need a couple external tools from the `exonerate` suite and the
 
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/ecoli/job_044601.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/ecoli/ecoli_mutated.fasta
-  $ quiver -j16 $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ quiver -j8 $INPUT -r $REFERENCE -o variants.gff -o css.fasta
 
 NOTE: We use sed to replace tabs with spaces before inspecting output
 in some of the tests below.  It just makes the test file more legible.
