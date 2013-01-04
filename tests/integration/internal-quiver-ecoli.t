@@ -24,13 +24,14 @@ reference!).
   ##source-commandline * (glob)
   ##sequence-region ref000001|ecoliK12_mutated 1 4639560
   ref000001|ecoliK12_mutated . substitution 547694 547694 . . . variantSeq=G;reference=A;coverage=100;confidence=48;length=1
-  ref000001|ecoliK12_mutated . insertion 547831 547831 . . . variantSeq=G;coverage=100;confidence=50;length=1
-  ref000001|ecoliK12_mutated . insertion 856035 856035 . . . variantSeq=CG;coverage=99;confidence=48;length=2
-  ref000001|ecoliK12_mutated . insertion 1350165 1350165 . . . variantSeq=GC;coverage=100;confidence=48;length=2
-  ref000001|ecoliK12_mutated . insertion 1363168 1363168 . . . variantSeq=GC;coverage=100;confidence=48;length=2
+  ref000001|ecoliK12_mutated . insertion 547831 547831 . . . variantSeq=G;coverage=100;confidence=48;length=1
+  ref000001|ecoliK12_mutated . insertion 856035 856035 . . . variantSeq=CG;coverage=99;confidence=49;length=2
+  ref000001|ecoliK12_mutated . insertion 1350165 1350165 . . . variantSeq=GC;coverage=100;confidence=47;length=2
+  ref000001|ecoliK12_mutated . insertion 1363168 1363168 . . . variantSeq=GC;coverage=100;confidence=47;length=2
   ref000001|ecoliK12_mutated . insertion 2171384 2171384 . . . variantSeq=CC;coverage=100;confidence=49;length=2
   ref000001|ecoliK12_mutated . insertion 3422255 3422255 . . . variantSeq=C;coverage=65;confidence=51;length=1
-  ref000001|ecoliK12_mutated . insertion 4294288 4294288 . . . variantSeq=CG;coverage=100;confidence=49;length=2
+  ref000001|ecoliK12_mutated . insertion 3768727 3768727 . . . variantSeq=GC;coverage=100;confidence=48;length=2
+  ref000001|ecoliK12_mutated . insertion 4294288 4294288 . . . variantSeq=CG;coverage=100;confidence=48;length=2
 
 OK, now let's take a gander at the consensus FASTA output.  We end up
 with 17000 nocalls here, which is not bad considering the short insert
