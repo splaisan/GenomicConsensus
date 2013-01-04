@@ -4,7 +4,7 @@ setup(
     name = 'GenomicConsensus',
     version='0.4.0',
     author='Pacific Biosciences',
-    author_email='pbiDevNet@pacificbiosciences.com',
+    author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES').read(),
     scripts = ['variantCaller.py',
                'summarizeConsensus.py',
