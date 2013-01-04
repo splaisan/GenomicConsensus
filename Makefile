@@ -16,11 +16,12 @@ tests:
 	# End-to-end tests
 	PATH=`pwd`:$(PATH) cram `find tests/integration ! -name "internal*" -name "*.t"`
 
+INTERNAL_UTILS_PATH = /mnt/secondary/Share/Quiver/Tools
+
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
 	# servers, including some utilities (exonerate suite, MuMMer)
-	UTILS_PATH=/mnt/secondary/Share/Quiver/Tools
-	PATH=`pwd`:$(UTILS_PATH):$(PATH) cram tests/integration/internal*.t
+	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/integration/internal*.t
 
 doc:
 	cd doc; make html
