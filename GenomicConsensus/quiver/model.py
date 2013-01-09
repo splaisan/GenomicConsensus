@@ -47,9 +47,10 @@ class ParameterSet(object):
 
     @staticmethod
     def fromString(s):
-        if   s == "NoQVsModel.C2":      return NoQVsModel.C2()
-        elif s == "AllQVsModel.C2":     return AllQVsModel.C2()
-        elif s == "NoMergeQVModel.C2" : return NoMergeQVModel.C2()
+        if   s == "NoQVsModel.C2":          return NoQVsModel.C2()
+        elif s == "AllQVsModel.C2":         return AllQVsModel.C2()
+        elif s == "AllQVsModel.XL_C2_Beta": return AllQVsModel.XL_C2_Beta()
+        elif s == "NoMergeQVModel.C2" :     return NoMergeQVModel.C2()
         else: raise Exception, "Unrecognized parameter set"
 
     @staticmethod
@@ -156,6 +157,21 @@ class AllQVsModel(Model):
             np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
                        -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
                        -1.02398814, -0.12135255]),
+            bandingOptions=cc.BandingOptions(4, 5),
+            fastScoreThreshold=-12.5)
+
+    """
+    Adjustment to the merging rate to account for the increased
+    merging apparent in the 'C' channel in the XL-C2 chemistry.
+    Validated as increasing the discrimination score in job 038537,
+    using the logsigmoid objective function.
+    """
+    @classmethod
+    def XL_C2_Beta(cls):
+        return cls.paramsFromArray(
+            np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
+                       -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
+                       0.5, -0.12135255]),
             bandingOptions=cc.BandingOptions(4, 5),
             fastScoreThreshold=-12.5)
 
