@@ -30,7 +30,7 @@
 
 # Author: David Alexander
 
-import numpy as np, itertools, logging
+import numpy as np, itertools, logging, re
 from collections import Counter
 
 from GenomicConsensus.variants import *
@@ -137,6 +137,65 @@ def refineConsensus(mms, maxRounds=20):
     logging.debug("Quiver: %d rounds" % round_)
     return (mms.Template(), converged)
 
+def findDinucleotideRepeats(s):
+    """
+    string -> list( (length-2 string, (start_position, end_position)) )
+    """
+    repeatsFound = []
+    allDinucs = [ a + b for a in "ACGT" for b in "ACGT" if a != b ]
+    for dinuc in allDinucs:
+        matchIter = re.finditer("(?:%s){3,}" % dinuc, s)
+        for m in matchIter:
+            repeatsFound.append((dinuc, m.span()))
+    return repeatsFound
+
+def refineDinucleotideRepeats(mms):
+    """
+    We have observed a couple instances where we call the consensus to
+    be off the truth by +/- 1 dinucleotide repeat---we are getting
+    trapped in an inferor local optimum, like so:
+
+                           likelihood
+    truth       ATATATAT      100
+    quiver      AT--ATAT       90
+    quiver+A    ATA-ATAT       85
+    quiver+T    AT-TATAT       85
+
+    To resolve this issue, we need to explore the likelihood change
+    for wobbling on every dinucleotide repeat in the window.
+
+    This code is not to be emulated!  It is a stopgap until we can
+    bake efficient multi-base mutation testing into ConsensusCore.
+    """
+    def wobble(mms, dinuc, startPos, repeatCountDiff):
+        b1, b2 = dinuc
+        if repeatCountDiff == -1:
+            mms.ApplyMutations([cc.Mutation(cc.DELETION, start, "-")])
+            mms.ApplyMutations([cc.Mutation(cc.DELETION, start, "-")])
+        elif repeatCountDiff == 1:
+            mms.ApplyMutations([cc.Mutation(cc.INSERTION, start, b2)])
+            mms.ApplyMutations([cc.Mutation(cc.INSERTION, start, b1)])
+
+    for (dinuc, (start, end)) in findDinucleotideRepeats(mms.Template()):
+        currentScore = mms.BaselineScore()
+        wobble(mms, dinuc, start, 1)
+        scoreP1 = mms.BaselineScore()
+
+        wobble(mms, dinuc, start, -1)
+        wobble(mms, dinuc, start, -1)
+        scoreN1 = mms.BaselineScore()
+
+        bestIdx = np.argmax([scoreN1, currentScore, scoreP1])
+
+        if bestIdx == 0:
+            continue
+        elif bestIdx == 1:
+            wobble(mms, dinuc, start, 1)
+            continue
+        else:
+            wobble(mms, dinuc, start, 1)
+            wobble(mms, dinuc, start, 1)
+            continue
 
 def consensusConfidence(mms, positions=None):
     """

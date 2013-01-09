@@ -316,8 +316,15 @@ class QuiverWorker(object):
             mms.AddRead(mr)
 
         # Test mutations, improving the consensus
-        quiverCss, quiverConverged = refineConsensus(mms)
-        css = quiverCss
+        _, quiverConverged = refineConsensus(mms)
+
+        # Greedy algorithm can get trapped in a local minimum, which
+        # appears only to happen in practice in dinucleotide repeat
+        # regions.  Optionally sample +1/-1 repeat instance
+        if options.refineDinucleotideRepeats:
+            refineDinucleotideRepeats(mms)
+
+        quiverCss = css = mms.Template()
         cssQv = consensusConfidence(mms)
 
         ga = cc.Align(refSequence, css)
