@@ -213,7 +213,7 @@ def parseOptions(relax=False):
                         help="The pairwise alignment algorithm that will be used to produce variant calls" \
                              " from the consensus (Quiver only).")
     parser.add_argument("--refineDinucleotideRepeats",
-                        default=False,
+                        default=True,
                         help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
                              " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
                              " convergence (getting trapped in local optimum) (Quiver only)")
