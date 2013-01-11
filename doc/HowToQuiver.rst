@@ -188,8 +188,11 @@ consensus accuracy.  After understanding the demo code, look at
 Known Issues
 ------------
 
-``ConsensusCore`` doesn't compile with Boost 1.48, but 1.47 and 1.51 are
-fine.
+- ``ConsensusCore`` doesn't compile with Boost 1.48, but 1.47 and 1.51 are fine.
+- Your Python must have been configured with ``CFLAGS=-fPIC`` in order
+  for ``ConsensusCore`` to build correctly (it has to link against
+  libpython).  This is the most common cause for build/install
+  failures.
 
 
 
