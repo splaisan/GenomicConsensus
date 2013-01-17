@@ -28,7 +28,7 @@ Required libraries and tools
 ----------------------------
 To install the PacBio software, the following are required:
 
-- Boost  >= 1.4.7   (standard C++ libraries)
+- Boost  >= 1.4.7   (standard C++ libraries; *note that 1.4.8 does not work*)
 - SWIG   >= 2.0.7   (library wrapper generator)
 - Python >= 2.7.2
 - virtualenv        (builds isolated Python environments)
