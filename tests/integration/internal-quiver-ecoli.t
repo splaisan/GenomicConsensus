@@ -42,7 +42,7 @@ deemed JMP vs GAP here.
   $ show-diff -q out.delta | sed 's/\t/ /g'
   * (glob)
   NUCMER
-
+  
   [SEQ] [TYPE] [S1] [E1] [LEN 1]
   ref000001|ecoliK12_mutated|quiver JMP 225001 226000 1000
   ref000001|ecoliK12_mutated|quiver GAP 226500 226999 500 500 0
