@@ -37,13 +37,12 @@ from collections import defaultdict, namedtuple, OrderedDict
 from bisect import bisect_left, bisect_right
 from itertools import izip
 from ..utils import probability_to_qv
-from .. import (io,
-                reference)
+from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from ..alignment import AlignmentColumn
-
+from .consumers import consumers, broadcast
 
 #
 # The type used in the wire protocol.
@@ -200,9 +199,9 @@ class PluralityResult(object):
     def onStart(self):
         self.consensusByRefId = OrderedDict()
         self.chunksReceivedById = defaultdict(int)
-        self.consumers = io.consumers(options.outputFilenames,
-                                      PluralityLocusSummary._fields,
-                                      options.variantConfidenceThreshold)
+        self.consumers = consumers(options.outputFilenames,
+                                   PluralityLocusSummary._fields,
+                                   options.variantConfidenceThreshold)
 
     def onResult(self, result):
         # This is trickier than it really ought to be.  We want to
@@ -232,7 +231,7 @@ class PluralityResult(object):
         if self.chunksReceivedById[refId] == reference.numChunks(refId,
                                                                  options.referenceChunkSize,
                                                                  options.referenceWindow):
-            io.broadcast((refId, self.consensusByRefId[refId]), self.consumers)
+            broadcast((refId, self.consensusByRefId[refId]), self.consumers)
             del self.consensusByRefId[refId]
 
     def onFinish(self):

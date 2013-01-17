@@ -36,10 +36,9 @@ import csv, gzip, logging, os, numpy as np, sys, time
 import traceback
 from collections import namedtuple
 from .. import reference
-from .fastx import FastaWriter, FastqWriter
 from ..variants import VariantList
 from ..utils import fileFormat
-from .VariantsGffWriter import VariantsGffWriter
+from ..io  import VariantsGffWriter, FastqWriter, FastaWriter
 
 # The output is written by "consumer" objects (opposite of generators)
 # Each consumer consumes (refId, tbl) tuples, where the tbl is the numpy
@@ -101,7 +100,7 @@ def fastaConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refHeader = reference.idToHeader(refId)
+            refHeader = reference.idToHeader(refId) + "|plurality"
             seqArray = tbl["consensus"]
             logging.info("Writing FASTA output for %s." % refHeader)
             writer.writeRecord(refHeader, seqArray)
@@ -260,4 +259,3 @@ def supportedOutputExtensions():
                               ".gff"]
     compressedExtensions = [ext + ".gz" for ext in uncompressedExtensions]
     return uncompressedExtensions + compressedExtensions
-

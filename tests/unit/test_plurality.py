@@ -32,6 +32,3 @@ class TestPlurality:
 
     def test_staggeredReads(self):
         validateStubs(StaggeredReads)
-
-
-
