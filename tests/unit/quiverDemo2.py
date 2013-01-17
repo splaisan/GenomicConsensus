@@ -43,7 +43,7 @@ def demo1():
                                      DelTag=_("NNNNNNNNNNNNNNNNNN"),
                                     MergeQV=_("                  "))
 
-    #                                         01234567-8901234567    
+    #                                         01234567-8901234567
     AAAread     = AlignmentHitStub(0,  True, "GATCGATC-AAGATCGATC",
                                              "GATCGATCAAAGATCGATC",
                                      InsQV=_("        *          "),
@@ -70,7 +70,7 @@ def demo2():
 
     referenceWindow = (1, 0, 100)
     deletionVariant = Deletion(1, 8,  9, "A", "-")
-    
+
     #                                         0123456789012345678
     AAread_correctDelTag = \
                    AlignmentHitStub(0, True, "GATCGATCAAAGATCGATC",
@@ -91,8 +91,8 @@ def demo2():
                                     DelTag=_("NNNNNNNNNNNNNNNNNNN"),
                                    MergeQV=_("                   "))
 
-                   
-    #                                         0123456789012345678    
+
+    #                                         0123456789012345678
     AAAread     = AlignmentHitStub(0,  True, "GATCGATCAAAGATCGATC",
                                              "GATCGATCAAAGATCGATC",
                                      InsQV=_("                   "),
@@ -130,7 +130,7 @@ def demo3():
 
     referenceWindow = (1, 0, 100)
     substitutionVariant = Snv(1, 9,  10, "A", "T")
-    
+
     #                                         0123456789012345678
     AAAread =      AlignmentHitStub(0, True, "GATCGATCAAAGATCGATC",
                                              "GATCGATCAAAGATCGATC",
@@ -159,8 +159,8 @@ def demo3():
     ylabel("# reads with AAA")
     xlabel("# reads with ATA")
     title("Quiver calls AAA (red=TRUE)")
-    
-    
+
+
 demo1()
 raw_input()
 demo2()

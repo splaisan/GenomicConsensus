@@ -2,7 +2,7 @@
 Run plurality on the small example file, and make sure the GFF and
 CSV output is correct.
 
-  $ export DATA=$TESTDIR/../data   
+  $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/lambda/aligned_reads_1.cmp.h5
   $ export REFERENCE=$DATA/lambda/lambdaNEB.fa
   $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff -o consensus.csv $INPUT

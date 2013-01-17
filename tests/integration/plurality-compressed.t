@@ -1,7 +1,7 @@
 
 Check the gzip compressed output.
 
-  $ export DATA=$TESTDIR/../data   
+  $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/lambda/aligned_reads_1.cmp.h5
   $ export REFERENCE=$DATA/lambda/lambdaNEB.fa
   $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o variants.gff.gz

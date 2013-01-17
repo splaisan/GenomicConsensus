@@ -51,7 +51,7 @@ class AlignmentColumn(object):
         self.referencePos = referencePos
         self.referenceBase = referenceBase
         self._snippetsAndFrequencies = defaultdict(int)
-        # Ordered Snippets And Frequencies :-) 
+        # Ordered Snippets And Frequencies :-)
         self._osaf = None
 
     @staticmethod

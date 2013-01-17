@@ -13,7 +13,7 @@ class TestRareVariants(object):
     snpsfreqs = ['T',0.0095,   # 19, < 1%
                  'G',0.025,    # 50, lower QV rare variant
                  '-',0.05,     # 100, highest QV rare variant
-                 'A',0.9155]   # 1831, dominant allele (putative wild-type) 
+                 'A',0.9155]   # 1831, dominant allele (putative wild-type)
 
     def setup(self):
         sys.argv = ['','']
@@ -30,7 +30,7 @@ class TestRareVariants(object):
 
         results = algCol.consensus()
 
-        # running just consensus will find any and all variants above 1% and 
+        # running just consensus will find any and all variants above 1% and
         # coverage > 500
         assert_equal(3, len(results))
         assert_equal(results[0], PluralityLocusSummary('test',1,2000,'G',84,50))
@@ -58,11 +58,11 @@ class TestRareVariants(object):
                     (('test',9),PluralityLocusSummary('test',9,119,'',37,6)),
                     (('test',9),PluralityLocusSummary('test',9,119,'A',93,109))]
 
-        expected = set(expected) 
+        expected = set(expected)
 
         for r in results:
             assert_true(r in expected, "Unexpected result: %s" % str(r))
-            
+
 
     def test_rare(self):
         """[RareCaller.rare] The rare variant alignment processing. """
@@ -112,7 +112,7 @@ class TestRareVariants(object):
         # some dummy values
         rr.consensusByRefId = OrderedDict()
         rr.chunksReceivedById = defaultdict(int)
-        
+
         # setup our sneaky consumer
         rr.consumers = [testConsumer(1,fn='blah')]
 

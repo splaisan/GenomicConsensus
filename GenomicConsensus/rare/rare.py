@@ -82,14 +82,14 @@ class RareAlignmentColumn(AlignmentColumn):
         """
         Generates coverage information only for positions that have a variant.
         Binomial test runs using scipy.stats.binom.sf
-        x = # of variant observations 
+        x = # of variant observations
         n = Total number of observations (coverage)
         f = x / n
         p = Probability of success, or that the variant observed is a sequencing error.
             For CCS reads this is presumed to be 0.01
         for each snippit:
             if n > 500 and f > 0.01:
-                pval = binom.sf(x, n, p=0.01) 
+                pval = binom.sf(x, n, p=0.01)
                 save to output, calculate confidence based on pval
         """
         coverage = self.coverage()
@@ -99,7 +99,7 @@ class RareAlignmentColumn(AlignmentColumn):
         saf = self._snippetsAndFrequencies
         if self.referenceBase in saf and saf[self.referenceBase] == coverage:
             return loci
-        
+
         # Rare variants are 1% < freq < 50% at a coverage > 500. Dominant
         # alleles (i.e., 50% < freq) are also detected and reported.
         for snippet, count in self.orderedSnippetsAndFrequencies:
@@ -130,12 +130,12 @@ class RareCaller(object):
 
     def onChunk(self, referenceWindow, alnHits):
         return (referenceWindow, self.rare(referenceWindow, alnHits))
-    
+
     @staticmethod
     def rare(referenceWindow, alignments):
         """
         Modeled after the PluralityCaller.plurality method
-        
+
         Input: referenceWindow, iterable of alignmentHits
         Output: list of (Locus, PluralityLocusSummary)
 

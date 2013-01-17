@@ -6,7 +6,7 @@ exiting 80))
 Run plurality on the small example file, and make sure the GFF and
 CSV output is correct.
 
-  $ export DATA=$TESTDIR/../data   
+  $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/bcrabl/aligned_reads_dccs.cmp.h5
   $ export REFERENCE=$DATA/bcrabl/bcrabl_amplicon_ucsf.fa
   $ variantCaller.py --algorithm=rare -r $REFERENCE -o variants.gff $INPUT

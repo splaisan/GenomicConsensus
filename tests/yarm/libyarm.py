@@ -1,5 +1,5 @@
 # Support library
-# Yet Another Reference Mutator (yarm), the purpose of which is to help 
+# Yet Another Reference Mutator (yarm), the purpose of which is to help
 # validate existing/new variant algorithms.
 
 from os import getenv
@@ -19,14 +19,14 @@ class MutatedStrain(object):
     @staticmethod
     def fromGff(ins):
         '''
-        Parse a GFF formatted input stream into a MutatedStrain. 
+        Parse a GFF formatted input stream into a MutatedStrain.
         '''
         import re
 
         ms = MutatedStrain("gff")
         ms.gffinf = dict()
-         
-        mc = 0 
+
+        mc = 0
         for l in ins:
             if l[0] == '#': continue
             f = l.split()
@@ -46,7 +46,7 @@ class MutatedStrain(object):
             conf = re.search('confidence=(\d+)', f[8]).group(1)
             cove = re.search('coverage=(\d+)', f[8]).group(1)
 
-            # Special cases: collapse indel calls into substitutions 
+            # Special cases: collapse indel calls into substitutions
             # NOTE: assuming we're sorted here
             # case 1 (d->i, same index)
             # deletion  10201   reference=G
@@ -76,19 +76,19 @@ class MutatedStrain(object):
                         continue
             except Exception, e:
                 pass
-            
+
             mutobj = Mutation(offs, typ, wild, mut)
             ms.mutations.append(mutobj)
             ms.gffinf[mutobj] = GffAnnot(conf,cove)
             mc = mc + 1
-    
+
         return ms
 
     @property
     def id(self):
         '''ID of this mutated strain'''
         return self._id
-    
+
     @property
     def length(self):
         '''The length, or total # of bases'''
@@ -104,7 +104,7 @@ class MutatedStrain(object):
         return self._mutations
 
     def __repr__(self):
-        return "\n%s %i\n%s\n" % (self.id, self.length, 
+        return "\n%s %i\n%s\n" % (self.id, self.length,
                "\n".join([self._repstr(x) for x in self.mutations]))
 
     def _repstr(self, x):
@@ -115,7 +115,7 @@ class MutatedStrain(object):
 
 class Mutator(object):
     '''
-    Responsible for generating a `mutation strain` based on a `wild-type` 
+    Responsible for generating a `mutation strain` based on a `wild-type`
     reference. The strain can later be applied to a reference.
     '''
     def __init__(self):
@@ -149,7 +149,7 @@ class Mutator(object):
                 mut = '-'
                 mutLen = mutLen - 1
             else:
-                if typ == 'i': 
+                if typ == 'i':
                     wild = '-'
                     mutLen = mutLen + 1
                 mut = random.choice(self.bases.replace(wild,''))
@@ -162,12 +162,12 @@ class Mutator(object):
         strain.length = seqOffs + seqlen + mutLen
 
         return strain
-    
+
     def apply(self, strain, instream, outstream):
         '''
         Given a stream of bases, apply the mutations in the given strain while
         writing it to the outputstream.
-        ''' 
+        '''
         jc = ' ' if bool(getenv('debug')) else ''
         seqOffs = 0
         smuts = strain.mutations
@@ -176,9 +176,9 @@ class Mutator(object):
         while seq:
             seq = seq.replace('\n','')
             seqlen = len(seq)
-            mseq = seq 
+            mseq = seq
             if mut and mut.offs < seqOffs + seqlen:
-                # apply a mutation 
+                # apply a mutation
                 idx = mut.offs - seqOffs
                 if   mut.typ == 's':
                     mseq = jc.join([mseq[:idx], mut.mut, mseq[idx+1:]])

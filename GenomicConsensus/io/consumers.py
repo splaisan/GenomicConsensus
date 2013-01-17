@@ -71,7 +71,7 @@ def printErrorMessage(where):
     traceback.print_exc()
     print "*" * len(head)
     print
-    
+
 # ========================================
 # Consumers
 #
@@ -145,7 +145,7 @@ def variantsGffConsumer(file, **kwargs):
             logging.info("Calculating variants from consensus for %s." % refHeader)
 
             loci = locusIterForGff(tbl, refSeq, confidenceThreshold)
-            
+
             for locus in loci:
                 if len(locus.consensus) == 0:
                     vl.addDeletion(refId,
@@ -217,8 +217,8 @@ def locusIterForGff(tbl, refSeq, qvThresh):
             varPos = np.flatnonzero((ra.consensus != refSeq) &
                                     (ra.consensusConfidence > qvThresh))
             for refPos in varPos:
-                yield Locus(refPos, refSeq[refPos], ra.coverage[refPos], 
-                              ra.consensus[refPos], ra.consensusConfidence[refPos], 
+                yield Locus(refPos, refSeq[refPos], ra.coverage[refPos],
+                              ra.consensus[refPos], ra.consensusConfidence[refPos],
                               ra.consensusFrequency[refPos])
 
         return _literNumpy(tbl, refSeq, qvThresh)
@@ -260,4 +260,4 @@ def supportedOutputExtensions():
                               ".gff"]
     compressedExtensions = [ext + ".gz" for ext in uncompressedExtensions]
     return uncompressedExtensions + compressedExtensions
-    
+

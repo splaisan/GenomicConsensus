@@ -37,7 +37,7 @@ invocation is::
         variantCaller.py -j8 --algorithm=quiver \
                          -r lambdaNEB.fa        \
                          -o variants.gff        \
-                         aligned_reads.cmp.h5   
+                         aligned_reads.cmp.h5
 
 which requests that variant calling proceed,
 - using 8 worker processes,
@@ -53,7 +53,7 @@ exclusively on a *window* of the reference genome, where the
 
 Invoking
 
-:: 
+::
 
     variantCaller.py --help
 
@@ -81,7 +81,7 @@ for variant calling.
         ``variantCaller.py`` requires its input cmp.h5 file to be
         be sorted.  An unsorted file can be sorting using the tool
         ``cmpH5Sort.py``.
-        
+
         The *quiver* algorithm in ``variantCaller.py`` requires its
         input cmp.h5 file to have the following *pulse features*:
             - ``InsQV``,
@@ -89,7 +89,7 @@ for variant calling.
             - ``DelQV``,
             - ``DelTag``,
             - ``MergeQV``.
-        
+
         The *plurality* algorithm can be run on cmp.h5 files that lack
         these features.
 
@@ -128,7 +128,7 @@ Available algorithms
 ````````````````````
 
 At this time there are two algorithms available for variant calling:
-**plurality** and **quiver**.  
+**plurality** and **quiver**.
 
 **Plurality** is a simple and very fast procedure that merely tallies the most
 frequent read base or bases found in alignment with each reference base, and

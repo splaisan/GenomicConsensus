@@ -1,7 +1,7 @@
 
 Some tests of a "fluidigm amplicons" dataset
 
-  $ export DATA=$TESTDIR/../data   
+  $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/fluidigm_amplicons/040500.cmp.h5
   $ export REFERENCE=$DATA/fluidigm_amplicons/Fluidigm_human_amplicons.fasta
 

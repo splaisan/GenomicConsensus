@@ -57,9 +57,9 @@ class ResultCollector(object):
 
     def run(self):
         if options.doProfiling:
-            cProfile.runctx("self._run()", 
-                            globals=globals(), 
-                            locals=locals(), 
+            cProfile.runctx("self._run()",
+                            globals=globals(),
+                            locals=locals(),
                             filename=os.path.join(options.temporaryDirectory,
                                                   "profile-%s.out" % (self.name)))
         else:

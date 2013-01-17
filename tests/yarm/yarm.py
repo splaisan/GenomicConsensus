@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Yet Another Reference Mutator (yarm), the purpose of which is to help 
+# Yet Another Reference Mutator (yarm), the purpose of which is to help
 # validate existing/new variant algorithms.
 
 import sys
@@ -18,7 +18,7 @@ def create():
     fasta = sys.argv[2]
     n = int(defarg(3,1))
     strains = []
-    for i in range(0,n): 
+    for i in range(0,n):
         fd = open(fasta, 'r')
         header = fd.readline()[1:-1]
         strains.append(Mutator().mutate("%i_%s"%(i, header),fd))
@@ -44,7 +44,7 @@ def apply():
     seq = outs.getvalue()
     for i in range(0, len(seq), 80):
         print seq[i:i+80]
-        
+
 def stats():
     '''
     View stats on a set of mutation strains
@@ -70,7 +70,7 @@ def invert():
     '''
     Same as `dump`, but invert the coordinates to match reads mapped to strain
         [map=0] yarm invert <strains> [index]
-    ''' 
+    '''
     strains = pickle.load(open(sys.argv[2],'r'))
     n = int(defarg(3,0))
     asmap = bool(getenv('map'))
@@ -111,15 +111,15 @@ def compare():
     putativeFalseIndels = [x for x in act - exp if x.typ == 'd' or x.typ == 'i']
     trueIndels = groundTruth.mutations
 
-    # Locate closest true indels. If less than 5 bases away and same call, set 
+    # Locate closest true indels. If less than 5 bases away and same call, set
     # to true indel call. NOTE: this does not adjust multiple close calls, only
     # the closest.
     for indel in putativeFalseIndels:
         idx = bisect(trueIndels, indel)
         # Watch for boundaries
-        if idx == 0: 
+        if idx == 0:
             idx = 1
-        if idx == len(trueIndels): 
+        if idx == len(trueIndels):
             idx -= 1
 
         left = trueIndels[idx-1]
@@ -145,7 +145,7 @@ def compare():
     #print "P: %i N: %i " % (len(exp), seqlen-len(exp)),
     print "TP: %i FP: %i FN: %i TN: %i " % (tpl, fpl, len(fn), tn),
     print "TPR: %f FPR: %f FDR: %f" % (tpr, fpr, fdr)
-    if bool(getenv('verbose')): 
+    if bool(getenv('verbose')):
         print "TP\n".join(["%s\t%s\t"%(str(x),ms.gffinf[x].conf) for x in tp])+'TP'
         print "FP\n".join(["%s\t%s\t"%(str(x),ms.gffinf[x].conf) for x in fp])+'FP'
         print "FN\n".join([str(x) for x in fn])+'FN'
@@ -167,12 +167,12 @@ def context():
     fasta.seek(start+(start/linew),1)
     nseq = fasta.read(size*2+1)
     seq = nseq.replace('\n','')
-    seq = seq + fasta.read(len(nseq)-len(seq)) 
+    seq = seq + fasta.read(len(nseq)-len(seq))
     print " ".join([seq[:size], seq[size], seq[size+1:]])
 
 def _invert(stra):
     '''
-    Takes a strain and `invert`s the offsets from wild to mutated 
+    Takes a strain and `invert`s the offsets from wild to mutated
     coordinates in 1-based coordinate space.
     '''
     inv = MutatedStrain(stra.id)
@@ -212,7 +212,7 @@ def usage():
     print 'Yet Another Reference Mutator (yarm)'
     print '%s [%s]' % (sys.argv[0], "|".join([k for k in cmds.keys() if k]))
 
-cmds = {None: usage, 'create': create, 'apply': apply, 
+cmds = {None: usage, 'create': create, 'apply': apply,
         'stats': stats, 'dump': dump, 'invert': invert,
         'compare': compare, 'context': context}
 hip = ("Awww snap", "Check the 411", "For shizza", "You trippin")
