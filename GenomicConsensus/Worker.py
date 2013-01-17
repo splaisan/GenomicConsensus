@@ -35,6 +35,7 @@ from multiprocessing import Process
 from threading import Thread
 from pbcore.io import CmpH5Reader
 from .options import options
+from .reference import windowToString
 
 class Worker(object):
     """
@@ -64,7 +65,7 @@ class Worker(object):
             else:
                 coords, rowNumbers = datum
                 logging.debug("%s received work unit, coords=%s, # reads=%d"
-                              % (self.name, str(coords), len(rowNumbers)))
+                              % (self.name, windowToString(coords), len(rowNumbers)))
 
                 alnHits = self._inCmpH5[rowNumbers]
                 result = self.onChunk(coords, alnHits)

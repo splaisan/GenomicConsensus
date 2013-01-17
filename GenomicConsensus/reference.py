@@ -121,7 +121,7 @@ def loadFromFile(filename, cmpH5):
         return 1
     assert isLoaded()
 
-def windowFromString(s):
+def stringToWindow(s):
     assert isLoaded()
     if s == None:
         return None
@@ -135,6 +135,14 @@ def windowFromString(s):
         refStart = 0
         refEnd   = byId[refId].length
     return (refId, refStart, refEnd)
+
+def windowToString(referenceWindow):
+    assert isLoaded()
+    refId, refStart, refEnd = referenceWindow
+    return "%s:%d-%d" % (idToHeader(refId),
+                         refStart,
+                         refEnd)
+
 
 def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
     """

@@ -138,7 +138,6 @@ def variantsGffConsumer(file, **kwargs):
             (refId, tbl) = (yield)
 
             vl = VariantList()
-            refName = reference.idToName(refId)
             refHeader = reference.idToHeader(refId)
             refSeq = reference.byId[refId].sequence
             logging.info("Calculating variants from consensus for %s." % refHeader)
@@ -177,7 +176,7 @@ def variantsGffConsumer(file, **kwargs):
             # deletions, here is the place to do it.  We're not doing
             # anything here right now.
 
-            logging.info("Writing variants for %s to GFF." % refName)
+            logging.info("Writing variants for %s to GFF." % refHeader)
             for variant in vl:
                 writer.writeRecord(variant.toGffRecord())
 

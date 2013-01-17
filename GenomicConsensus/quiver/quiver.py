@@ -349,7 +349,9 @@ class QuiverWorker(object):
         quiverReport = "%d Quiver variants" % numQuiverVariants
 
         logging.info("%s: %s, %s %s" %
-                     (referenceWindow, poaReport, quiverReport, coverageReport))
+                     (reference.windowToString(referenceWindow),
+                      poaReport, quiverReport, coverageReport))
+
         if not quiverConverged:
             logging.info("%s: Quiver did not converge to MLE" % (referenceWindow,))
 

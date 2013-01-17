@@ -195,7 +195,7 @@ class ToolRunner(object):
             die("Error loading reference")
         # Grok the referenceWindow spec, if any.
         options.referenceWindow = \
-            reference.windowFromString(options.referenceWindowAsString)
+            reference.stringToWindow(options.referenceWindowAsString)
         cmph5.close()
 
     def _mainLoop(self):
