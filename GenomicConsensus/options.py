@@ -134,13 +134,14 @@ def parseOptions(relax=False):
                         type=str,
                         default=None)
 
-    parser.add_argument("--coverage", "-X",
-                        action="store",
-                        dest="coverage",
-                        type=int,
-                        default=None,
-                        help="A designation of the maximum coverage level to be used for analysis." + \
-                             " Exact interpretation is algorithm-specific.")
+    parser.add_argument(
+        "--coverage", "-X",
+        action="store",
+        dest="coverage",
+        type=int,
+        default=None,
+        help="A designation of the maximum coverage level to be used for analysis." + \
+             " Exact interpretation is algorithm-specific.")
     parser.add_argument("--mapQvThreshold", "-m",
                         action="store",
                         dest="mapQvThreshold",
@@ -176,23 +177,25 @@ def parseOptions(relax=False):
         assert rs[0] < rs[1]
         return rs
 
-    parser.add_argument("--readStratum",
-                        help="A string of the form 'n/N', where n, and N are integers, 0 <= n < N, designating" \
-                             " that the reads are to be deterministically split into N strata of roughly even"  \
-                             " size, and stratum n is to be used for variant and consensus calling.  This is"   \
-                             " mostly useful for Quiver development.",
-                        dest="readStratum",
-                        default=None,
-                        type=parseReadStratum)
+    parser.add_argument(
+        "--readStratum",
+        help="A string of the form 'n/N', where n, and N are integers, 0 <= n < N, designating" \
+             " that the reads are to be deterministically split into N strata of roughly even"  \
+             " size, and stratum n is to be used for variant and consensus calling.  This is"   \
+             " mostly useful for Quiver development.",
+        dest="readStratum",
+        default=None,
+        type=parseReadStratum)
 
     #
     # Default values for these arguments are algorithm specific.
     # See 'additionalDefaultOptions' in each algorithm module.
     #
-    parser.add_argument("--variantConfidenceThreshold", "-q",
-                        action="store",
-                        dest="variantConfidenceThreshold",
-                        type=float)
+    parser.add_argument(
+        "--variantConfidenceThreshold", "-q",
+        action="store",
+        dest="variantConfidenceThreshold",
+        type=float)
     parser.add_argument("--variantCoverageThreshold", "-x",
                         action="store",
                         dest="variantCoverageThreshold",
@@ -201,22 +204,25 @@ def parseOptions(relax=False):
                         action="store",
                         dest="referenceChunkOverlap",
                         type=int)
-    parser.add_argument("--noEvidenceConsensusCall",
-                        action="store",
-                        choices=["nocall", "reference"],
-                        default="nocall",
-                        help="The consensus base that will be output for sites with no effective coverage.")
-    parser.add_argument("--aligner", "-a",
-                        action="store",
-                        choices=["affine", "simple"],
-                        default="affine",
-                        help="The pairwise alignment algorithm that will be used to produce variant calls" \
-                             " from the consensus (Quiver only).")
-    parser.add_argument("--refineDinucleotideRepeats",
-                        default=True,
-                        help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
-                             " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
-                             " convergence (getting trapped in local optimum) (Quiver only)")
+    parser.add_argument(
+        "--noEvidenceConsensusCall",
+        action="store",
+        choices=["nocall", "reference"],
+        default="nocall",
+        help="The consensus base that will be output for sites with no effective coverage.")
+    parser.add_argument(
+        "--aligner", "-a",
+        action="store",
+        choices=["affine", "simple"],
+        default="affine",
+        help="The pairwise alignment algorithm that will be used to produce variant calls" \
+             " from the consensus (Quiver only).")
+    parser.add_argument(
+        "--refineDinucleotideRepeats",
+        default=True,
+        help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
+             " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
+             " convergence (getting trapped in local optimum) (Quiver only)")
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
