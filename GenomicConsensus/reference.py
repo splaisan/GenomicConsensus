@@ -49,9 +49,10 @@ class ReferenceContig(object):
         self.length = length
 
 # Lookup tables.
-byName  = OrderedDict()   # Global identifier (string, e.g. "ref000001") -> ReferenceContig
-byId    = OrderedDict()   # CmpH5 local id (integer)    -> ReferenceContig
-byMD5   = OrderedDict()   # MD5 sum (e.g. "a13...")     -> ReferenceContig
+byName   = OrderedDict()   # Global identifier (string, e.g. "ref000001") -> ReferenceContig
+byHeader = OrderedDict()   # Fasta header (string e.g. "chr1") -> ReferenceContig
+byId     = OrderedDict()   # CmpH5 local id (integer)    -> ReferenceContig
+byMD5    = OrderedDict()   # MD5 sum (e.g. "a13...")     -> ReferenceContig
 
 def idToName(_id):
     return byId[_id].name
@@ -61,6 +62,24 @@ def nameToId(name):
 
 def idToHeader(_id):
     return byId[_id].header
+
+def headerToId(header):
+    return byHeader[header].id
+
+# Interpret a string key (one of name, header, or id (as string))
+# and find the associated id.  Only to be used in interpretation of
+# command-line input!
+def anyKeyToId(stringKey):
+    assert isLoaded()
+    if stringKey in byHeader:
+        return byHeader[stringKey].id
+    elif stringKey in byName:
+        return byName[stringKey].id
+    elif stringKey.isdigit():
+        refId = int(stringKey)
+        return byId[refId].id
+    else:
+        raise Exception, "Unknown reference name: %s" % stringKey
 
 def isLoaded():
     return bool(byMD5)
@@ -90,6 +109,7 @@ def loadFromFile(filename, cmpH5):
             byId[refId]          = contig
             byName[refName]      = contig
             byMD5[contig.md5sum] = contig
+            byHeader[fastaEntry.raw_name] = contig
     logging.info("Loaded %d of %d reference groups from %s " %
                  (len(byId), numFastaEntries, filename))
 
@@ -107,11 +127,11 @@ def windowFromString(s):
         return None
     m = re.match("(.*):(.*)-(.*)", s)
     if m:
-        refId    = nameToId(m.group(1))
+        refId    = anyKeyToId(m.group(1))
         refStart = int(m.group(2))
         refEnd   = min(int(m.group(3)), byId[refId].length)
     else:
-        refId    = nameToId(s)
+        refId    = anyKeyToId(s)
         refStart = 0
         refEnd   = byId[refId].length
     return (refId, refStart, refEnd)
