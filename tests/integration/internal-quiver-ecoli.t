@@ -30,38 +30,31 @@ with 17000 nocalls here, which is not bad considering the short insert
 size (2KB) and the fact that E. Coli has 7 5KB near-perfect repeats.
 
   $ fastacomposition css.fasta
-  css.fasta A 1137820 C 1175416 G 1172314 N 17000 T 1137029
+  css.fasta A 1137820 C 1175416 G 1172314 T 1137029 a 4381 c 4115 g 4586 t 3918
 
 Use the MuMMer suite to look at the differences from the reference.
 
   $ nucmer -mum $REFERENCE css.fasta 2>/dev/null
 
-First, structural differences.  Not really sure why some of the Ns are
-deemed JMP vs GAP here.
+First: no structural differences.  There are some (gaps) if you use
+the masked output.
 
   $ show-diff -q out.delta | sed 's/\t/ /g'
   * (glob)
   NUCMER
   
   [SEQ] [TYPE] [S1] [E1] [LEN 1]
-  ref000001|ecoliK12_mutated|quiver JMP 225001 226000 1000
-  ref000001|ecoliK12_mutated|quiver GAP 226500 226999 500 500 0
-  ref000001|ecoliK12_mutated|quiver GAP 257499 257998 500 500 0
-  ref000001|ecoliK12_mutated|quiver GAP 1298500 1298999 500 500 0
-  ref000001|ecoliK12_mutated|quiver GAP 1871000 1871499 500 500 0
-  ref000001|ecoliK12_mutated|quiver JMP 2725502 2727501 2000
-  ref000001|ecoliK12_mutated|quiver JMP 3423007 3425006 2000
-  ref000001|ecoliK12_mutated|quiver GAP 3618506 3619005 500 500 0
-  ref000001|ecoliK12_mutated|quiver GAP 3761507 3762506 1000 1000 0
-  ref000001|ecoliK12_mutated|quiver JMP 3941007 3943006 2000
-  ref000001|ecoliK12_mutated|quiver GAP 4034509 4036508 2000 2000 0
-  ref000001|ecoliK12_mutated|quiver GAP 4037009 4037508 500 500 0
-  ref000001|ecoliK12_mutated|quiver JMP 4166010 4168009 2000
-  ref000001|ecoliK12_mutated|quiver JMP 4207515 4209514 2000
 
+Next, the SNPs.
 
-Next, the SNPs.  Most of these are low confidence SNPs due to coverage
-dropouts.  Just count them for now.
-
-  $ show-snps -H -C -x10 out.delta | wc -l
-  20
+  $ show-snps -H -C -x10 out.delta
+    547694   A G   547692    |      140   547692  |  AACTAAACGAAGGCAAAACAC  AACTAAACGAGGGCAAAACAC  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+    547834   . G   547833    |      140   547833  |  TGGAGCAGGG.GAAGTGAACT  TGGAGCAGGGGGAAGTGAACT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   2171385   . C   2171385   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CCGATACCACCCCGCCGTATG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   2171385   . C   2171386   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CGATACCACCCCGCCGTATGT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   3619034   . C   3619040   |   193936  1020527  |  GTCATTGCCC.CGGACGGCAG  GTCATTGCCCCCGGACGGCAG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   4209525   . C   4209540   |       13   430036  |  ACGGTTGTCC.CGGTTTAAGC  ACGGTTGTCCCCGGTTTAAGC  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   4209538   . T   4209554   |       13   430023  |  TTTAAGCGTG.TAGGCTGGTT  TTTAAGCGTGTTAGGCTGGTT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   4209580   . C   4209597   |       42   429981  |  AAGGCTGAGG.CGTGATGACG  AAGGCTGAGGCCGTGATGACG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   4294288   . C   4294306   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AAGGCGTTTACGCCGCATCCG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+   4294288   . G   4294307   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AGGCGTTTACGCCGCATCCGA  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
