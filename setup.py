@@ -11,7 +11,6 @@ setup(
                'plurality',
                'quiver'],
     packages = find_packages(),
-    package_data = { "GenomicConsensus.resources" : ["*.json"] },
     zip_safe = False,
     install_requires=[
         'pbcore >= 0.2',
