@@ -86,13 +86,17 @@ def rowNumberIsInReadStratum(readStratum, rowNumber):
     return (rowNumber % N) == n
 
 def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
-    # referenceSequence is a np.array(dtype="c")
-    # return value type is the same
+    # referenceSequence is str, return value is str
+    # return value type is the same type as input
+    assert isinstance(referenceSequence, str)
+
     if noEvidenceConsensusCallMode == "reference":
-        return referenceSequence
+        result = referenceSequence
     elif noEvidenceConsensusCallMode == "lowercasereference":
-        return np.array(referenceSequence.tostring().lower(), dtype="c")
+        result =  referenceSequence.lower()
     elif noEvidenceConsensusCallMode == "nocall":
-        return np.array("N" * len(referenceSequence), dtype="c")
+        result = "N" * len(referenceSequence)
     else:
         raise Exception, "Invalid `noEvidenceConsensusCallMode`"
+
+    return result

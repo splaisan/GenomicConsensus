@@ -271,7 +271,7 @@ class QuiverWorker(object):
             domainQv  = np.zeros(domainLen, dtype=np.uint8)
             domainVariants = []
             return QuiverWindowSummary(refId, refStart, refEnd,
-                                       domainCss, domainQV, domainVariants)
+                                       domainCss, domainQv, domainVariants)
 
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
