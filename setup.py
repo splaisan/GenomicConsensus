@@ -15,6 +15,6 @@ setup(
     install_requires=[
         'pbcore >= 0.2',
         'numpy >= 1.6.0',
-        'h5py >= 1.3.0'
+        'h5py >= 2.0.1'
         ]
     )
