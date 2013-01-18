@@ -45,6 +45,7 @@ from ..io.VariantsGffWriter import VariantsGffWriter
 
 try:
     import ConsensusCore as cc
+    from GenomicConsensus.utils import noEvidenceConsensusCall
     from GenomicConsensus.quiver.utils import *
     from GenomicConsensus.quiver.model import *
     if cc.Version.VersionString() == "0.4.1":
@@ -259,24 +260,18 @@ class QuiverWorker(object):
         # cannot come up with a good consensus if the sequence is
         # highly divergent from the reference.  By default, the
         # behavior is to "nocall" the window in question, but if the
-        # user sets --noEvidenceConsensusCall="reference", the
-        # reference will be used instead.
+        # user sets
+        #   --noEvidenceConsensusCall="reference", or
+        #   --noEvidenceConsensusCall="lowecasereference", the
+        # reference or its lowercase will be used instead.
 
         if len(clippedSpanningAlns) < 3:
-            if options.noEvidenceConsensusCall == "nocall":
-                domainCss = "N"*domainLen
-                domainQv  = np.zeros(domainLen, dtype=np.uint8)
-                domainVariants = []
-                return QuiverWindowSummary(refId, refStart, refEnd,
-                                           domainCss, domainQv, domainVariants)
-            elif len(clippedNonSpanningAlns) == 0:
-                domainCss = domainRefSequence
-                domainQv  = np.zeros(domainLen, dtype=np.uint8)
-                domainVariants = []
-                return QuiverWindowSummary(refId, refStart, refEnd,
-                                           domainCss, domainQv, domainVariants)
-            # ... otherwise, we continue, using the reference as the
-            # starting point for quiver's estimation.
+            domainCss = noEvidenceConsensusCall(domainRefSequence,
+                                                options.noEvidenceConsensusCall)
+            domainQv  = np.zeros(domainLen, dtype=np.uint8)
+            domainVariants = []
+            return QuiverWindowSummary(refId, refStart, refEnd,
+                                       domainCss, domainQV, domainVariants)
 
         # Load the bits that POA cares about.
         forwardStrandSequences = [a.read(orientation="genomic", aligned=False)

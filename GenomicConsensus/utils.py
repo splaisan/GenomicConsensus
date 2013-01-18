@@ -84,3 +84,15 @@ def fileFormat(filename):
 def rowNumberIsInReadStratum(readStratum, rowNumber):
     n, N = readStratum
     return (rowNumber % N) == n
+
+def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
+    # referenceSequence is a np.array(dtype="c")
+    # return value type is the same
+    if noEvidenceConsensusCallMode == "reference":
+        return referenceSequence
+    elif noEvidenceConsensusCallMode == "lowercasereference":
+        return np.array(referenceSequence.tostring().lower(), dtype="c")
+    elif noEvidenceConsensusCallMode == "nocall":
+        return np.array("N" * len(referenceSequence), dtype="c")
+    else:
+        raise Exception, "Invalid `noEvidenceConsensusCallMode`"

@@ -207,8 +207,8 @@ def parseOptions(relax=False):
     parser.add_argument(
         "--noEvidenceConsensusCall",
         action="store",
-        choices=["nocall", "reference"],
-        default="nocall",
+        choices=["nocall", "reference", "lowercasereference"],
+        default="lowercasereference",
         help="The consensus base that will be output for sites with no effective coverage.")
     parser.add_argument(
         "--aligner", "-a",

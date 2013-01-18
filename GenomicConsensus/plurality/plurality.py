@@ -36,7 +36,7 @@ import math, logging, numpy as np, random
 from collections import defaultdict, namedtuple, OrderedDict
 from bisect import bisect_left, bisect_right
 from itertools import izip
-from ..utils import probability_to_qv
+from ..utils import probability_to_qv, noEvidenceConsensusCall
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
@@ -243,10 +243,8 @@ class PluralityResult(object):
             tbl = np.zeros(shape=refEntry.length,
                            dtype=self.LOCUS_SUMMARY_DTYPE)
             ra = tbl.view(np.recarray)
-            if options.noEvidenceConsensusCall=="nocall":
-                ra.consensus[:] = "N"
-            else:
-                ra.consensus[:] = refEntry.sequence
+            ra.consensus[:] = noEvidenceConsensusCall(refEntry.sequence,
+                                                      options.noEvidenceConsensusCall)
             self.consensusByRefId[refId] = tbl
 
     def installInTable(self, locusSummary, tbl, rowNumber):
