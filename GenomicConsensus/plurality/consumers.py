@@ -116,7 +116,7 @@ def fastqConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refHeader = reference.idToHeader(refId)
+            refHeader = reference.idToHeader(refId) + "|plurality"
             seqArray = tbl["consensus"]
             qvArray = tbl["consensusConfidence"]
             logging.info("Writing FASTQ output for %s." % refHeader)
