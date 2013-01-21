@@ -18,12 +18,12 @@ reference!).
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
-  ##sequence-region ref000001|ecoliK12_mutated 1 4639560
-  ref000001|ecoliK12_mutated . substitution 547694 547694 . . . variantSeq=G;reference=A;coverage=100;confidence=48;length=1
-  ref000001|ecoliK12_mutated . insertion 547831 547831 . . . variantSeq=G;coverage=100;confidence=48;length=1
-  ref000001|ecoliK12_mutated . insertion 2171384 2171384 . . . variantSeq=CC;coverage=100;confidence=49;length=2
-  ref000001|ecoliK12_mutated . insertion 3422255 3422255 . . . variantSeq=C;coverage=65;confidence=51;length=1
-  ref000001|ecoliK12_mutated . insertion 4294288 4294288 . . . variantSeq=CG;coverage=100;confidence=48;length=2
+  ##sequence-region ecoliK12_mutated 1 4639560
+  ecoliK12_mutated . substitution 547694 547694 . . . variantSeq=G;reference=A;coverage=100;confidence=48;length=1
+  ecoliK12_mutated . insertion 547831 547831 . . . variantSeq=G;coverage=100;confidence=48;length=1
+  ecoliK12_mutated . insertion 2171384 2171384 . . . variantSeq=CC;coverage=100;confidence=49;length=2
+  ecoliK12_mutated . insertion 3422255 3422255 . . . variantSeq=C;coverage=65;confidence=51;length=1
+  ecoliK12_mutated . insertion 4294288 4294288 . . . variantSeq=CG;coverage=100;confidence=48;length=2
 
 OK, now let's take a gander at the consensus FASTA output.  We end up
 with 17000 nocalls here, which is not bad considering the short insert
@@ -48,13 +48,13 @@ the masked output.
 Next, the SNPs.
 
   $ show-snps -H -C -x10 out.delta
-    547694   A G   547692    |      140   547692  |  AACTAAACGAAGGCAAAACAC  AACTAAACGAGGGCAAAACAC  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-    547834   . G   547833    |      140   547833  |  TGGAGCAGGG.GAAGTGAACT  TGGAGCAGGGGGAAGTGAACT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   2171385   . C   2171385   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CCGATACCACCCCGCCGTATG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   2171385   . C   2171386   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CGATACCACCCCGCCGTATGT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   3619034   . C   3619040   |   193936  1020527  |  GTCATTGCCC.CGGACGGCAG  GTCATTGCCCCCGGACGGCAG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   4209525   . C   4209540   |       13   430036  |  ACGGTTGTCC.CGGTTTAAGC  ACGGTTGTCCCCGGTTTAAGC  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   4209538   . T   4209554   |       13   430023  |  TTTAAGCGTG.TAGGCTGGTT  TTTAAGCGTGTTAGGCTGGTT  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   4209580   . C   4209597   |       42   429981  |  AAGGCTGAGG.CGTGATGACG  AAGGCTGAGGCCGTGATGACG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   4294288   . C   4294306   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AAGGCGTTTACGCCGCATCCG  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
-   4294288   . G   4294307   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AGGCGTTTACGCCGCATCCGA  |  1  1  ref000001|ecoliK12_mutated\tref000001|ecoliK12_mutated|quiver (esc)
+    547694   A G   547692    |      140   547692  |  AACTAAACGAAGGCAAAACAC  AACTAAACGAGGGCAAAACAC  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+    547834   . G   547833    |      140   547833  |  TGGAGCAGGG.GAAGTGAACT  TGGAGCAGGGGGAAGTGAACT  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   2171385   . C   2171385   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CCGATACCACCCCGCCGTATG  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   2171385   . C   2171386   |        0  2171385  |  CCGATACCAC.CGCCGTATGT  CGATACCACCCCGCCGTATGT  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   3619034   . C   3619040   |   193936  1020527  |  GTCATTGCCC.CGGACGGCAG  GTCATTGCCCCCGGACGGCAG  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   4209525   . C   4209540   |       13   430036  |  ACGGTTGTCC.CGGTTTAAGC  ACGGTTGTCCCCGGTTTAAGC  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   4209538   . T   4209554   |       13   430023  |  TTTAAGCGTG.TAGGCTGGTT  TTTAAGCGTGTTAGGCTGGTT  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   4209580   . C   4209597   |       42   429981  |  AAGGCTGAGG.CGTGATGACG  AAGGCTGAGGCCGTGATGACG  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   4294288   . C   4294306   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AAGGCGTTTACGCCGCATCCG  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
+   4294288   . G   4294307   |        0   345273  |  AAGGCGTTTA.CCGCATCCGA  AGGCGTTTACGCCGCATCCGA  |  1  1  ecoliK12_mutated\tecoliK12_mutated|quiver (esc)
