@@ -2,6 +2,10 @@
 How to install and use Quiver
 =============================
 
+Quiver is now bundled in the 1.4 release of SMRTanalysis.  If you do
+not have the 1.4 version yet, or you want to install the very latest
+bleeding-edge code, you may follow the instructions below.
+
 *Note: please install this software on an isolated machine that does
 not have SMRTanalysis installed.  Older versions of SMRTanalysis
 pollute the ``PYTHONPATH``, which has the undesirable effect of
@@ -47,18 +51,18 @@ Data file requirements
 
 To make the most accurate consensus calls possible, Quiver makes use
 of a battery of quality value metrics calculated by the basecaller.
-By default, only a subset of these quality values are included in the
-``.cmp.h5`` files produced by SMRTanalysis.  To get a ``.cmp.h5`` with
-all the QVs loaded, you will need to use the ``Resequencing_QVs``
-workflow within SMRTPortal.
+If you are using a SMRTportal installation verision 1.4 or later, then
+SMRTportal will load all the information Quiver needs, so you
+can skip the rest of this section.
 
-If you are using SMRTPortal 1.3.3 or later, ``Resequencing_QVs`` will
-already be installed.
+By default in older SMRTportal 1.3.3, only a subset of these quality
+values are included in the ``.cmp.h5`` files produced by SMRTanalysis.
+To get a ``.cmp.h5`` with all the QVs loaded, you will need to use the
+``RS_Mapping_QVs`` protocol to create a ``cmp.h5`` file for Quiver.
 
-Otherwise, it is easy to install into your SMRTPortal installation.
-All you need to do is put the `Resequencing_QVs.1.xml`_ file into
-SMRTportal's ``common/protocols/`` directory, and `BLASR_QVs.1.xml`_ in
-the ``common/protocols/mapping`` directory.
+If you are using an older version than SMRTportal/SMRTanalysis 1.3.3,
+please upgrade.
+
 
 Automatic installation instructions
 -----------------------------------
@@ -127,10 +131,10 @@ For example, ::
 will use 8 CPUs to run Quiver on ``aligned_reads.cmp.h5``, outputting
 the consensus sequence and variants.
 
-Note that if you have not used the `Resequencing_QVs` protocol to
+Note that if you have not used the `RS_Mapping_QVs` protocol to
 generate the cmp.h5 file---or if the source bas.h5 file was generated
 by pre-1.3.1 instrument software---the cmp.h5 will not contain the
-full battery of QV metrics required for optimal Quiver accuracy.  the
+full battery of QV metrics required for optimal Quiver accuracy.  The
 command will still work, but it will give a warning that its accuracy
 will be suboptimal.
 
@@ -152,10 +156,10 @@ using Quiver:
   user must download this FASTA file and then import it as a new
   reference into SMRTPortal.
 
-- Run a `Resequencing_QVs` job using the original data files, and
+- Run a ``RS_Mapping_QVs`` job using the original data files, and
   the rough assembly FASTA file as a reference.
 
-The output of the `Resequencing_QVs` job is the cmp.h5 file you will now
+The output of the `RS_Mapping_QVs` job is the cmp.h5 file you will now
 feed to Quiver::
 
     $ quiver -j8 aligned_reads.cmp.h5     \
@@ -198,6 +202,4 @@ Known Issues
 
 .. _`practical guide`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverPracticum/quiver-practicum.pdf
 .. _`technical summary`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverSummary/slides.pdf
-.. _Resequencing_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/Resequencing_QVs.1.xml
-.. _BLASR_QVs.1.xml: https://github.com/PacificBiosciences/ConsensusCore/raw/master/tools/BLASR_QVs.1.xml
 .. _FAQ: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst

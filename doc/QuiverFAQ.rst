@@ -106,17 +106,38 @@ The extension is used to determine the output file format.
 
 What does it mean that Quiver's consensus is *de novo*?
 -------------------------------------------------------
-It is *de novo* in the sense that, in its default configuration, the
-reference and the reference alignment are not used to inform the
-consensus output.  Only the reads factor into the determination of the
-consensus.
+It is *de novo* in the sense that the reference and the reference
+alignment are not used to inform the consensus output.  Only the reads
+factor into the determination of the consensus.
+
+The only time the reference sequence is used to make consensus calls,
+when the ``--noEvidenceConsensusCall`` flag is set to ``reference`` or
+``lowercasereference`` (the default), is when there is no effective
+coverage in a genomic window, so Quiver has no evidence for computing
+consensus.  The purist can set ``--noEvidenceConsensusCall=nocall`` to
+avoid using the reference even in zero coverage regions.
 
 
 What is Quiver's accuracy?
 --------------------------
 Quiver's expected accuracy is a function of coverage.  Using the C2
-chemistry, the accuracy we typically achieve is >Q50@60x; >Q40@40x;
->Q30@20x; >Q20@5x.  The "Q" values we refer to are Phred-scaled
+chemistry, our nominal expected accuracy levels are as follows:
+
++--------+---------+
+|Coverage|Expected |
+|        |consensus|
+|        |accuracy |
++========+=========+
+|5x      | > Q20   |
++--------+---------+
+|20x     | > Q30   |
++--------+---------+
+|40x     | > Q40   |
++--------+---------+
+|60x     | > Q50   |
++--------+---------+
+
+The "Q" values we refer to are Phred-scaled
 quality values::
 
    q = -10 log_10 p_error
@@ -155,7 +176,32 @@ If you have verified that there is high effective coverage in region
 in question, it is highly possible---given the high accuracy Quiver
 can achieve---that the apparent errors you are observing actually
 reflect true sequence variants.  Inspect the FASTQ output file to
-ensure that the region was called at high confidence; then see
+ensure that the region was called at high confidence; if an erroneous
+sequence variant is being called at high confidence, please report a
+bug to us.
+
+
+What does Quiver do for genomic regions with no effective coverage?
+-------------------------------------------------------------------
+For regions with no effective coverage, no variants are outputted, and
+the FASTQ confidence is 0.
+
+The output in the FASTA and FASTQ consensus sequence tracks is
+dependent on the setting of the ``--noEvidenceConsensusCall`` flag.
+Assuming the reference in the window is "ACGT", the options are:
+
++---------------------------------------------+---------+
+|``--noEvidenceConsensusCall=...``            |Consensus|
+|                                             |output   |
++=============================================+=========+
+|``nocall`` (default in 1.4)                  |NNNN     |
++---------------------------------------------+---------+
+|``reference``                                |ACGT     |
++---------------------------------------------+---------+
+|``lowercasereference`` (new post 1.4, and the|         |
+|default)                                     |acgt     |
++---------------------------------------------+---------+
+
 
 
 
@@ -178,45 +224,26 @@ sequence.  If your genome contains long (relative to your library
 insert size) highly-similar repeats, the effective coverage (after
 `MapQV` filtering) may be reduced in the repeat regions---we term
 these `MapQV` dropouts.  If the coverage is sufficiently reduced in
-these regions, Quiver will, by default, opt to "no-call" these
-regions---putting "N" in consensus output there.
+these regions, Quiver will not call consensus in these regions---see
+`What does Quiver do for genomic regions with no effective coverage?`_.
 
-You have two options when confronted with this problem.
-
-First, you can turn off the `MapQV` filter entirely.  In this case,
-the consensus for each instance of a genomic repeat will be calculated
-using reads that may actually be from other instances of the repeat,
-so the exact trustworthiness of the consensus in that region may be
-suspect.
-
-Second, if you believe that your original reference is relatively
-accurate, you can have Quiver insert the reference bases into the
-consensus output in these regions of low effective coverage.
+If you want to use ambiguously mapped reads in computing a consensus
+for a denovo assembly, you can turn off the `MapQV` filter entirely.
+In this case, the consensus for each instance of a genomic repeat will
+be calculated using reads that may actually be from other instances of
+the repeat, so the exact trustworthiness of the consensus in that
+region may be suspect.  The next section describes how to disable the
+`MapQV` filter.
 
 
 How can I turn off the `MapQV` filter and why would I want to?
 --------------------------------------------------------------
 You can disable the `MapQV` filter using the flag
-``--mapQvThreshold=0`` (shorthand: ``-m=0``).  You might want to do
-this in de novo assembly projects, but it is not recommended for
-variant calling applications.
-
-
-How can I make Quiver output the original reference in areas of low coverage?
------------------------------------------------------------------------------
-When Quiver is confronted with a region where effective coverage is so
-low that high-quality consensus cannot be produced, it  has two options:
-
-- "no-call" the region, filling the consensus with "N" bases and not
-  making any variant calls in the region.  This can be enabled by
-  ``--noEvidenceConsensusCall=nocall``---but it is the default.  This
-  is suitable when you believe the original reference may be
-  inaccurate.
-
-- transfer the reference sequence in the region into the consensus
-  output, and call no variants in the region.  This can be enabled by
-  ``--noEvidenceConsensusCall=reference``.  This would be a good
-  option if you bleieve your reference to be relatively accurate.
+``--mapQvThreshold=0`` (shorthand: ``-m=0``).  If you are running your
+Quiver job via SMRTportal, this can be done by unchecking the "Use
+only unambiguously mapped reads" option. You might want to do this in
+de novo assembly projects, but it is not recommended for variant
+calling applications.
 
 
 How do I inspect or validate the variant calls made by Quiver?
@@ -245,9 +272,9 @@ variants by quality and coverage.
 - The `MapQV` filter, by default, removes reads with MapQV < 20.  This
   is configured using ``--mapQvThreshold=value`` / ``-m=value``
 - Variants are only called if the read coverage of the site exceeds
-  11x, by default---this is configurable using ``-x=value``.
+  5x, by default---this is configurable using ``-x=value``.
   Further, they will not be called if the confidence (Phred-scaled)
-  does not exceed 20---configurable using ``-q=value``.
+  does not exceed 40---configurable using ``-q=value``.
 
 
 What is the best way to call consensus on an amplicon dataset?
