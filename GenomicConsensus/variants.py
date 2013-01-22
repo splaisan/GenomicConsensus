@@ -81,7 +81,8 @@ class Variant(object):
         self.kwargs = kwargs
 
     def __cmp__(self, other):
-        return cmp(self.refStart, other.refStart)
+        return cmp( (self.refId, self.refStart, self.sortingPrecedence),
+                    (other.refId, other.refStart, other.sortingPrecedence) )
 
     def __repr__(self):
         return "%d:%d-%d; %s -> %s" \
@@ -116,6 +117,8 @@ class Variant(object):
 
 
 class Insertion(Variant):
+    sortingPrecedence = 1
+
     def __repr__(self):
         return "Insertion   " + super(Insertion, self).__repr__()
 
@@ -130,6 +133,8 @@ class Insertion(Variant):
         return record
 
 class Deletion(Variant):
+    sortingPrecedence = 2
+
     def __repr__(self):
         return "Deletion    " + super(Deletion, self).__repr__()
 
@@ -144,6 +149,8 @@ class Deletion(Variant):
         return record
 
 class Substitution(Variant):
+    sortingPrecedence = 3
+
     def __repr__(self):
         return "Substitution" + super(Substitution, self).__repr__()
 

@@ -393,6 +393,9 @@ class QuiverResultCollector(object):
                 if (v.confidence > options.variantConfidenceThreshold and
                     v.coverage   > options.variantCoverageThreshold):
                     filteredVariantsByRefId[v.refId].append(v)
+            # Sort variants before output
+            for refId in filteredVariantsByRefId:
+                filteredVariantsByRefId[refId].sort()
             self.writeVariantsGff(options.gffOutputFilename, filteredVariantsByRefId)
 
         # 2. FASTA output.  Currently unoptimized--will choke hard on
