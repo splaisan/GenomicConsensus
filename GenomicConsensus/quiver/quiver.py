@@ -48,10 +48,10 @@ try:
     from GenomicConsensus.utils import noEvidenceConsensusCall
     from GenomicConsensus.quiver.utils import *
     from GenomicConsensus.quiver.model import *
-    if cc.Version.VersionString() == "0.4.1":
+    if cc.Version.VersionTuple() == (0, 5, 0):
         availability = (True, "OK")
     else:
-        availability = (False, "Need ConsensusCore version 0.4.1")
+        availability = (False, "Need ConsensusCore version 0.5.0")
 except ImportError:
     availability = (False, "ConsensusCore not installed---required for Quiver algorithm")
 
