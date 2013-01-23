@@ -32,9 +32,9 @@ Required libraries and tools
 ----------------------------
 To install the PacBio software, the following are required:
 
-- Boost  >= 1.4.7   (standard C++ libraries; *note that 1.4.8 does not work*)
+- Boost  >= 1.4.7   (standard C++ libraries)
 - SWIG   >= 2.0.7   (library wrapper generator)
-- Python >= 2.7.2
+- Python 2.7.3
 - virtualenv        (builds isolated Python environments)
 
 If you within PacBio, these requirements are already installed within
@@ -189,15 +189,11 @@ consensus accuracy.  After understanding the demo code, look at
 ``quiver.py`` to see how we handle edge cases that limit accuracy.
 
 
-Known Issues
+Known issues
 ------------
-
-- ``ConsensusCore`` doesn't compile with Boost 1.48, but 1.47 and 1.51 are fine.
-- Your Python must have been configured with ``CFLAGS=-fPIC`` in order
-  for ``ConsensusCore`` to build correctly (it has to link against
-  libpython).  This is the most common cause for build/install
-  failures.
-
+There is a bug in the `multiprocessing` module in Python 2.7.2 and
+lower that causes the interpreter to crash during shutdown.  Use
+Python 2.7.3 or newer.
 
 
 .. _`practical guide`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverPracticum/quiver-practicum.pdf
