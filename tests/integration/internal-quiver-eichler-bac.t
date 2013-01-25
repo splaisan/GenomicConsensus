@@ -29,6 +29,7 @@ MuMMer at the end are compared to the Sanger reference.
   CH17-157L1 . deletion 24556 24556 . . . reference=A;coverage=100;confidence=93;length=1
   CH17-157L1 . deletion 26174 26175 . . . reference=AC;coverage=100;confidence=93;length=2
   CH17-157L1 . deletion 51238 51238 . . . reference=C;coverage=100;confidence=93;length=1
+  CH17-157L1 . insertion 55888 55888 . . . variantSeq=A;coverage=100;confidence=93;length=1
   CH17-157L1 . deletion 64654 64654 . . . reference=C;coverage=100;confidence=93;length=1
   CH17-157L1 . deletion 93356 93357 . . . reference=CG;coverage=100;confidence=93;length=2
   CH17-157L1 . deletion 161413 161413 . . . reference=T;coverage=100;confidence=93;length=1
@@ -38,7 +39,7 @@ MuMMer at the end are compared to the Sanger reference.
 
 
   $ fastacomposition css.fasta
-  css.fasta A 65472 C 51211 G 50142 N 921 T 63159
+  css.fasta A 65473 C 51211 G 50142 N 921 T 63159
 
 Use the MuMMer suite to look at the differences from the reference.
 
@@ -52,7 +53,7 @@ First: no structural differences.
   
   [SEQ] [TYPE] [S1] [E1] [LEN 1]
   CH17-157L1|quiver BRK 1 500 500
-  CH17-157L1|quiver BRK 230485 230905 421
+  CH17-157L1|quiver BRK 230486 230906 421
 
 Next, the SNPs.
 
@@ -60,10 +61,11 @@ Next, the SNPs.
      24558   . A   24577     |    24076    24558  |  AAAAAAAAAA.AGCCTGGATG  AAAAAAAAAAAAGCCTGGATG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      51215   C .   51233     |     1765    51215  |  GGCCCGCCCCCCGGGCAGCCA  GGCCCGCCCC.CGGGCAGCCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      52980   . A   52999     |     1765    52980  |  AAAAAAAAAA.ACAACAAACA  AAAAAAAAAAAACAACAAACA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     64634   C .   64652     |    11654    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     85478   . T   85497     |     8834    85478  |  TTTTTTTTTT.TACTAACCAG  TTTTTTTTTTTTACTAACCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     94312   . T   94332     |     8834    94312  |  TTTTTTTTTT.TAGACAGAGT  TTTTTTTTTTTTAGACAGAGT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    106985   . T   107006    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTTCCTGAGCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    106985   . T   107007    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTCCTGAGCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    182920   . A   182943    |      564    47946  |  AAAAAAAAAA.ATGTGGTCTC  AAAAAAAAAAAATGTGGTCTC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    183484   . A   183508    |      564    47382  |  AAAAAAAAAA.ATAGATGAAC  AAAAAAAAAAAATAGATGAAC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     55873   . A   55893     |     2893    55873  |  AAAAAAAAAA.ATATATATAT  AAAAAAAAAAAATATATATAT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     64634   C .   64653     |     8761    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     85478   . T   85498     |     8834    85478  |  TTTTTTTTTT.TACTAACCAG  TTTTTTTTTTTTACTAACCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     94312   . T   94333     |     8834    94312  |  TTTTTTTTTT.TAGACAGAGT  TTTTTTTTTTTTAGACAGAGT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    106985   . T   107007    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTTCCTGAGCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    106985   . T   107008    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTCCTGAGCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    182920   . A   182944    |      564    47946  |  AAAAAAAAAA.ATGTGGTCTC  AAAAAAAAAAAATGTGGTCTC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    183484   . A   183509    |      564    47382  |  AAAAAAAAAA.ATAGATGAAC  AAAAAAAAAAAATAGATGAAC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
