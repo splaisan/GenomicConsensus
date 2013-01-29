@@ -36,14 +36,31 @@ from ConsensusCore import (BandingOptions,
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
 
-import argparse, math, numpy as np, pbls
+import argparse, math, numpy as np, pbls, logging
 from scipy.optimize import fmin, fmin_powell
+import SocketServer as ss
 
 TRAINING_JOB     = "038537"
 TRAINING_WINDOWS = [ (1, winStart, winStart+1000)
                      for winStart in range(5000, 45000, 1000)]
 BANDING   = BandingOptions(4, 200)
 THRESHOLD = -500
+
+TRAINING_JOB = "183394"
+
+# Exclude some tricky bastards ... somehow we now have 3 new transposon insertions
+# in our damn ecoli at:
+#
+#    257899, 1298717, 1871054
+#
+# and Something suspicious at
+#
+#    1096522
+#
+TRAINING_WINDOWS =  [ (1, winStart, winStart+1000)
+                      #for winStart in range(5000, 4500000, 1000)
+                      for winStart in range(5000, 200000, 1000)
+                      if winStart not in [ 257000, 1298000, 1871000, 1096000 ] ]
 
 def chunks(n, l):
     for i in xrange(0, len(l), n):
@@ -70,7 +87,7 @@ def Worker_objective(t):
 
     params = model.paramsFromArray(x, BANDING, THRESHOLD).quiverConfig
 
-    if options.verbose: print "Window: " +  `window`
+    if options.verbose: logging.info("Window: " +  `window`)
     _, winStart, winEnd = window
     trueTemplate = refSeq[winStart:winEnd]
     overlappingReads = cmpH5.readsInRange(*window)
@@ -112,9 +129,7 @@ class memoize(object):
         self.cache = {}
     def __call__(self, arg):
         hashableArg = tuple(arg)
-        if hashableArg in self.cache:
-            print "Memoize cache hit!"
-        else:
+        if hashableArg not in self.cache:
             self.cache[hashableArg] = self.function(arg)
         return self.cache[hashableArg]
 
@@ -133,14 +148,9 @@ def objective(x):
 
     global fevals
     fevals += 1
-
-    print "************"
-    print "(Iteration #%d)"      % fevals
-    print "x:                  " + str(x)
-    print "Loss:               " + str(loss)
-    print "Misclassifications: " + str(misclassifications)
-    print "Quality:            " + \
-        "Q" + str(int(-10*math.log10(float(misclassifications+1)/(referenceBases+1))))
+    quality = int(-10*math.log10(float(misclassifications+1)/(referenceBases+1)))
+    logging.info("{ iteration=%d, x=%r, loss=%f, misclassifications=%d, quality=%d }" %
+                 (fevals, x, loss, misclassifications, quality))
     return loss
 
 parser = argparse.ArgumentParser(description="Quiver training script")
@@ -171,17 +181,16 @@ parser.add_argument("--model",
                     choices=["AllQVsModel",
                              "NoQVsModel",
                              "NoMergeQVModel"])
+parser.add_argument("--serverPort", "-p",
+                    action="store", type=int, default=0)
+
 
 options = parser.parse_args()
 
 transform = eval(options.objectiveName)
 model = eval(options.model)
 
-def main():
-    np.seterr(over="ignore")
-
-    global pool
-    pool = initializeWorkers(options.numWorkers)
+def optimize():
     x0 = model.start
     ans = fmin_powell(objective,
                       x0,
@@ -189,5 +198,29 @@ def main():
                       full_output=True)
     print ans
 
+
+class ThreadingTCPServer(ss.ThreadingMixIn, ss.TCPServer): pass
+
+class MyTCPHandler(ss.BaseRequestHandler):
+    def handle(self):
+        self.data = self.request.recv(2048).strip()
+        x = eval(self.data)
+        result = objective(x)
+        self.request.sendall(str(result))
+
+def serve(port):
+    HOST= "0.0.0.0"
+    server = ss.TCPServer((HOST, port), MyTCPHandler)
+    server.serve_forever()
+
+
+def main():
+    np.seterr(over="ignore")
+    global pool
+    pool = initializeWorkers(options.numWorkers)
+    if options.serverPort:
+        serve(options.serverPort)
+    else:
+        optimize()
 if __name__=="__main__":
     main()
