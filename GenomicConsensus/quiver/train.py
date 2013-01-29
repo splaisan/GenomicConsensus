@@ -31,7 +31,7 @@
 # Author: David Alexander
 
 from multiprocessing import *
-from ConsensusCore import (SparseSseQvRecursor as Recursor,
+from ConsensusCore import (BandingOptions,
                            SparseSseQvMultiReadMutationScorer as MutationScorer)
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
@@ -42,6 +42,8 @@ from scipy.optimize import fmin, fmin_powell
 TRAINING_JOB     = "038537"
 TRAINING_WINDOWS = [ (1, winStart, winStart+1000)
                      for winStart in range(5000, 45000, 1000)]
+BANDING   = BandingOptions(4, 200)
+THRESHOLD = -500
 
 def chunks(n, l):
     for i in xrange(0, len(l), n):
@@ -66,8 +68,7 @@ def Worker_objective(t):
     misclassifications = 0
     referenceBases = 0
 
-    params = model.paramsFromArray(x).qvModelParams
-    r = Recursor()
+    params = model.paramsFromArray(x, BANDING, THRESHOLD).quiverConfig
 
     if options.verbose: print "Window: " +  `window`
     _, winStart, winEnd = window
@@ -81,7 +82,7 @@ def Worker_objective(t):
         # Skipping low-coverage regions
         if len(usedReads) < options.coverageDepth: continue
 
-        mms = MutationScorer(r, params, trueTemplate)
+        mms = MutationScorer(params, trueTemplate)
         for aln in usedReads:
             qvsf = model.extractFeatures(aln)
             mms.AddRead(qvsf, int(aln.RCRefStrand))
