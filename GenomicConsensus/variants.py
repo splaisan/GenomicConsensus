@@ -32,10 +32,9 @@
 
 from __future__ import absolute_import
 
-import sys, time
-
 from pbcore.io import Gff3Record, GffWriter
 from . import reference
+import sys, time
 
 # Internally we use Python-style half-open intervals zero-based
 # [start, end) to delineate reference ranges.  An insertion has
@@ -47,8 +46,7 @@ from . import reference
 
 __all__ = [ "Deletion",
             "Insertion",
-            "Substitution",
-            "VariantList" ]
+            "Substitution" ]
 
 class Variant(object):
 
@@ -62,8 +60,8 @@ class Variant(object):
                  refSequence, readSequence,
                  coverage=0,
                  confidence=0,
-                 zygosity=HAPLOID,
-                 **kwargs):
+                 frequency=0,
+                 zygosity=HAPLOID):
         """
         `kwargs` encompasses the non-existential features of a
         variant, and are dumped as-is to GFF/CSV output file.  The
@@ -75,10 +73,10 @@ class Variant(object):
         self.refEnd = refEnd
         self.refSequence = refSequence
         self.readSequence = readSequence
-        self.zygosity = zygosity
         self.coverage = coverage
         self.confidence = confidence
-        self.kwargs = kwargs
+        self.frequency = frequency
+        self.zygosity = zygosity
 
     def __cmp__(self, other):
         return cmp( (self.refId, self.refStart, self.sortingPrecedence),
@@ -93,31 +91,24 @@ class Variant(object):
         return repr(self)
 
     def toGffRecord(self):
-        record = Gff3Record()
-        record.seqid = reference.byId[self.refId].header
-        record.score = "."
-        record.strand = "."
-
-        # Empty attributes are not printed.
-        if self.readSequence:
-            record.put("variantSeq", self.readSequence)
-        if self.refSequence:
-            record.put("reference", self.refSequence)
-
-        # If the zygosity attribute is omitted, HAPLOID is understood.
+        gffStart, gffEnd = self.gffCoords()
+        record = Gff3Record(reference.idToHeader(self.refId),
+                            gffStart,
+                            gffEnd,
+                            self.gffType)
+        if self.readSequence: record.variantSeq = self.readSequence
+        if self.refSequence:  record.reference  = self.refSequence
         if self.zygosity != Variant.HAPLOID:
-            record.put("zygosity", self.zygosity)
-
-        record.put("coverage", self.coverage)
-        record.put("confidence", self.confidence)
-
-        for key, value in self.kwargs.iteritems():
-            record.put(key, value)
+            record.zygosity = self.zygosity
+        record.coverage = self.coverage
+        record.confidence = self.confidence
+        if self.frequency: record.frequency = self.frequency
+        record.length = len(self)
         return record
-
 
 class Insertion(Variant):
     sortingPrecedence = 1
+    gffType = "insertion"
 
     def __repr__(self):
         return "Insertion   " + super(Insertion, self).__repr__()
@@ -125,15 +116,12 @@ class Insertion(Variant):
     def __len__(self):
         return len(self.readSequence)
 
-    def toGffRecord(self):
-        record = Variant.toGffRecord(self)
-        record.type = "insertion"
-        record.start, record.end = self.refStart, self.refStart
-        record.put("length", len(self))
-        return record
+    def gffCoords(self):
+        return self.refStart, self.refStart
 
 class Deletion(Variant):
     sortingPrecedence = 2
+    gffType = "deletion"
 
     def __repr__(self):
         return "Deletion    " + super(Deletion, self).__repr__()
@@ -141,15 +129,12 @@ class Deletion(Variant):
     def __len__(self):
         return len(self.refSequence)
 
-    def toGffRecord(self):
-        record = Variant.toGffRecord(self)
-        record.type = "deletion"
-        record.start, record.end = self.refStart + 1, self.refEnd
-        record.put("length", len(self))
-        return record
+    def gffCoords(self):
+        return self.refStart + 1, self.refEnd
 
 class Substitution(Variant):
     sortingPrecedence = 3
+    gffType = "substitution"
 
     def __repr__(self):
         return "Substitution" + super(Substitution, self).__repr__()
@@ -157,44 +142,5 @@ class Substitution(Variant):
     def __len__(self):
         return len(self.refSequence)
 
-    def toGffRecord(self):
-        record = Variant.toGffRecord(self)
-        record.type = "substitution"
-        record.start, record.end = self.refStart + 1, self.refEnd
-        record.put("length", len(self))
-        return record
-
-class VariantList(object):
-    """
-    A collection class for variants that allows
-    sorting and basic cleanups based on compacting
-    adjacent variants when possible.
-    """
-    def __init__(self):
-        self._lst = []
-
-    def __iter__(self):
-        return iter(self._lst)
-
-    def __repr__(self):
-        return "\n".join(repr(v) for v in self)
-
-    def add(self, variant):
-        self._lst.append(variant)
-
-    def addDeletion(self, refId, refStart, refEnd, **kwargs):
-        refSequence = reference.byId[refId].sequence[refStart:refEnd].tostring()
-        self.add(Deletion(refId, refStart, refEnd, refSequence, "", **kwargs))
-
-    def addSubstitution(self, refId, refStart, refEnd, readSequence, **kwargs):
-        assert len(readSequence) == refEnd - refStart
-        refSequence = reference.byId[refId].sequence[refStart:refEnd].tostring()
-        self.add(Substitution(refId, refStart, refEnd, refSequence, readSequence, **kwargs))
-
-    def addInsertion(self, refId, refStart, refEnd, readSequence, **kwargs):
-        assert refStart == refEnd
-        self.add(Insertion(refId, refStart, refEnd, "", readSequence, **kwargs))
-
-    def sort(self):
-        self._lst.sort()
-
+    def gffCoords(self):
+        return self.refStart + 1, self.refEnd

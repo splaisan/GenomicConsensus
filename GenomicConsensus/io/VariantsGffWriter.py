@@ -41,16 +41,16 @@ class VariantsGffWriter(object):
 
     def __init__(self, f, shellCommand, referenceEntries):
         self._gffWriter = GffWriter(f)
-        self._gffWriter.writeMetaData("pacbio-variant-version", "1.4")
-        self._gffWriter.writeMetaData("date", time.ctime())
-        self._gffWriter.writeMetaData("feature-ontology", self.ONTOLOGY_URL)
-        self._gffWriter.writeMetaData("source", "GenomicConsensus %s" % __VERSION__)
-        self._gffWriter.writeMetaData("source-commandline",  shellCommand)
+        self._gffWriter.writeHeader("##pacbio-variant-version 1.4")
+        self._gffWriter.writeHeader("##date %s" % time.ctime())
+        self._gffWriter.writeHeader("##feature-ontology %s" % self.ONTOLOGY_URL)
+        self._gffWriter.writeHeader("##source GenomicConsensus %s" % __VERSION__)
+        self._gffWriter.writeHeader("##source-commandline %s" % shellCommand)
 
         # Reference groups.
         for entry in referenceEntries:
-            self._gffWriter.writeMetaData("sequence-region", "%s 1 %d" \
-                                          % (entry.header, entry.length))
+            self._gffWriter.writeHeader("##sequence-region %s 1 %d" \
+                                            % (entry.header, entry.length))
 
     def writeRecord(self, gffRecord):
         self._gffWriter.writeRecord(gffRecord)

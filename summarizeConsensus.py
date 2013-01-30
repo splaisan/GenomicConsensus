@@ -3,7 +3,7 @@
 import argparse, gzip, numpy as np, sys
 from collections import namedtuple
 
-from pbcore.io import GffReader, GffWriter, Gff3Record, parseGffLine
+from pbcore.io import GffReader, GffWriter, Gff3Record
 from GenomicConsensus.utils import error_probability_to_qv
 from GenomicConsensus import __VERSION__
 
@@ -11,12 +11,6 @@ from GenomicConsensus import __VERSION__
 # Note: GFF-style coordinates
 #
 Region = namedtuple("Region", ("seqid", "start", "end"))
-
-
-def lookup(key, alist):
-    for k, v in alist:
-        if k == key:
-            return v
 
 def main():
     headers = [
@@ -63,8 +57,7 @@ def main():
             if (region.seqid == variantGffRecord.seqid and
                 region.start <= variantGffRecord.start <= region.end):
                 counterName = counterNames[variantGffRecord.type]
-                variantLength = int(lookup("length", variantGffRecord.attributes))
-                summary[counterName] += variantLength
+                summary[counterName] += variantGffRecord.length
             # TODO: base consensusQV on effective coverage
             summary["cQv"] = (20, 20, 20)
 
@@ -88,7 +81,7 @@ def main():
             inHeader = False
 
         # Parse the line
-        rec = parseGffLine(line)
+        rec = Gff3Record.fromString(line)
 
         if rec.type == "region":
             summary = summaries[(rec.seqid, rec.start, rec.end)]

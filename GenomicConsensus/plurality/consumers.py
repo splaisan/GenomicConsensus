@@ -36,7 +36,7 @@ import csv, gzip, logging, os, numpy as np, sys, time
 import traceback
 from collections import namedtuple
 from .. import reference
-from ..variants import VariantList
+from ..variants import Insertion, Deletion, Substitution
 from ..utils import fileFormat
 from ..io  import VariantsGffWriter, FastqWriter, FastaWriter
 
@@ -137,7 +137,7 @@ def variantsGffConsumer(file, **kwargs):
         while True:
             (refId, tbl) = (yield)
 
-            vl = VariantList()
+            variants = []
             refHeader = reference.idToHeader(refId)
             refSeq = reference.byId[refId].sequence
             logging.info("Calculating variants from consensus for %s." % refHeader)
@@ -146,38 +146,36 @@ def variantsGffConsumer(file, **kwargs):
 
             for locus in loci:
                 if len(locus.consensus) == 0:
-                    vl.addDeletion(refId,
-                                   locus.refPos,
-                                   locus.refPos + 1,
-                                   coverage=locus.coverage,
-                                   confidence=locus.confidence,
-                                   frequency=locus.frequency)
+                    variants.append(Deletion(refId,
+                                             locus.refPos,
+                                             locus.refPos + 1,
+                                             locus.refBase,
+                                             "",
+                                             coverage=locus.coverage,
+                                             confidence=locus.confidence,
+                                             frequency=locus.frequency))
                 else:
                     if len(locus.consensus) > 1:
-                        vl.addInsertion(refId,
-                                        locus.refPos,
-                                        locus.refPos,
-                                        locus.consensus[:-1],
-                                        coverage=locus.coverage,
-                                        confidence=locus.confidence,
-                                        frequency=locus.frequency)
+                        variants.append(Insertion(refId,
+                                                  locus.refPos,
+                                                  locus.refPos,
+                                                  "",
+                                                  locus.consensus[:-1],
+                                                  coverage=locus.coverage,
+                                                  confidence=locus.confidence,
+                                                  frequency=locus.frequency))
                     if locus.consensus[-1] != locus.refBase:
-                        vl.addSubstitution(refId,
-                                           locus.refPos,
-                                           locus.refPos+1,
-                                           locus.consensus[-1],
-                                           coverage=locus.coverage,
-                                           confidence=locus.confidence,
-                                           frequency=locus.frequency)
-
-            # This is the place where we could insert code to
-            # manipulate the VariantList before writing it out to
-            # disk.  For example if we wanted to collapse adjacent
-            # deletions, here is the place to do it.  We're not doing
-            # anything here right now.
+                        variants.append(Substitution(refId,
+                                                     locus.refPos,
+                                                     locus.refPos+1,
+                                                     locus.refBase,
+                                                     locus.consensus[-1],
+                                                     coverage=locus.coverage,
+                                                     confidence=locus.confidence,
+                                                     frequency=locus.frequency))
 
             logging.info("Writing variants for %s to GFF." % refHeader)
-            for variant in vl:
+            for variant in variants:
                 writer.writeRecord(variant.toGffRecord())
 
     except Exception:
@@ -186,8 +184,10 @@ def variantsGffConsumer(file, **kwargs):
         file.close()
         return
 
-Locus = namedtuple("Locus", ("refPos", "refBase", "coverage", "consensus",
-                                 "confidence","frequency"))
+Locus = namedtuple("Locus", ("refPos", "refBase",
+                             "coverage", "consensus",
+                             "confidence","frequency"))
+
 def locusIterForGff(tbl, refSeq, qvThresh):
     """
     Obtain the approprate iterator for the given data structure.  The rare
