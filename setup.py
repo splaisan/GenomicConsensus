@@ -13,7 +13,7 @@ setup(
     packages = find_packages(),
     zip_safe = False,
     install_requires=[
-        'pbcore >= 0.2',
+        'pbcore >= 0.5.0',
         'numpy >= 1.6.0',
         'h5py >= 2.0.1'
         ]
