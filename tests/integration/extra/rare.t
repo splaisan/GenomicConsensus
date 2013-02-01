@@ -6,7 +6,7 @@ exiting 80))
 Run plurality on the small example file, and make sure the GFF and
 CSV output is correct.
 
-  $ export DATA=$TESTDIR/../data
+  $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/bcrabl/aligned_reads_dccs.cmp.h5
   $ export REFERENCE=$DATA/bcrabl/bcrabl_amplicon_ucsf.fa
   $ variantCaller.py --algorithm=rare -r $REFERENCE -o variants.gff $INPUT
@@ -33,4 +33,3 @@ First, the variants.gff:
   bcr_abl_amplicon\t.\tsubstitution\t301\t301\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2971;confidence=4;frequency=30;length=1 (esc)
   bcr_abl_amplicon\t.\tsubstitution\t406\t406\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=93;frequency=309;length=1 (esc)
   bcr_abl_amplicon\t.\tsubstitution\t408\t408\t.\t.\t.\tvariantSeq=G;reference=A;coverage=2975;confidence=5;frequency=32;length=1 (esc)
-

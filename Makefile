@@ -14,14 +14,21 @@ tests:
 	# Unit tests
 	nosetests tests/unit
 	# End-to-end tests
-	PATH=`pwd`:$(PATH) cram `find tests/integration ! -name "internal*" -name "*.t"`
+	PATH=`pwd`:$(PATH) cram tests/integration/*.t
+
+extra-tests:
+	# Tests that need to be run by Jenkins but are slowing
+	# down the development cycle, so aren't run by "tests"
+	# target.
+	PATH=`pwd`:$(PATH) cram tests/integration/extra/*.t
+
 
 INTERNAL_UTILS_PATH = /mnt/secondary/Share/Quiver/Tools
 
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
 	# servers, including some utilities (exonerate suite, MuMMer)
-	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/integration/internal*.t
+	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/integration/internal/*.t
 
 doc:
 	cd doc; make html

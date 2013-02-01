@@ -1,5 +1,5 @@
-  $ export PATH=$TESTDIR/../yarm:$PATH
-  $ export DATA=$TESTDIR/../data
+  $ export PATH=$TESTDIR/../../yarm:$PATH
+  $ export DATA=$TESTDIR/../../data
 
 Substitutions
 
@@ -29,4 +29,3 @@ Deletions
   TP: 54 FP: 4 FN: 16 TN: 4639648  TPR: 0.771429 FPR: 0.000001 FDR: 0.068966
   TP: 53 FP: 5 FN: 17 TN: 4639647  TPR: 0.757143 FPR: 0.000001 FDR: 0.086207
   TP: 51 FP: 4 FN: 19 TN: 4639648  TPR: 0.728571 FPR: 0.000001 FDR: 0.072727
-
