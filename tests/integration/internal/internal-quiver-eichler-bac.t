@@ -22,20 +22,11 @@ MuMMer at the end are compared to the Sanger reference.
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
   ##sequence-region CH17-157L1 1 230921
-  CH17-157L1 . deletion 797 797 . . . reference=G;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 805 805 . . . reference=T;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 10965 10965 . . . reference=T;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 15160 15160 . . . reference=A;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 24556 24556 . . . reference=A;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 26174 26175 . . . reference=AC;coverage=100;confidence=93;length=2
-  CH17-157L1 . deletion 51238 51238 . . . reference=C;coverage=100;confidence=93;length=1
-  CH17-157L1 . insertion 55888 55888 . . . variantSeq=A;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 64654 64654 . . . reference=C;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 93356 93357 . . . reference=CG;coverage=100;confidence=93;length=2
-  CH17-157L1 . deletion 161413 161413 . . . reference=T;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 180807 180807 . . . reference=T;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 190890 190890 . . . reference=T;coverage=100;confidence=93;length=1
-  CH17-157L1 . deletion 202304 202304 . . . reference=T;coverage=100;confidence=93;length=1
+  CH17-157L1 . deletion 797 797 . . . reference=G;coverage=100;confidence=48;length=1
+  CH17-157L1 . deletion 805 805 . . . reference=T;coverage=100;confidence=47;length=1
+  CH17-157L1 . deletion 26174 26175 . . . reference=AC;coverage=100;confidence=48;length=2
+  CH17-157L1 . insertion 55888 55888 . . . variantSeq=A;coverage=100;confidence=48;length=1
+  CH17-157L1 . deletion 93356 93357 . . . reference=CG;coverage=100;confidence=49;length=2
 
 
   $ fastacomposition css.fasta

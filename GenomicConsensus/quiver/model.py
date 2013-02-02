@@ -133,14 +133,20 @@ class AllQVsModel(Model):
     fixedParamIdx  = []
     fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
     numFreeParams  = len(freeParamIdx)
-    fullStart      = np.array([ -1.28069103,  -31.42568016,
-                                 -0.44760609, -15.58668041,
-                                 -0.4832615 , -25.06574059,
-                                 -3.10107303,  -0.71846718,
-                                 -18.,         -1.70749295,
-                                 -44.3414917,   0.,
-                                 0.,            0.         ],
-                              dtype=np.float32)
+    #
+    # This is the C2 parameter set, which will also be used as the
+    # starting point for training.  These parameters are from training
+    # against ref000001:10000-40000 @ 11x in job 038537, using the
+    # logsigmoid objective function.
+    #
+    fullStart = np.array([ 0.2627555 , -1.09688872,
+                           -0.01637988, -0.60275947,
+                           -0.02682689, -1.00012494,
+                           0.06000148, -0.02579358,
+                           -0.15864559, -0.04403654,
+                           -1.02398814, -0.12135255,
+                           0,           0],
+                         dtype=np.float)
 
     """
     Starting point for training.
@@ -154,9 +160,7 @@ class AllQVsModel(Model):
     @classmethod
     def C2(cls):
         return cls.paramsFromArray(
-            np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
-                       -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
-                       -1.02398814, -0.12135255]),
+            AllQVsModel.start,
             bandingOptions=cc.BandingOptions(4, 5),
             fastScoreThreshold=-12.5)
 
@@ -187,7 +191,9 @@ class NoMergeQVModel(Model):
                              "DeletionQV",
                              "DeletionTag"])
 
-    freeParamIdx = [ 1,  # Mismatch
+    freeParamIdx = [ 0,  # Match
+                     1,  # Mismatch
+                     2,  # MismatchS
                      3,  # Branch
                      4,  # BranchS
                      5,  # DeletionN
@@ -214,11 +220,19 @@ class NoMergeQVModel(Model):
     @classmethod
     def C2(cls):
         return cls.paramsFromArray(
-            [ -3.90937113e+01,  -2.52056402e+01,  -1.38876854e+00,
-              -3.07886177e+01,  -1.51443235e-02,  -1.01846311e+00,
-              -8.63561305e+00,  -1.86460591e+00,  -4.13471617e+01],
-            bandingOptions=cc.BandingOptions(4, 200),
-            fastScoreThreshold=-500)
+            [-0.032017275750000004,
+              -0.9773427825000001,
+              -0.01119015225,
+              -0.630141005,
+              -0.0347192135,
+              -0.7697154425,
+              -0.0003786080875,
+              -0.02546157775,
+              -0.21589032625,
+              -0.04661514775,
+              -1.0336790425],
+            bandingOptions=cc.BandingOptions(4, 5),
+            fastScoreThreshold=-12.5)
 
 
 class NoQVsModel(Model):
@@ -249,8 +263,10 @@ class NoQVsModel(Model):
     @classmethod
     def C2(cls):
         return cls.paramsFromArray(
-            [-48.69212896,  -14.85421593,
-              -10.00835906, -10.01483049,
-              -14.85421593],
-            bandingOptions=cc.BandingOptions(4, 200),
-            fastScoreThreshold=-500)
+            [-1.217303224,
+              -0.37135539825,
+              -0.2502089765,
+              -0.25037076225,
+              -0.37135539825],
+            bandingOptions=cc.BandingOptions(4, 5),
+            fastScoreThreshold=-12.5)
