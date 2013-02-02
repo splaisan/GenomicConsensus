@@ -49,8 +49,10 @@ class ParameterSet(object):
     def fromString(s):
         if   s == "NoQVsModel.C2":          return NoQVsModel.C2()
         elif s == "AllQVsModel.C2":         return AllQVsModel.C2()
-        elif s == "AllQVsModel.XL_C2_Beta": return AllQVsModel.XL_C2_Beta()
         elif s == "NoMergeQVModel.C2" :     return NoMergeQVModel.C2()
+        elif s == "AllQVsModel.XL_C2_Beta": return AllQVsModel.XL_C2_Beta()
+        elif s == "AllQVsModel.7118P_beta": return AllQVsModel.dyeball_7118P_beta()
+        elif s == "AllQVsModel.8446P_beta": return AllQVsModel.dyeball_8446P_beta()
         else: raise Exception, "Unrecognized parameter set"
 
     @staticmethod
@@ -178,6 +180,32 @@ class AllQVsModel(Model):
                        0.5, -0.12135255]),
             bandingOptions=cc.BandingOptions(4, 5),
             fastScoreThreshold=-12.5)
+
+    @classmethod
+    def dyeball_7118P_beta(cls):
+        """
+        Trained at 60x on first 200kbp of 183394 (E. coli)
+        """
+        return cls.paramsFromArray(
+            [ 13.31411649, -30.42568016,  -0.30170806, -15.20471441,
+              -0.46108245, -25.06451822,  -2.10107303,  -0.6611031 ,
+              -15.381966  ,  -2.32552692, -43.3414917 ,  -0.61803397],
+            bandingOptions=cc.BandingOptions(4, 200),
+            fastScoreThreshold=-500)
+
+    @classmethod
+    def dyeball_8446P_beta(cls):
+        """
+        Trained at 60x on first 200kbp of 183399 (E. coli)
+        """
+        return cls.paramsFromArray(
+            [ 13.74259609, -29.43072161,  -0.71344687, -24.63413862,
+              -0.40215081, -26.29869275,  -2.71599121,  -1.28546193,
+              -16.61995966,  -1.4152423 , -42.34653315,   0.38508181],
+            bandingOptions=cc.BandingOptions(4, 200),
+            fastScoreThreshold=-500)
+
+
 
 
 class NoMergeQVModel(Model):
