@@ -34,7 +34,7 @@ from __future__ import absolute_import
 
 import math, md5, logging, re, numpy as np
 from collections import namedtuple, OrderedDict
-from pbcore.io import FastaReader, FastaEntry
+from pbcore.io import FastaReader, FastaRecord
 
 class ReferenceContig(object):
     """
@@ -92,26 +92,26 @@ def loadFromFile(filename, cmpH5):
     # Load contigs
     assert not isLoaded()
     f = FastaReader(filename)
-    numFastaEntries = 0
+    numFastaRecords = 0
     fastaChecksums = set()
-    for fastaEntry in f:
-        numFastaEntries += 1
-        md5sum = md5.md5(fastaEntry.sequence).hexdigest()
+    for fastaRecord in f:
+        numFastaRecords += 1
+        md5sum = md5.md5(fastaRecord.sequence).hexdigest()
         fastaChecksums.add(md5sum)
-        normalizedContigSequence = fastaEntry.sequence.upper()
+        normalizedContigSequence = fastaRecord.sequence.upper()
         if md5sum in cmpH5.referenceTable.MD5:
             cmpH5RefEntry = cmpH5.referenceInfo(md5sum)
             refId         = cmpH5RefEntry.ID
             refName       = cmpH5RefEntry.Name
-            contig = ReferenceContig(refId, refName, fastaEntry.raw_name, md5sum,
+            contig = ReferenceContig(refId, refName, fastaRecord.name, md5sum,
                                      np.array(normalizedContigSequence, dtype="c"),
                                      len(normalizedContigSequence))
             byId[refId]          = contig
             byName[refName]      = contig
             byMD5[contig.md5sum] = contig
-            byHeader[fastaEntry.raw_name] = contig
+            byHeader[fastaRecord.name] = contig
     logging.info("Loaded %d of %d reference groups from %s " %
-                 (len(byId), numFastaEntries, filename))
+                 (len(byId), numFastaRecords, filename))
 
     # If the cmpH5 has alignments to contigs that weren't contained in
     # the fasta file, report an error.
