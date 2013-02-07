@@ -92,7 +92,7 @@ class Variant(object):
 
     def toGffRecord(self):
         gffStart, gffEnd = self.gffCoords()
-        record = Gff3Record(reference.idToHeader(self.refId),
+        record = Gff3Record(reference.idToName(self.refId),
                             gffStart,
                             gffEnd,
                             self.gffType)

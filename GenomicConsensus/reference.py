@@ -32,27 +32,24 @@
 
 from __future__ import absolute_import
 
-import math, md5, logging, re, numpy as np
-from collections import namedtuple, OrderedDict
+import math, logging, re, numpy as np
+from collections import OrderedDict
 from pbcore.io import FastaReader, FastaRecord
 
 class ReferenceContig(object):
     """
     A contig from a reference (i.e. FASTA) file.
     """
-    def __init__(self, id, name, header, md5sum, sequence, length):
-        self.id     = id          # CmpH5-local id
-        self.name   = name        # "ref00.."
-        self.header = header      # Fasta header
-        self.md5sum = md5sum
+    def __init__(self, id, name, md5sum, sequence, length):
+        self.id       = id          # CmpH5-local id
+        self.name     = name        # Fasta header
+        self.md5sum   = md5sum
         self.sequence = sequence
-        self.length = length
+        self.length   = length
 
-# Lookup tables.
-byName   = OrderedDict()   # Global identifier (string, e.g. "ref000001") -> ReferenceContig
-byHeader = OrderedDict()   # Fasta header (string e.g. "chr1") -> ReferenceContig
-byId     = OrderedDict()   # CmpH5 local id (integer)    -> ReferenceContig
-byMD5    = OrderedDict()   # MD5 sum (e.g. "a13...")     -> ReferenceContig
+byName   = OrderedDict()   # Fasta header (string e.g. "chr1") -> FastaRecord
+byId     = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecord
+byMD5    = OrderedDict()   # MD5 sum (e.g. "a13...")           -> FastaRecord
 
 def idToName(_id):
     return byId[_id].name
@@ -60,20 +57,12 @@ def idToName(_id):
 def nameToId(name):
     return byName[name].id
 
-def idToHeader(_id):
-    return byId[_id].header
-
-def headerToId(header):
-    return byHeader[header].id
-
-# Interpret a string key (one of name, header, or id (as string))
+# Interpret a string key (one of name, or id (as string))
 # and find the associated id.  Only to be used in interpretation of
 # command-line input!
 def anyKeyToId(stringKey):
     assert isLoaded()
-    if stringKey in byHeader:
-        return byHeader[stringKey].id
-    elif stringKey in byName:
+    if stringKey in byName:
         return byName[stringKey].id
     elif stringKey.isdigit():
         refId = int(stringKey)
@@ -96,20 +85,19 @@ def loadFromFile(filename, cmpH5):
     fastaChecksums = set()
     for fastaRecord in f:
         numFastaRecords += 1
-        md5sum = md5.md5(fastaRecord.sequence).hexdigest()
+        md5sum = fastaRecord.md5
         fastaChecksums.add(md5sum)
         normalizedContigSequence = fastaRecord.sequence.upper()
         if md5sum in cmpH5.referenceTable.MD5:
             cmpH5RefEntry = cmpH5.referenceInfo(md5sum)
             refId         = cmpH5RefEntry.ID
-            refName       = cmpH5RefEntry.Name
-            contig = ReferenceContig(refId, refName, fastaRecord.name, md5sum,
+            refName       = fastaRecord.name
+            contig = ReferenceContig(refId, refName, md5sum,
                                      np.array(normalizedContigSequence, dtype="c"),
                                      len(normalizedContigSequence))
             byId[refId]          = contig
             byName[refName]      = contig
             byMD5[contig.md5sum] = contig
-            byHeader[fastaRecord.name] = contig
     logging.info("Loaded %d of %d reference groups from %s " %
                  (len(byId), numFastaRecords, filename))
 
@@ -139,7 +127,7 @@ def stringToWindow(s):
 def windowToString(referenceWindow):
     assert isLoaded()
     refId, refStart, refEnd = referenceWindow
-    return "%s:%d-%d" % (idToHeader(refId),
+    return "%s:%d-%d" % (idToName(refId),
                          refStart,
                          refEnd)
 
@@ -156,8 +144,10 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
     else:
         start, end = (0, referenceEntry.length)
 
-    # The last chunk only needs to reach 'end-overlap', because it will be extended to 'end' -- this prevents the generation of multiple chunks
-    # covering the last few bases of the reference (fixes bug #21940)
+    # The last chunk only needs to reach 'end-overlap', because it
+    # will be extended to 'end' -- this prevents the generation of
+    # multiple chunks covering the last few bases of the reference
+    # (fixes bug #21940)
     for chunkBegin in xrange(start, end-overlap, referenceStride):
         yield (refId,
                max(chunkBegin - overlap, 0),

@@ -50,7 +50,7 @@ class VariantsGffWriter(object):
         # Reference groups.
         for entry in referenceEntries:
             self._gffWriter.writeHeader("##sequence-region %s 1 %d" \
-                                            % (entry.header, entry.length))
+                                            % (entry.name, entry.length))
 
     def writeRecord(self, gffRecord):
         self._gffWriter.writeRecord(gffRecord)

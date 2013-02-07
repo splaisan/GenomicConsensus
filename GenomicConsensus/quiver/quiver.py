@@ -405,7 +405,7 @@ class QuiverResultCollector(object):
             for refId, unsortedChunks in self.consensusChunks.iteritems():
                 chunks = sorted(unsortedChunks)
                 css = "".join(chunk.consensus for chunk in chunks)
-                quiverHeader = reference.idToHeader(refId) + "|quiver"
+                quiverHeader = reference.idToName(refId) + "|quiver"
                 writer.writeRecord(quiverHeader, css)
 
         # 3. FASTQ output
@@ -415,7 +415,7 @@ class QuiverResultCollector(object):
                 chunks = sorted(unsortedChunks)
                 css = "".join(chunk.consensus for chunk in chunks)
                 qv = np.concatenate([chunk.qv for chunk in chunks])
-                quiverHeader = reference.idToHeader(refId) + "|quiver"
+                quiverHeader = reference.idToName(refId) + "|quiver"
                 writer.writeRecord(quiverHeader, css, qv)
 
 

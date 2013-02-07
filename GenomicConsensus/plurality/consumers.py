@@ -83,7 +83,7 @@ def csvConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refHeader = reference.idToHeader(refId)
+            refHeader = reference.idToName(refId)
             coverage = tbl.view(np.recarray).coverage
             logging.info("Writing CSV output for %s." % refHeader)
             for record in tbl[coverage > 0, :]:
@@ -100,7 +100,7 @@ def fastaConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refHeader = reference.idToHeader(refId) + "|plurality"
+            refHeader = reference.idToName(refId) + "|plurality"
             seqArray = tbl["consensus"]
             logging.info("Writing FASTA output for %s." % refHeader)
             writer.writeRecord(refHeader, seqArray)
@@ -116,7 +116,7 @@ def fastqConsumer(file, **kwargs):
     try:
         while True:
             (refId, tbl) = (yield)
-            refHeader = reference.idToHeader(refId) + "|plurality"
+            refHeader = reference.idToName(refId) + "|plurality"
             seqArray = tbl["consensus"]
             qvArray = tbl["consensusConfidence"]
             logging.info("Writing FASTQ output for %s." % refHeader)
@@ -138,7 +138,7 @@ def variantsGffConsumer(file, **kwargs):
             (refId, tbl) = (yield)
 
             variants = []
-            refHeader = reference.idToHeader(refId)
+            refHeader = reference.idToName(refId)
             refSeq = reference.byId[refId].sequence
             logging.info("Calculating variants from consensus for %s." % refHeader)
 
