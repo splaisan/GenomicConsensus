@@ -57,7 +57,7 @@ class Worker(object):
 
         while True:
             datum = self._workQueue.get()
-            if datum == None:
+            if datum is None:
                 # Sentinel indicating end of input.  Place a sentinel
                 # on the results queue and end this worker process.
                 self._resultsQueue.put(None)

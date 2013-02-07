@@ -111,7 +111,7 @@ def loadFromFile(filename, cmpH5):
 
 def stringToWindow(s):
     assert isLoaded()
-    if s == None:
+    if s is None:
         return None
     m = re.match("(.*):(.*)-(.*)", s)
     if m:
@@ -137,7 +137,7 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
     Enumerate all work chunks (restricted to the window, if provided).
     """
     assert isLoaded()
-    assert (referenceWindow == None) or (refId == referenceWindow[0])
+    assert (referenceWindow is None) or (refId == referenceWindow[0])
     referenceEntry = byId[refId]
     if referenceWindow:
         _, start, end = referenceWindow
@@ -158,7 +158,7 @@ def numChunks(refId, referenceStride, referenceWindow=None):
     How many chunks will there be for the given refId and window restriction?
     """
     assert isLoaded()
-    assert (referenceWindow == None) or (refId == referenceWindow[0])
+    assert (referenceWindow is None) or (refId == referenceWindow[0])
     referenceEntry = byId[refId]
     if referenceWindow:
         _, start, end = referenceWindow
@@ -171,7 +171,7 @@ def enumerateIds(referenceWindow=None):
     Enumerate all refIds (subject to the referenceWindow restriction, if provided).
     """
     assert isLoaded()
-    if referenceWindow == None:
+    if referenceWindow is None:
         for refId in byId: yield refId
     else:
         refId, refStart, refEnd = referenceWindow

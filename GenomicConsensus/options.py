@@ -268,5 +268,5 @@ def importAdditionalDefaultOptions(additionalDefaults):
     # overriden on the command-line.
     optionsDictView = vars(options)
     for k, v in additionalDefaults.iteritems():
-        if k not in optionsDictView or optionsDictView[k] == None:
+        if k not in optionsDictView or optionsDictView[k] is None:
             optionsDictView[k] = v

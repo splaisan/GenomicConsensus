@@ -48,7 +48,7 @@ class ResultCollector(object):
         sentinelsReceived = 0
         while sentinelsReceived < options.numWorkers:
             result = self._resultsQueue.get()
-            if result == None:
+            if result is None:
                 sentinelsReceived += 1
             else:
                 self.onResult(result)
