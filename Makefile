@@ -12,7 +12,7 @@ develop:
 
 tests:
 	# Unit tests
-	nosetests tests/unit
+	nosetests --with-xunit tests/unit
 	# End-to-end tests
 	PATH=`pwd`:$(PATH) cram tests/integration/*.t
 
