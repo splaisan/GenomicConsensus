@@ -40,13 +40,14 @@ import argparse, math, numpy as np, pbls, logging
 from scipy.optimize import fmin, fmin_powell
 import SocketServer as ss
 
-TRAINING_JOB     = "038537"
-TRAINING_WINDOWS = [ (1, winStart, winStart+1000)
-                     for winStart in range(5000, 45000, 1000)]
+# TRAINING_JOB     = "038537"
+# TRAINING_WINDOWS = [ (1, winStart, winStart+1000)
+#                      for winStart in range(5000, 45000, 1000)]
 BANDING   = BandingOptions(4, 200)
 THRESHOLD = -500
 
-TRAINING_JOB = "183394"
+#TRAINING_JOB = "183394"  # 7118P
+TRAINING_JOB = "183399" # 8446P
 
 # Exclude some tricky bastards ... somehow we now have 3 new transposon insertions
 # in our damn ecoli at:
@@ -215,6 +216,7 @@ def serve(port):
 
 
 def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
     np.seterr(over="ignore")
     global pool
     pool = initializeWorkers(options.numWorkers)
