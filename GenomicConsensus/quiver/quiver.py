@@ -45,7 +45,7 @@ from ..io.VariantsGffWriter import VariantsGffWriter
 
 try:
     import ConsensusCore as cc
-    from GenomicConsensus.utils import noEvidenceConsensusCall
+    from GenomicConsensus.utils import noEvidenceConsensusCall, die
     from GenomicConsensus.quiver.utils import *
     from GenomicConsensus.quiver.model import *
     if cc.Version.VersionTuple() == (0, 5, 0):
@@ -220,25 +220,30 @@ def dumpEvidence(evidenceDumpBaseDirectory,
         readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
     readsFasta.close()
 
+
+def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
+    parametersFile = findParametersFile(parametersFileOrDirectory)
+    parameterSets = loadParameterSets(parametersFile)
+    if options.parameterSet == "best":
+        chemistry = "C2"  # hack for now ... load this from cmp.h5
+        params = bestParameterSet(parameterSets.values(),
+                                  chemistry,
+                                  cmpH5.pulseFeaturesAvailable())
+    else:
+        try:
+            params = parameterSets[parameterSetName]
+        except:
+            die("Quiver: no available parameter set named %s" % parameterSetName)
+    return params
+
+
 class QuiverWorker(object):
 
     def onStart(self):
-        if options.parameters == "best":
-            self.params = ParameterSet.bestAvailable(self._inCmpH5)
-        else:
-            self.params = ParameterSet.fromString(options.parameters)
-        self.model  = self.params.model
-
-        # If the parameter set was chosen automatically by "best" and
-        # the model is not AllQVs, we should warn the user that this
-        # could result in a degradation in performance.
-        if options.parameters=="best" and self.model != AllQVsModel:
-            logging.warn(
-                "This .cmp.h5 file lacks some of the QV data tracks that are required " +
-                "for optimal performance of the Quiver algorithm.  For optimal results" +
-                " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
-                "from an instrument using software version 1.3.1 or later.")
-
+        self.params = fetchParameterSet(self._inCmpH5,
+                                        options.parametersFile,
+                                        options.parameterSet)
+        self.model = self.params.model
 
     def onChunk(self, referenceWindow, alnHits):
         refId, refStart, refEnd = referenceWindow
@@ -451,17 +456,29 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "variantCoverageThreshold"   : 5,
                              "variantConfidenceThreshold" : 40,
                              "coverage"                   : 100,
-                             "parameters"                 : "best" }
+                             "parameterSet"               : "best" }
 
 def compatibilityWithCmpH5(cmpH5):
     if cmpH5.readType != "standard":
-        return (False, "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads.")
-    elif (options.parameters != "best" and
-        not ParameterSet.fromString(options.parameters).model.isCompatibleWithCmpH5(cmpH5)):
-        return (False, "This Quiver parameter set requires QV features not available in this .cmp.h5 file.")
-    else:
+        return (False, "The Quiver algorithm requires a cmp.h5 file containing " + \
+                       "standard (non-CCS) reads.")
 
-        return (True, "OK")
+    params = fetchParameterSet(cmpH5,
+                               options.parametersFile,
+                               options.parameterSet)
+
+    if not params.model.isCompatibleWithCmpH5(cmpH5):
+        return (False, "Selected Quiver parameter set is incompatible with this " + \
+                        "cmp.h5 file due to missing data tracks.")
+
+    if options.parameterSet == "best" and params.model != AllQVsModel:
+        logging.warn(
+            "This .cmp.h5 file lacks some of the QV data tracks that are required " +
+            "for optimal performance of the Quiver algorithm.  For optimal results" +
+            " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
+            "from an instrument using software version 1.3.1 or later.")
+
+    return (True, "OK")
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.

@@ -128,9 +128,16 @@ def parseOptions(relax=False):
                         dest="algorithm",
                         type=str,
                         default="plurality")
-    parser.add_argument("--parameters", "-p",
+    parser.add_argument("--parametersFile", "-P",
+                        dest="parametersFile",
+                        type=str,
+                        default=None,
+                        help="Parameter set filename (.ini), or directory containing "  + \
+                             "parameter set files, of which the largest in sort order " + \
+                             "will be used.")
+    parser.add_argument("--parameterSet", "-p",
                         action="store",
-                        dest="parameters",
+                        dest="parameterSet",
                         type=str,
                         default=None)
 

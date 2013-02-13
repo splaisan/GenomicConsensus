@@ -31,7 +31,7 @@
 # Author: David Alexander
 
 from __future__ import absolute_import
-import math, numpy as np, os.path
+import math, numpy as np, os.path, sys
 
 # We truncate QVs at 93 because the FASTQ format downstream can only
 # support QVs in the range [0, 93] without lossage.
@@ -100,3 +100,7 @@ def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
         raise Exception, "Invalid `noEvidenceConsensusCallMode`"
 
     return result
+
+def die(msg):
+    print msg
+    sys.exit(-1)

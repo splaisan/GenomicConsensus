@@ -11,6 +11,8 @@ setup(
                'plurality',
                'quiver'],
     packages = find_packages(),
+    package_data={'GenomicConsensus.quiver': ['resources/*.ini']},
+    include_package_data=True,
     zip_safe = False,
     install_requires=[
         'pbcore >= 0.5.0',

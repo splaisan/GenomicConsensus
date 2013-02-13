@@ -9,7 +9,7 @@ Quiver actually makes one error here, which is kind of disappointing,
 but this data is from a really ancient instrument-software version, so
 I'm not all that surprised.
 
-  $ quiver -pNoQVsModel.C2 -x0 -q0 $INPUT -r $REFERENCE -o v.gff -o css.fa -o css.fq
+  $ quiver -pC2.NoQVsModel -x0 -q0 $INPUT -r $REFERENCE -o v.gff -o css.fa -o css.fq
 
   $ cat v.gff
   ##gff-version 3

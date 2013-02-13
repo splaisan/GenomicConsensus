@@ -30,40 +30,86 @@
 
 # Author: David Alexander
 
-import numpy as np
 from GenomicConsensus.quiver.utils import asFloatFeature
 import ConsensusCore as cc
+
+import numpy as np, ConfigParser
+from glob import glob
+from os.path import join
+from pkg_resources import resource_filename, Requirement
+
 
 __all__ = [ "ParameterSet",
             "AllQVsModel",
             "NoMergeQVModel",
-            "NoQVsModel"      ]
-
+            "NoQVsModel",
+            "findParametersFile",
+            "loadParameterSets",
+            "bestParameterSet"  ]
 
 class ParameterSet(object):
-    def __init__(self, model, quiverConfig):
-        self.model = model
+    def __init__(self, name, quiverConfig):
+        chem, modelName = name.split(".")[:2]
+        if    modelName=="AllQVsModel":    model = AllQVsModel
+        elif  modelName=="NoMergeQVModel": model = NoMergeQVModel
+        elif  modelName=="NoQVsModel":     model = NoQVsModel
+        self.name         = name
+        self.chemistry    = chem
+        self.model        = model
         self.quiverConfig = quiverConfig
 
-    @staticmethod
-    def fromString(s):
-        if   s == "NoQVsModel.C2":          return NoQVsModel.C2()
-        elif s == "AllQVsModel.C2":         return AllQVsModel.C2()
-        elif s == "NoMergeQVModel.C2" :     return NoMergeQVModel.C2()
-        elif s == "AllQVsModel.XL_C2_Beta": return AllQVsModel.XL_C2_Beta()
-        elif s == "AllQVsModel.7118P_beta": return AllQVsModel.dyeball_7118P_beta()
-        elif s == "AllQVsModel.8446P_beta": return AllQVsModel.dyeball_8446P_beta()
-        else: raise Exception, "Unrecognized parameter set"
+def _getResourcesDirectory():
+    return resource_filename(Requirement.parse("GenomicConsensus"),
+                             "GenomicConsensus/quiver/resources")
 
-    @staticmethod
-    def bestAvailable(cmpH5):
-        if AllQVsModel.isCompatibleWithCmpH5(cmpH5):
-            params = AllQVsModel.C2()
-        elif NoMergeQVModel.isCompatibleWithCmpH5(cmpH5):
-            params = NoMergeQVModel.C2()
-        else:
-            params = NoQVsModel.C2()
-        return params
+def findParametersFile(filenameOrDirectory):
+    if filenameOrDirectory is None:
+        filenameOrDirectory = _getResourcesDirectory()
+
+    if filenameOrDirectory.endswith(".ini"):
+        return filenameOrDirectory
+    else:
+        eligibleParameterFiles = glob(join(filenameOrDirectory, "*.ini"))
+        if not eligibleParameterFiles:
+            raise ValueError("Parameter set directory must contain parameter set (*.ini) files")
+        return sorted(eligibleParameterFiles)[-1]
+
+def _buildParameterSet(parameterSetName, nameValuePairs):
+    assert len(nameValuePairs) == 12
+    qvModelParams = cc.QvModelParams(*[ float(pair[1]) for pair in nameValuePairs ])
+    quiverConfig = cc.QuiverConfig(qvModelParams,
+                                   cc.ALL_MOVES,
+                                   cc.BandingOptions(4, 5),
+                                   -12.5)
+    return ParameterSet(parameterSetName, quiverConfig)
+
+def loadParameterSets(iniFilename):
+    # returns dict: name -> ParameterSet
+    cp = ConfigParser.ConfigParser()
+    cp.optionxform=str
+    cp.read([iniFilename])
+    sections = cp.sections()
+    return { sectionName : _buildParameterSet(sectionName, cp.items(sectionName))
+             for sectionName in sections }
+
+def bestParameterSet(parameterSets, chemistry, qvsAvailable):
+    fallbackParameterSets = \
+        [ paramSet for paramSet in parameterSets
+          if paramSet.chemistry == "unknown"
+          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
+    perChemistryParameterSets = \
+        [ paramSet for paramSet in parameterSets
+          if paramSet.chemistry == chemistry
+          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
+    # Find the best one, under the assumption that a chemistry-trained
+    # parameter set is always better than the "unknown" chemistry set.
+    if perChemistryParameterSets:
+        return max(perChemistryParameterSets, key=lambda ps: ps.model.rank)
+    elif fallbackParameterSets:
+        return max(fallbackParameterSets,     key=lambda ps: ps.model.rank)
+    else:
+        raise Exception("Quiver: No applicable parameter set found!")
+
 
 class Model(object):
     @classmethod
@@ -124,6 +170,9 @@ class Model(object):
 
 
 class AllQVsModel(Model):
+    # Rank is used to determine whether one model is better than another,
+    # all else being equal
+    rank = 3
 
     requiredFeatures = set([ "InsertionQV",
                              "SubstitutionQV",
@@ -135,6 +184,7 @@ class AllQVsModel(Model):
     fixedParamIdx  = []
     fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
     numFreeParams  = len(freeParamIdx)
+
     #
     # This is the C2 parameter set, which will also be used as the
     # starting point for training.  These parameters are from training
@@ -155,65 +205,15 @@ class AllQVsModel(Model):
     """
     start = fullStart[freeParamIdx]
 
-    """
-    Parameters from training against ref000001:10000-40000 @ 11x in
-    job 038537, using the logsigmoid objective function.
-    """
-    @classmethod
-    def C2(cls):
-        return cls.paramsFromArray(
-            AllQVsModel.start,
-            bandingOptions=cc.BandingOptions(4, 5),
-            fastScoreThreshold=-12.5)
-
-    """
-    Adjustment to the merging rate to account for the increased
-    merging apparent in the 'C' channel in the XL-C2 chemistry.
-    Validated as increasing the discrimination score in job 038537,
-    using the logsigmoid objective function.
-    """
-    @classmethod
-    def XL_C2_Beta(cls):
-        return cls.paramsFromArray(
-            np.array([ 0.2627555 , -1.09688872, -0.01637988, -0.60275947, -0.02682689,
-                       -1.00012494,  0.06000148, -0.02579358, -0.15864559, -0.04403654,
-                       0.5, -0.12135255]),
-            bandingOptions=cc.BandingOptions(4, 5),
-            fastScoreThreshold=-12.5)
-
-    @classmethod
-    def dyeball_7118P_beta(cls):
-        """
-        Trained at 60x on first 200kbp of 183394 (E. coli)
-        """
-        return cls.paramsFromArray(
-            [ 13.31411649, -30.42568016,  -0.30170806, -15.20471441,
-              -0.46108245, -25.06451822,  -2.10107303,  -0.6611031 ,
-              -15.381966  ,  -2.32552692, -43.3414917 ,  -0.61803397],
-            bandingOptions=cc.BandingOptions(4, 200),
-            fastScoreThreshold=-500)
-
-    @classmethod
-    def dyeball_8446P_beta(cls):
-        """
-        Trained at 60x on first 200kbp of 183399 (E. coli)
-        """
-        return cls.paramsFromArray(
-            [ 13.74259609, -29.43072161,  -0.71344687, -24.63413862,
-              -0.40215081, -26.29869275,  -2.71599121,  -1.28546193,
-              -16.61995966,  -1.4152423 , -42.34653315,   0.38508181],
-            bandingOptions=cc.BandingOptions(4, 200),
-            fastScoreThreshold=-500)
-
-
-
-
 class NoMergeQVModel(Model):
     """
     This model is intended for cmp.h5 files produced using the
     ResequencingQVs workflow using bas.h5 files that lack the MergeQV
     (i.e. Primary software pre-1.3.1).
     """
+    rank = 2
+
+
     requiredFeatures = set([ "InsertionQV",
                              "SubstitutionQV",
                              "DeletionQV",
@@ -241,29 +241,9 @@ class NoMergeQVModel(Model):
     """
     start = fullStart[freeParamIdx]
 
-    """
-    Parameters from training against ref000001:10000-40000 @ 11x in
-    job 038537, using the logsigmoid objective function.
-    """
-    @classmethod
-    def C2(cls):
-        return cls.paramsFromArray(
-            [-0.032017275750000004,
-              -0.9773427825000001,
-              -0.01119015225,
-              -0.630141005,
-              -0.0347192135,
-              -0.7697154425,
-              -0.0003786080875,
-              -0.02546157775,
-              -0.21589032625,
-              -0.04661514775,
-              -1.0336790425],
-            bandingOptions=cc.BandingOptions(4, 5),
-            fastScoreThreshold=-12.5)
-
 
 class NoQVsModel(Model):
+    rank = 1
 
     requiredFeatures = set([])
 
@@ -283,18 +263,3 @@ class NoQVsModel(Model):
     Starting point for training.
     """
     start = fullStart[freeParamIdx]
-
-    """
-    Parameters from training against ref000001:10000-40000 @ 11x in
-    job 038537, using the logsigmoid objective function.
-    """
-    @classmethod
-    def C2(cls):
-        return cls.paramsFromArray(
-            [-1.217303224,
-              -0.37135539825,
-              -0.2502089765,
-              -0.25037076225,
-              -0.37135539825],
-            bandingOptions=cc.BandingOptions(4, 5),
-            fastScoreThreshold=-12.5)
