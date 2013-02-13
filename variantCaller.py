@@ -164,38 +164,28 @@ class ToolRunner(object):
         """
         Read the CmpH5 input file into a CmpH5 object and
         store it as self._inCmpH5.
-
-        Raises an exception if file is unsorted or empty.
         """
         fname = options.inputFilename
-        logging.info("Reading CmpH5 file %s" % (fname,))
         self._inCmpH5 = CmpH5Reader(fname)
-        if not self._inCmpH5.isSorted:
-            die("Input CmpH5 file must be sorted.")
-        if self._inCmpH5.isEmpty:
-            die("Input CmpH5 file must be nonempty.")
 
-        # Compatible with selected algorithm?
-        cmpH5isOK, msg = self._algorithm.compatibilityWithCmpH5(self._inCmpH5)
-        if not cmpH5isOK:
-            die("Failure: %s" %  msg)
 
-        logging.info("Input CmpH5 data: numAlnHits=%d" % len(self._inCmpH5))
-
-    def _loadReference(self):
-        # The refGroupId<->refGroupFullName mapping is only delineated
-        # in the cmph5 file.  So we have to open the cmph5, use it to
-        # look up the mapping, then close it---we do the real open
-        # after the fork.
-        assert self._inCmpH5 == None
-        cmph5 = CmpH5Reader(options.inputFilename)
-        err = reference.loadFromFile(options.referenceFilename, cmph5)
+    def _loadReference(self, cmpH5):
+        err = reference.loadFromFile(options.referenceFilename, cmpH5)
         if err:
             die("Error loading reference")
         # Grok the referenceWindow spec, if any.
         options.referenceWindow = \
             reference.stringToWindow(options.referenceWindowAsString)
-        cmph5.close()
+
+    def _checkFileCompatibility(self, cmpH5):
+        if not cmpH5.isSorted:
+            die("Input CmpH5 file must be sorted.")
+        if cmpH5.isEmpty:
+            die("Input CmpH5 file must be nonempty.")
+        # Compatible with selected algorithm?
+        cmpH5isOK, msg = self._algorithm.compatibilityWithCmpH5(cmpH5)
+        if not cmpH5isOK:
+            die("Failure: %s" %  msg)
 
     def _mainLoop(self):
         # Split up reference genome into chunks and farm out the
@@ -284,12 +274,22 @@ class ToolRunner(object):
         if options.doProfiling:
             self._makeTemporaryDirectory()
 
-        self._loadReference()
+        # We need to peek at the cmp.h5 file to build the The
+        # refGroupId<->refGroupFullName mapping, and to determine
+        # whether the selected algorithm parameters (Quiver) are
+        # compatible with the data.  But we then have to close the
+        # file, and let the "real" open happen after the fork.
+        with CmpH5Reader(options.inputFilename) as peekCmpH5:
+            logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
+            self._loadReference(peekCmpH5)
+            self._checkFileCompatibility(peekCmpH5)
+            logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
+
         if options.dumpEvidence:
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
 
-        self._readCmpH5Input()
         self._launchSlaves()
+        self._readCmpH5Input()
 
         monitoringThread = threading.Thread(target=monitorSlaves, args=(self,))
         monitoringThread.start()
