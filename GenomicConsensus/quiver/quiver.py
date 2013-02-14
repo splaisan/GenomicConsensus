@@ -257,7 +257,11 @@ class QuiverWorker(object):
         clippedAlns = clippedSpanningAlns + clippedNonSpanningAlns
         coverageReport = "[span=%d, nonspan=%d]" % \
             (len(clippedSpanningAlns), len(clippedNonSpanningAlns))
-        siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5, referenceWindow,
+
+        # Get the coverage for [refStart, refEnd], as we can actually
+        # try to call an insertion at refEnd, in which case we
+        # technically need the coverage there.
+        siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5, (refId, refStart, refEnd+1),
                                                        rowNumbers=[a.rowNumber
                                                                    for a in clippedAlns])
 
