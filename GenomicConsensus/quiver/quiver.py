@@ -225,7 +225,7 @@ def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
     parametersFile = findParametersFile(parametersFileOrDirectory)
     parameterSets = loadParameterSets(parametersFile)
     if options.parameterSet == "best":
-        chemistry = "C2"  # hack for now ... load this from cmp.h5
+        chemistry = majorityChemistry(cmpH5)
         params = bestParameterSet(parameterSets.values(),
                                   chemistry,
                                   cmpH5.pulseFeaturesAvailable())

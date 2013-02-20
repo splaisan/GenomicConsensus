@@ -33,7 +33,7 @@
 from GenomicConsensus.quiver.utils import asFloatFeature
 import ConsensusCore as cc
 
-import numpy as np, ConfigParser
+import numpy as np, ConfigParser, collections
 from glob import glob
 from os.path import join
 from pkg_resources import resource_filename, Requirement
@@ -45,7 +45,8 @@ __all__ = [ "ParameterSet",
             "NoQVsModel",
             "findParametersFile",
             "loadParameterSets",
-            "bestParameterSet"  ]
+            "bestParameterSet",
+            "majorityChemistry" ]
 
 class ParameterSet(object):
     def __init__(self, name, quiverConfig):
@@ -61,6 +62,19 @@ class ParameterSet(object):
 def _getResourcesDirectory():
     return resource_filename(Requirement.parse("GenomicConsensus"),
                              "GenomicConsensus/quiver/resources")
+
+def majorityChemistry(cmpH5):
+    """
+    For the moment, we are doing Quiver analyses based on the majority
+    chemistry represented in the cmp.h5 file.  Admittedly this could
+    lead to suboptimal Quiver performance on mixed-chemistry cmp.h5
+    files, but it is expedient.  Tie-breaking is done by alphabetical
+    order of chemistry name.
+    """
+    chemistries = cmpH5.movieTable.SequencingChemistry
+    counts = collections.Counter(chemistries).most_common()
+    sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
+    return sortedCounts[0][0]
 
 def findParametersFile(filenameOrDirectory):
     if filenameOrDirectory is None:
