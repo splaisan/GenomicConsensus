@@ -34,24 +34,31 @@ class TestBestParameterSet:
         assert_equal("C5.NoQVsModel",
                      bestParameterSet(self.parameterSets.values(), "C5", []).name)
         assert_equal("C5.NoMergeQVModel",
-                     bestParameterSet(self.parameterSets.values(), "C5", NoMergeQVModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C5",
+                                      NoMergeQVModel.requiredFeatures).name)
         assert_equal("C5.AllQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C5", AllQVsModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C5",
+                                      AllQVsModel.requiredFeatures).name)
 
     def test_bestParameterSet_2(self):
         # Try C6, where there is only one trained parameter set
         assert_equal("C6.NoQVsModel",
                      bestParameterSet(self.parameterSets.values(), "C6", []).name)
         assert_equal("C6.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C6", NoMergeQVModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C6",
+                                      NoMergeQVModel.requiredFeatures).name)
         assert_equal("C6.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C6", AllQVsModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C6",
+                                      AllQVsModel.requiredFeatures).name)
 
     def test_bestParameterSet_3(self):
-        # Try the "future" chemistry C7, where we don't have access to any trained parameter sets yet
+        # Try the "future" chemistry C7, where we don't have access to
+        # any trained parameter sets yet
         assert_equal("unknown.NoQVsModel",
                      bestParameterSet(self.parameterSets.values(), "C7", []).name)
         assert_equal("unknown.NoMergeQVModel",
-                     bestParameterSet(self.parameterSets.values(), "C7", NoMergeQVModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C7",
+                                      NoMergeQVModel.requiredFeatures).name)
         assert_equal("unknown.AllQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C7", AllQVsModel.requiredFeatures).name)
+                     bestParameterSet(self.parameterSets.values(), "C7",
+                                      AllQVsModel.requiredFeatures).name)
