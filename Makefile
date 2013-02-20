@@ -1,4 +1,5 @@
 SHELL = /bin/bash -e
+INTERNAL_UTILS_PATH = /mnt/secondary/Share/Quiver/Tools
 
 bdist:
 	python setup.py build --executable="/usr/bin/env python"
@@ -14,33 +15,31 @@ tests:
 	# Unit tests
 	nosetests --with-xunit tests/unit
 	# End-to-end tests
-	PATH=`pwd`:$(PATH) cram tests/integration/*.t
+	PATH=`pwd`:$(PATH) cram tests/cram/*.t
 
 extra-tests:
 	# Tests that need to be run by Jenkins but are slowing
 	# down the development cycle, so aren't run by "tests"
 	# target.
-	PATH=`pwd`:$(PATH) cram tests/integration/extra/*.t
-
-
-INTERNAL_UTILS_PATH = /mnt/secondary/Share/Quiver/Tools
+	PATH=`pwd`:$(PATH) cram tests/cram/extra/*.t
 
 internal-tests:
 	# Tests that depend on files located on PacBio internal NFS
 	# servers, including some utilities (exonerate suite, MuMMer)
-	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/integration/internal/*.t
+	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/cram/internal/*.t
 
 doc:
 	cd doc; make html
 
-docs: doc
-
-
 clean:
-	-rm -f *.gz *.gff *.fq *.fa *.csv
 	-rm -rf dist/ build/ *.egg-info
 	-rm -rf doc/_build
 	-find . -name "*.pyc" | xargs rm -f
 
+
+# Aliases
+docs: doc
+check: tests
+test: tests
 
 .PHONY: check test tests doc docs clean
