@@ -30,7 +30,8 @@
 
 # Author: David Alexander
 
-from GenomicConsensus.quiver.utils import asFloatFeature
+from GenomicConsensus.utils import die
+from GenomicConsensus.quiver.utils import asFloatFeature, fst, snd
 import ConsensusCore as cc
 
 import numpy as np, ConfigParser, collections
@@ -43,19 +44,51 @@ __all__ = [ "ParameterSet",
             "AllQVsModel",
             "NoMergeQVModel",
             "NoQVsModel",
+            "AllQVsMergingByChannelModel",
+            "NoQVsMergingByChannelModel",
             "findParametersFile",
             "loadParameterSets",
             "bestParameterSet",
             "majorityChemistry" ]
 
+
+_basicParameterNames = [ "Match",
+                         "Mismatch",
+                         "MismatchS",
+                         "Branch",
+                         "BranchS",
+                         "DeletionN",
+                         "DeletionWithTag",
+                         "DeletionWithTagS",
+                         "Nce",
+                         "NceS",
+                         "Merge",
+                         "MergeS" ]
+
+_mergeByChannelParameterNames = [ "Match",
+                                  "Mismatch",
+                                  "MismatchS",
+                                  "Branch",
+                                  "BranchS",
+                                  "DeletionN",
+                                  "DeletionWithTag",
+                                  "DeletionWithTagS",
+                                  "Nce",
+                                  "NceS",
+                                  "Merge_A",
+                                  "Merge_C",
+                                  "Merge_G",
+                                  "Merge_T",
+                                  "MergeS_A",
+                                  "MergeS_C",
+                                  "MergeS_G",
+                                  "MergeS_T" ]
+
+
 class ParameterSet(object):
-    def __init__(self, name, quiverConfig):
-        chem, modelName = name.split(".")[:2]
-        if    modelName=="AllQVsModel":    model = AllQVsModel
-        elif  modelName=="NoMergeQVModel": model = NoMergeQVModel
-        elif  modelName=="NoQVsModel":     model = NoQVsModel
+    def __init__(self, name, model, chemistry, quiverConfig):
         self.name         = name
-        self.chemistry    = chem
+        self.chemistry    = chemistry
         self.model        = model
         self.quiverConfig = quiverConfig
 
@@ -89,13 +122,25 @@ def findParametersFile(filenameOrDirectory):
         return sorted(eligibleParameterFiles)[-1]
 
 def _buildParameterSet(parameterSetName, nameValuePairs):
-    assert len(nameValuePairs) == 12
-    qvModelParams = cc.QvModelParams(*[ float(pair[1]) for pair in nameValuePairs ])
+    chem, modelName = parameterSetName.split(".")[:2]
+    if    modelName == "AllQVsModel":    model = AllQVsModel
+    elif  modelName == "NoMergeQVModel": model = NoMergeQVModel
+    elif  modelName == "NoQVsModel":     model = NoQVsModel
+    elif  modelName == "AllQVsMergingByChannelModel": model = AllQVsMergingByChannelModel
+    elif  modelName == "NoQVsMergingByChannelModel":  model = NoQVsMergingByChannelModel
+    else:
+        logging.error("Found parameter set for unrecognized model: %s" % modelName)
+        return None
+
+    if map(fst, nameValuePairs) != model.parameterNames:
+        die("Malformed parameter set file")
+
+    qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
     quiverConfig = cc.QuiverConfig(qvModelParams,
                                    cc.ALL_MOVES,
                                    cc.BandingOptions(4, 5),
                                    -12.5)
-    return ParameterSet(parameterSetName, quiverConfig)
+    return ParameterSet(parameterSetName, model, chem, quiverConfig)
 
 def loadParameterSets(iniFilename):
     # returns dict: name -> ParameterSet
@@ -103,8 +148,12 @@ def loadParameterSets(iniFilename):
     cp.optionxform=str
     cp.read([iniFilename])
     sections = cp.sections()
-    return { sectionName : _buildParameterSet(sectionName, cp.items(sectionName))
-             for sectionName in sections }
+    parameterSets = {}
+    for sectionName in sections:
+        parameterSet = _buildParameterSet(sectionName, cp.items(sectionName))
+        if parameterSet:
+            parameterSets[sectionName] = parameterSet
+    return parameterSets
 
 def bestParameterSet(parameterSets, chemistry, qvsAvailable):
     fallbackParameterSets = \
@@ -129,16 +178,18 @@ class Model(object):
     @classmethod
     def paramsFromArray(cls, arr, bandingOptions, fastScoreThreshold):
         assert len(arr) == cls.numFreeParams
-        arr_ = np.zeros(shape=(14,))
+        arr_ = np.zeros(shape=(len(cls.parameterNames),))
         arr_[cls.freeParamIdx] = arr
         res_ = np.where(cls.fixedParamMask, cls.fullStart, arr_).astype(np.float32)
         qvModelParams = cc.QvModelParams(*res_.tolist())
-        return ParameterSet(cls, cc.QuiverConfig(qvModelParams,
-                                                 cc.ALL_MOVES,
-                                                 bandingOptions,
-                                                 fastScoreThreshold))
+        return ParameterSet("Training", "Training", cls,
+                            cc.QuiverConfig(qvModelParams,
+                                            cc.ALL_MOVES,
+                                            bandingOptions,
+                                            fastScoreThreshold))
 
     requiredFeatures = set([])
+    parameterNames = []
 
     @classmethod
     def isCompatibleWithCmpH5(cls, cmpH5):
@@ -194,9 +245,11 @@ class AllQVsModel(Model):
                              "DeletionTag",
                              "MergeQV"       ])
 
-    freeParamIdx   = range(12)  # Everything but the Burst stuff
+    parameterNames = _basicParameterNames
+
+    freeParamIdx   = range(12)
     fixedParamIdx  = []
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
+    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
     numFreeParams  = len(freeParamIdx)
 
     #
@@ -210,8 +263,7 @@ class AllQVsModel(Model):
                            -0.02682689, -1.00012494,
                            0.06000148, -0.02579358,
                            -0.15864559, -0.04403654,
-                           -1.02398814, -0.12135255,
-                           0,           0],
+                           -1.02398814, -0.12135255],
                          dtype=np.float)
 
     """
@@ -227,11 +279,12 @@ class NoMergeQVModel(Model):
     """
     rank = 2
 
-
     requiredFeatures = set([ "InsertionQV",
                              "SubstitutionQV",
                              "DeletionQV",
                              "DeletionTag"])
+
+    parameterNames = _basicParameterNames
 
     freeParamIdx = [ 0,  # Match
                      1,  # Mismatch
@@ -245,8 +298,8 @@ class NoMergeQVModel(Model):
                      9,  # NceS
                     10 ] # Merge
 
-    fixedParamIdx = [ i for i in xrange(14) if i not in freeParamIdx ]
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
+    fixedParamIdx = [ i for i in xrange(12) if i not in freeParamIdx ]
+    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
     numFreeParams = len(freeParamIdx)
     fullStart = AllQVsModel.fullStart
 
@@ -258,8 +311,8 @@ class NoMergeQVModel(Model):
 
 class NoQVsModel(Model):
     rank = 1
-
     requiredFeatures = set([])
+    parameterNames = _basicParameterNames
 
     freeParamIdx =   [ 1,   # Mismatch
                        3,   # Branch;
@@ -267,11 +320,75 @@ class NoQVsModel(Model):
                        8,   # Nce;
                        10 ] # Merge;
 
-    fixedParamIdx = [ i for i in xrange(14) if i not in freeParamIdx ]
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(14) ]
+    fixedParamIdx = [ i for i in xrange(12) if i not in freeParamIdx ]
+    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
     numFreeParams = len(freeParamIdx)
 
     fullStart = -10*np.array(~np.array(fixedParamMask), dtype=np.float32)
+
+    """
+    Starting point for training.
+    """
+    start = fullStart[freeParamIdx]
+
+
+class AllQVsMergingByChannelModel(Model):
+    rank = -1
+    requiredFeatures = set([ "InsertionQV",
+                             "SubstitutionQV",
+                             "DeletionQV",
+                             "DeletionTag",
+                             "MergeQV"       ])
+
+    parameterNames = _mergeByChannelParameterNames
+
+
+    freeParamIdx   = range(18)
+    fixedParamIdx  = []
+    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(18) ]
+    numFreeParams  = len(freeParamIdx)
+
+    #
+    # This is the C2 parameter set, which will also be used as the
+    # starting point for training.  These parameters are from training
+    # against ref000001:10000-40000 @ 11x in job 038537, using the
+    # logsigmoid objective function.
+    #
+    fullStart = np.array([ 0.2627555 , -1.09688872,
+                           -0.01637988, -0.60275947,
+                           -0.02682689, -1.00012494,
+                           0.06000148, -0.02579358,
+                           -0.15864559, -0.04403654,
+                           -1.02398814, -1.02398814,
+                           -1.02398814, -1.02398814,
+                           -0.12135255, -0.12135255,
+                           -0.12135255, -0.12135255 ],
+                         dtype=np.float)
+
+    """
+    Starting point for training.
+    """
+    start = fullStart[freeParamIdx]
+
+class NoQVsMergingByChannelModel(Model):
+    rank = -1
+    requiredFeatures = set([])
+    parameterNames = _mergeByChannelParameterNames
+
+    freeParamIdx =   [ 1,   # Mismatch
+                       3,   # Branch;
+                       5,   # DeletionN;
+                       8,   # Nce;
+                       10,  # Merge_A
+                       11,  # Merge_C
+                       12,  # Merge_G
+                       13 ] # Merge_T
+
+    fixedParamIdx = [ i for i in xrange(18) if i not in freeParamIdx ]
+    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(18) ]
+    numFreeParams = len(freeParamIdx)
+
+    fullStart = -0.23*np.array(~np.array(fixedParamMask), dtype=np.float32)
 
     """
     Starting point for training.
