@@ -37,8 +37,8 @@ To install the PacBio software, the following are required:
 - Python 2.7.3
 - virtualenv        (builds isolated Python environments)
 
-If you within PacBio, these requirements are already installed within
-the cluster environment.
+If you are within PacBio, these requirements are already installed
+within the cluster environment.
 
 Otherwise, you will need to install them yourself.  The automatic
 installation script requires that the ``swig`` executable is in your
