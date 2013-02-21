@@ -55,10 +55,11 @@ If you are using a SMRTportal installation verision 1.4 or later, then
 SMRTportal will load all the information Quiver needs, so you
 can skip the rest of this section.
 
-By default in older SMRTportal 1.3.3, only a subset of these quality
-values are included in the ``.cmp.h5`` files produced by SMRTanalysis.
-To get a ``.cmp.h5`` with all the QVs loaded, you will need to use the
-``RS_Mapping_QVs`` protocol to create a ``cmp.h5`` file for Quiver.
+In SMRTportal versions 1.3.3 and prior, by default only a subset of
+these quality values are included in the ``.cmp.h5`` files produced by
+SMRTanalysis.  To get a ``.cmp.h5`` with all the QVs loaded, you will
+need to use the ``RS_Mapping_QVs`` protocol to create a ``cmp.h5``
+file for Quiver.
 
 If you are using an older version than SMRTportal/SMRTanalysis 1.3.3,
 please upgrade.
