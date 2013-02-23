@@ -5,7 +5,7 @@
 
 Inspect the variant calls.
 
-  $ grep -v "#" $TESTDIR/variants.gff | sed 's/\t/ /g'
+  $ grep -v "#" variants.gff | sed 's/\t/ /g'
   M.ruber . substitution 357364 357364 . . . variantSeq=T;reference=C;coverage=100;confidence=47;length=1
   M.ruber . insertion 640716 640716 . . . variantSeq=C;coverage=100;confidence=49;length=1
   M.ruber . insertion 1320669 1320669 . . . variantSeq=C;coverage=100;confidence=49;length=1
@@ -19,18 +19,18 @@ Inspect the variant calls.
 
 The variant calls have all been Sanger validated!
 
-        |                  | Confirmed | Confirmed  |
-        | Variant call     | by eye?   | by Sanger? |
-        |------------------+-----------+------------|
-        | 357364 C>T       | YES       | YES        |
-        | 640716 InsC      | YES       | YES        |
-        | 1320669 InsC     | YES       | YES        |
-        | 1878514 Del440bp | YES       | YES        |
-        | 1987969 InsG     | YES       | YES        |
-        | 2010700 InsT     | YES       | YES        |
-        | 2070035 InsA     | YES       | YES        |
-        | 2827713 InsT     | YES       | YES        |
-        | 2841287 Del15bp  | YES       | YES        |
+	|                  | Confirmed | Confirmed  |
+	| Variant call     | by eye?   | by Sanger? |
+	|------------------+-----------+------------|
+	| 357364 C>T       | YES       | YES        |
+	| 640716 InsC      | YES       | YES        |
+	| 1320669 InsC     | YES       | YES        |
+	| 1878514 Del440bp | YES       | YES        |
+	| 1987969 InsG     | YES       | YES        |
+	| 2010700 InsT     | YES       | YES        |
+	| 2070035 InsA     | YES       | YES        |
+	| 2827713 InsT     | YES       | YES        |
+	| 2841287 Del15bp  | YES       | YES        |
 
 
 Look at the consensus output.
