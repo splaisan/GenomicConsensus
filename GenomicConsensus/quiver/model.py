@@ -104,7 +104,7 @@ def majorityChemistry(cmpH5):
     files, but it is expedient.  Tie-breaking is done by alphabetical
     order of chemistry name.
     """
-    chemistries = cmpH5.movieTable.SequencingChemistry
+    chemistries = cmpH5.movieInfoTable.SequencingChemistry
     counts = collections.Counter(chemistries).most_common()
     sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
     return sortedCounts[0][0]
