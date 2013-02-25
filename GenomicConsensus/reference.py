@@ -88,7 +88,7 @@ def loadFromFile(filename, cmpH5):
         md5sum = fastaRecord.md5
         fastaChecksums.add(md5sum)
         normalizedContigSequence = fastaRecord.sequence.upper()
-        if md5sum in cmpH5.referenceTable.MD5:
+        if md5sum in cmpH5.referenceInfoTable.MD5:
             cmpH5RefEntry = cmpH5.referenceInfo(md5sum)
             refId         = cmpH5RefEntry.ID
             refName       = fastaRecord.name
@@ -103,7 +103,7 @@ def loadFromFile(filename, cmpH5):
 
     # If the cmpH5 has alignments to contigs that weren't contained in
     # the fasta file, report an error.
-    cmpH5Checksums = set(cmpH5.referenceTable.MD5)
+    cmpH5Checksums = set(cmpH5.referenceInfoTable.MD5)
     if not cmpH5Checksums.issubset(fastaChecksums):
         logging.error("CmpH5 aligned to a contig not represented in FASTA file")
         return 1
