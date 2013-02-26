@@ -62,3 +62,12 @@ class TestBestParameterSet:
         assert_equal("unknown.AllQVsModel",
                      bestParameterSet(self.parameterSets.values(), "C7",
                                       AllQVsModel.requiredFeatures).name)
+
+
+class TestLoadingBundledParameters:
+    """
+    Make sure that the bundled parameter set in resources/ works.
+    """
+    def test_loadAParameterSet(self):
+        paramSets = loadParameterSets(findParametersFile())
+        assert "C2.AllQVsModel" in paramSets

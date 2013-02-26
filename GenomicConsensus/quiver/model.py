@@ -109,14 +109,15 @@ def majorityChemistry(cmpH5):
     sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
     return sortedCounts[0][0]
 
-def findParametersFile(filenameOrDirectory):
+def findParametersFile(filenameOrDirectory=None):
     if filenameOrDirectory is None:
         filenameOrDirectory = _getResourcesDirectory()
 
     if filenameOrDirectory.endswith(".ini"):
         return filenameOrDirectory
     else:
-        eligibleParameterFiles = glob(join(filenameOrDirectory, "*.ini"))
+        eligibleParameterFiles = glob(join(filenameOrDirectory,
+                                           "*/GenomicConsensus/QuiverParameters.ini"))
         if not eligibleParameterFiles:
             raise ValueError("Parameter set directory must contain parameter set (*.ini) files")
         return sorted(eligibleParameterFiles)[-1]

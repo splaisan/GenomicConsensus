@@ -223,6 +223,7 @@ def dumpEvidence(evidenceDumpBaseDirectory,
 
 def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
     parametersFile = findParametersFile(parametersFileOrDirectory)
+    logging.info("Using Quiver parameter sets from %s" % parametersFile)
     parameterSets = loadParameterSets(parametersFile)
     if options.parameterSet == "best":
         chemistry = majorityChemistry(cmpH5)
@@ -243,6 +244,7 @@ class QuiverWorker(object):
         self.params = fetchParameterSet(self._inCmpH5,
                                         options.parametersFile,
                                         options.parameterSet)
+        logging.info("Using parameter set %s" % self.params.name)
         self.model = self.params.model
 
     def onChunk(self, referenceWindow, alnHits):
