@@ -11,7 +11,7 @@ setup(
                'plurality',
                'quiver'],
     packages = find_packages(),
-    package_data={'GenomicConsensus.quiver': ['resources/*.ini']},
+    package_data={'GenomicConsensus.quiver': ['resources/*/GenomicConsensus/*.ini']},
     include_package_data=True,
     zip_safe = False,
     install_requires=[
