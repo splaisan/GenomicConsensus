@@ -132,14 +132,16 @@ def parseOptions(relax=False):
                         dest="parametersFile",
                         type=str,
                         default=None,
-                        help="Parameter set filename (.ini), or directory containing "  + \
-                             "parameter set files, of which the largest in sort order " + \
-                             "will be used.")
+                        help="Parameter set filename (QuiverParameters.ini), or directory D " + \
+                             "such that either D/*/GenomicConsensus/QuiverParameters.ini, "   + \
+                             "or D/GenomicConsensus/QuiverParameters.ini, is found.  In the " + \
+                             "former case, the lexically largest path is chosen.")
     parser.add_argument("--parameterSet", "-p",
                         action="store",
                         dest="parameterSet",
                         type=str,
-                        default=None)
+                        default=None,
+                        help="Name of parameter set to select from the parameters file.")
 
     parser.add_argument(
         "--coverage", "-X",

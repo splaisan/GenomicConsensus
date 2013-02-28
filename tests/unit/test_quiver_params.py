@@ -5,8 +5,10 @@
 from numpy.testing import assert_array_almost_equal
 from nose.tools import assert_equal
 import operator, numpy as np
+from os.path import dirname as up
 
 from GenomicConsensus.quiver.model import *
+
 
 class StubParameterSet(object):
     def __init__(self, name):
@@ -18,6 +20,7 @@ class StubParameterSet(object):
         self.chemistry    = chem
         self.model        = model
         self.quiverConfig = None
+
 
 class TestBestParameterSet:
     def setup(self):
@@ -65,9 +68,37 @@ class TestBestParameterSet:
 
 
 class TestLoadingBundledParameters:
-    """
-    Make sure that the bundled parameter set in resources/ works.
-    """
-    def test_loadAParameterSet(self):
+
+    def test_loadBundledParameterSet(self):
+        """
+        Make sure that the bundled parameter set in resources/ works.
+        """
         paramSets = loadParameterSets(findParametersFile())
+        assert "C2.AllQVsModel" in paramSets
+
+
+    def test_loadParameterSetFromDir1(self):
+        """
+        Try loading from X, where the FS looks like:
+          X/
+            2013-03/
+              GenomicConsensus/
+                QuiverParameters.ini
+        """
+        quiverParamsIni = findParametersFile()
+        X = up(up(up(quiverParamsIni)))
+        paramSets = loadParameterSets(findParametersFile(X))
+        assert "C2.AllQVsModel" in paramSets
+
+    def test_loadParameterSetFromDir2(self):
+        """
+        Try loading from specified bundle
+          X/
+            2013-03/  <------------ here
+              GenomicConsensus/
+                QuiverParameters.ini
+        """
+        quiverParamsIni = findParametersFile()
+        X = up(up(quiverParamsIni))
+        paramSets = loadParameterSets(findParametersFile(X))
         assert "C2.AllQVsModel" in paramSets

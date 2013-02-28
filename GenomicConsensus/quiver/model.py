@@ -113,14 +113,25 @@ def findParametersFile(filenameOrDirectory=None):
     if filenameOrDirectory is None:
         filenameOrDirectory = _getResourcesDirectory()
 
+    # Given a full path to an .ini file, return the path
     if filenameOrDirectory.endswith(".ini"):
         return filenameOrDirectory
-    else:
-        eligibleParameterFiles = glob(join(filenameOrDirectory,
-                                           "*/GenomicConsensus/QuiverParameters.ini"))
-        if not eligibleParameterFiles:
-            raise ValueError("Parameter set directory must contain parameter set (*.ini) files")
-        return sorted(eligibleParameterFiles)[-1]
+
+    # Given a path to a bundle (the directory with a date as its
+    # name), return the path to the .ini file within
+    foundInThisBundle = glob(join(filenameOrDirectory,
+                                  "GenomicConsensus/QuiverParameters.ini"))
+    if foundInThisBundle:
+        return foundInThisBundle[0]
+
+    # Given a directory containing bundles, return the path to the
+    # .ini file within the lexically largest bundle subdirectory
+    foundInBundlesBelow = glob(join(filenameOrDirectory,
+                                    "*/GenomicConsensus/QuiverParameters.ini"))
+    if foundInBundlesBelow:
+        return sorted(foundInBundlesBelow)[-1]
+
+    raise ValueError("Unable to find parameter set file (QuiverParameters.ini)")
 
 def _buildParameterSet(parameterSetName, nameValuePairs):
     chem, modelName = parameterSetName.split(".")[:2]
