@@ -33,7 +33,7 @@
 
 from __future__ import absolute_import
 
-__VERSION__ = "0.5.1"
+__VERSION__ = "0.6.0"
 
 #
 # Verify that the correct version of the GenomicConsensus package is
