@@ -60,7 +60,6 @@ except ImportError:
 # Tuning parameters, here for now
 #
 POA_COVERAGE    = 11
-MUTATION_SEPARATION = 7
 
 #
 # The type used in the wire protocol.  Note that whereas plurality

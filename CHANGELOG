@@ -1,3 +1,3 @@
-Version 0.6.0 (to be released with SMRTanalysis 2.0)
+Version 0.6.0 (released with SMRTanalysis 2.0)
   * Improved Quiver accuracy, reducing errors in dinucleotide repeat regions
   * Improved, extensible support for existing and forthcoming sequencing chemistries
