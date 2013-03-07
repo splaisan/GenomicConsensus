@@ -43,17 +43,10 @@ from pbcore.io import rangeQueries, GffWriter
 from ..io.fastx import FastaWriter, FastqWriter
 from ..io.VariantsGffWriter import VariantsGffWriter
 
-try:
-    import ConsensusCore as cc
-    from GenomicConsensus.utils import noEvidenceConsensusCall, die
-    from GenomicConsensus.quiver.utils import *
-    from GenomicConsensus.quiver.model import *
-    if cc.Version.VersionTuple() == (0, 6, 0):
-        availability = (True, "OK")
-    else:
-        availability = (False, "Need ConsensusCore version 0.6.0")
-except ImportError:
-    availability = (False, "ConsensusCore not installed---required for Quiver algorithm")
+import ConsensusCore as cc
+from GenomicConsensus.utils import noEvidenceConsensusCall, die
+from GenomicConsensus.quiver.utils import *
+from GenomicConsensus.quiver.model import *
 
 
 #
@@ -457,6 +450,7 @@ __all__ = [ "name",
             "slaveFactories" ]
 
 name = "Quiver"
+availability = (True, "OK")
 additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "variantCoverageThreshold"   : 5,
                              "variantConfidenceThreshold" : 40,

@@ -15,10 +15,10 @@ setup(
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES').read(),
-    scripts = ['variantCaller.py',
-               'summarizeConsensus.py',
-               'plurality',
-               'quiver'],
+    scripts = ['bin/variantCaller.py',
+               'bin/summarizeConsensus.py',
+               'bin/plurality',
+               'bin/quiver'],
     packages = find_packages(),
     package_data={'GenomicConsensus.quiver': ['resources/*/GenomicConsensus/*.ini']},
     include_package_data=True,
@@ -26,6 +26,7 @@ setup(
     install_requires=[
         'pbcore >= 0.6.0',
         'numpy >= 1.6.0',
-        'h5py >= 2.0.1'
+        'h5py >= 2.0.1',
+        'ConsensusCore == 0.6.0'
         ]
     )
