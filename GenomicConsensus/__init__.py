@@ -30,6 +30,4 @@
 
 # Author: David Alexander
 
-from __future__ import absolute_import
-
-__VERSION__ = "0.6.0"
+__VERSION__ = "0.6.1"
