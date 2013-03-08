@@ -187,18 +187,6 @@ def bestParameterSet(parameterSets, chemistry, qvsAvailable):
 
 
 class Model(object):
-    @classmethod
-    def paramsFromArray(cls, arr, bandingOptions, fastScoreThreshold):
-        assert len(arr) == cls.numFreeParams
-        arr_ = np.zeros(shape=(len(cls.parameterNames),))
-        arr_[cls.freeParamIdx] = arr
-        res_ = np.where(cls.fixedParamMask, cls.fullStart, arr_).astype(np.float32)
-        qvModelParams = cc.QvModelParams(*res_.tolist())
-        return ParameterSet("Training", "Training", cls,
-                            cc.QuiverConfig(qvModelParams,
-                                            cc.ALL_MOVES,
-                                            bandingOptions,
-                                            fastScoreThreshold))
 
     requiredFeatures = set([])
     parameterNames = []
@@ -247,6 +235,8 @@ class Model(object):
 
 
 class AllQVsModel(Model):
+    name = "AllQVsModel"
+
     # Rank is used to determine whether one model is better than another,
     # all else being equal
     rank = 3
@@ -259,36 +249,13 @@ class AllQVsModel(Model):
 
     parameterNames = _basicParameterNames
 
-    freeParamIdx   = range(12)
-    fixedParamIdx  = []
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
-    numFreeParams  = len(freeParamIdx)
-
-    #
-    # This is the C2 parameter set, which will also be used as the
-    # starting point for training.  These parameters are from training
-    # against ref000001:10000-40000 @ 11x in job 038537, using the
-    # logsigmoid objective function.
-    #
-    fullStart = np.array([ 0.2627555 , -1.09688872,
-                           -0.01637988, -0.60275947,
-                           -0.02682689, -1.00012494,
-                           0.06000148, -0.02579358,
-                           -0.15864559, -0.04403654,
-                           -1.02398814, -0.12135255],
-                         dtype=np.float)
-
-    """
-    Starting point for training.
-    """
-    start = fullStart[freeParamIdx]
-
 class NoMergeQVModel(Model):
     """
     This model is intended for cmp.h5 files produced using the
     ResequencingQVs workflow using bas.h5 files that lack the MergeQV
     (i.e. Primary software pre-1.3.1).
     """
+    name = "NoMergeQVModel"
     rank = 2
 
     requiredFeatures = set([ "InsertionQV",
@@ -298,53 +265,15 @@ class NoMergeQVModel(Model):
 
     parameterNames = _basicParameterNames
 
-    freeParamIdx = [ 0,  # Match
-                     1,  # Mismatch
-                     2,  # MismatchS
-                     3,  # Branch
-                     4,  # BranchS
-                     5,  # DeletionN
-                     6,  # DeletionWithTag
-                     7,  # DeletionWithTagS
-                     8,  # Nce
-                     9,  # NceS
-                    10 ] # Merge
-
-    fixedParamIdx = [ i for i in xrange(12) if i not in freeParamIdx ]
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
-    numFreeParams = len(freeParamIdx)
-    fullStart = AllQVsModel.fullStart
-
-    """
-    Starting point for training.
-    """
-    start = fullStart[freeParamIdx]
-
 
 class NoQVsModel(Model):
+    name = "NoQVsModel"
     rank = 1
     requiredFeatures = set([])
     parameterNames = _basicParameterNames
 
-    freeParamIdx =   [ 1,   # Mismatch
-                       3,   # Branch;
-                       5,   # DeletionN;
-                       8,   # Nce;
-                       10 ] # Merge;
-
-    fixedParamIdx = [ i for i in xrange(12) if i not in freeParamIdx ]
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(12) ]
-    numFreeParams = len(freeParamIdx)
-
-    fullStart = -10*np.array(~np.array(fixedParamMask), dtype=np.float32)
-
-    """
-    Starting point for training.
-    """
-    start = fullStart[freeParamIdx]
-
-
 class AllQVsMergingByChannelModel(Model):
+    name = "AllQVsMergingByChannelModel"
     rank = -1
     requiredFeatures = set([ "InsertionQV",
                              "SubstitutionQV",
@@ -354,55 +283,8 @@ class AllQVsMergingByChannelModel(Model):
 
     parameterNames = _mergeByChannelParameterNames
 
-
-    freeParamIdx   = range(18)
-    fixedParamIdx  = []
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(18) ]
-    numFreeParams  = len(freeParamIdx)
-
-    #
-    # This is the C2 parameter set, which will also be used as the
-    # starting point for training.  These parameters are from training
-    # against ref000001:10000-40000 @ 11x in job 038537, using the
-    # logsigmoid objective function.
-    #
-    fullStart = np.array([ 0.2627555 , -1.09688872,
-                           -0.01637988, -0.60275947,
-                           -0.02682689, -1.00012494,
-                           0.06000148, -0.02579358,
-                           -0.15864559, -0.04403654,
-                           -1.02398814, -1.02398814,
-                           -1.02398814, -1.02398814,
-                           -0.12135255, -0.12135255,
-                           -0.12135255, -0.12135255 ],
-                         dtype=np.float)
-
-    """
-    Starting point for training.
-    """
-    start = fullStart[freeParamIdx]
-
 class NoQVsMergingByChannelModel(Model):
+    name = "NoQVsMergingByChannelModel"
     rank = -1
     requiredFeatures = set([])
     parameterNames = _mergeByChannelParameterNames
-
-    freeParamIdx =   [ 1,   # Mismatch
-                       3,   # Branch;
-                       5,   # DeletionN;
-                       8,   # Nce;
-                       10,  # Merge_A
-                       11,  # Merge_C
-                       12,  # Merge_G
-                       13 ] # Merge_T
-
-    fixedParamIdx = [ i for i in xrange(18) if i not in freeParamIdx ]
-    fixedParamMask = [ (i in fixedParamIdx) for i in xrange(18) ]
-    numFreeParams = len(freeParamIdx)
-
-    fullStart = -0.23*np.array(~np.array(fixedParamMask), dtype=np.float32)
-
-    """
-    Starting point for training.
-    """
-    start = fullStart[freeParamIdx]
