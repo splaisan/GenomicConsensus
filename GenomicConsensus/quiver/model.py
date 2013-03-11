@@ -230,8 +230,8 @@ class Model(object):
         assert aln.referenceSpan > 0
         return cc.MappedRead(cls.extractFeatures(aln),
                              int(aln.RCRefStrand),
-                             int(aln.referenceStart) - windowStart,
-                             int(aln.referenceEnd)   - windowStart)
+                             int(aln.referenceStart - windowStart),
+                             int(aln.referenceEnd   - windowStart))
 
 
 class AllQVsModel(Model):
