@@ -158,6 +158,20 @@ errors of given type occurred.  Formally, the QVs for a given read are
 vectors of the same length as the number of bases called; the QVs we
 use are as follows:
 
+  - DeletionQV
+  - InsertionQV
+  - MergeQV
+  - SubstitutionQV
+  - DeletionTag
+
+To find out if your cmp.h5 file is loaded with these QV tracks, run the command
+::
+
+    % h5ls -rv aligned_reads.cmp.h5
+
+and look for the QV track names in the output.  If your cmp.h5 file is
+lacking some of these tracks, Quiver will still run, though it will
+issue a warning that its performance will be suboptimal.
 
 
 Why is Quiver making errors in some region?
