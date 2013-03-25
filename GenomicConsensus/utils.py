@@ -268,3 +268,8 @@ def holes(refWindow, intervals):
     if lastE < winEnd:
         output.append((lastE, winEnd))
     return output
+
+def filterVariants(minCoverage, minConfidence, variants):
+    return [ v for v in variants
+             if ((v.coverage >= minCoverage) and
+                 (v.confidence >= minConfidence)) ]

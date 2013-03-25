@@ -177,10 +177,12 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                                quiverConfig)
 
             siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
-            variants += variantsFromConsensus(refWindow, refSequence,
+            variants_ = variantsFromConsensus(refWindow, refSequence,
                                               css.sequence, css.confidence, siteCoverage,
                                               options.aligner)
-
+            variants += filterVariants(options.variantCoverageThreshold,
+                                       options.variantConfidenceThreshold,
+                                       variants_)
         else:
             cssSeq = noEvidenceConsensusFactory(intRefSeq)
             css = Consensus(subWin,
