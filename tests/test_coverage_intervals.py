@@ -2,14 +2,14 @@
 import numpy as np
 from nose.tools import assert_equals
 
-from GenomicConsensus.utils import Window, kSpannedIntervals, abut, holes
+from GenomicConsensus.utils import kSpannedIntervals, abut, holes
 
 
 def test_intervals_1():
     """
     Intervals all covering the window
     """
-    refWindow = Window(0, 100, 1010)
+    refWindow = (0, 100, 1010)
     start = np.array(np.array([100]*10, dtype=int), dtype=int)
     end   = np.array(np.array([110]*10, dtype=int), dtype=int)
     assert_equals([(100, 110)],
@@ -19,7 +19,7 @@ def test_intervals_2():
     """
     Intervals not touching the window
     """
-    refWindow = Window(0, 1, 10)
+    refWindow = (0, 1, 10)
     start = np.array([0]*5 + [10]*5, dtype=int)
     end   = np.array([1]*5 + [15]*5, dtype=int)
     assert_equals([],
@@ -29,7 +29,7 @@ def test_intervals_3():
     """
     Intervals covering the middle of the window -- "dromedary"
     """
-    refWindow = Window(0, 0, 10)
+    refWindow = (0, 0, 10)
     start = np.array([3]*10, dtype=int)
     end  = np.array([7]*10, dtype=int)
     assert_equals([(3, 7)],
@@ -39,7 +39,7 @@ def test_intervals_4():
     """
     Two intervals at the fringes, with a hole in the middle --- "camel"
     """
-    refWindow = Window(0, 100, 110)
+    refWindow = (0, 100, 110)
     start = np.array([103]*5 + [107]*5, dtype=int)
     end   = np.array([105]*5 + [109]*5, dtype=int)
     assert_equals([(103,105), (107,109)],
@@ -50,7 +50,7 @@ def test_intervals_5():
     """
     A case where there is nowhere 3-spanning coverage
     """
-    refWindow = Window(0, 0, 10)
+    refWindow = (0, 0, 10)
     reads = [ (x, x+1) for  x in xrange(0, 10) ]
     reads.append((0, 10))
     start, end = map(np.array, zip(*reads))
@@ -69,21 +69,21 @@ def test_abut():
 
 
 def test_holes_1():
-    assert_equals([(0, 100)], holes(Window(0, 0, 100), []))
+    assert_equals([(0, 100)], holes((0, 0, 100), []))
 
 def test_holes_2():
-    assert_equals([], holes(Window(0, 0, 100), [(0, 100)]))
+    assert_equals([], holes((0, 0, 100), [(0, 100)]))
 
 def test_holes_3():
     """
     Holes for the dromedary test case
     """
     assert_equals([(0,3), (7,10)],
-                  holes(Window(0, 0, 10), [(3,7)]))
+                  holes((0, 0, 10), [(3,7)]))
 
 def test_holes_4():
     """
     Holes for the camel test case
     """
     assert_equals([(3, 7)],
-                  holes(Window(0, 0, 10), [(0,3), (7,10)]))
+                  holes((0, 0, 10), [(0,3), (7,10)]))

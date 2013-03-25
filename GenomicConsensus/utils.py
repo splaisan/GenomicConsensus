@@ -111,50 +111,6 @@ def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
 
     return result
 
-class Window(object):
-    def __init__(self, contigKey, start, end):
-        self.contigKey  = contigKey
-        self.start = start
-        self.end   = end
-
-    def __repr__(self):
-        return "%s:%d-%d" % (self.contigKey, self.start, self.end)
-
-    def __len__(self):
-        return (self.end - self.start)
-
-    def __eq__(self, other):
-        return (self.contigKey == other.contigKey and
-                self.start     == other.start and
-                self.end       == other.end)
-
-    @staticmethod
-    def fromString(windowString):
-        splitOnColon = windowString.split(":")
-        if len(splitOnColon) < 2:
-            key = 1
-        else:
-            key, rest = splitOnColon
-        if "-" not in rest:
-            refPos = int(rest)
-            start = refPos - 10
-            end   = refPos + 10
-        else:
-            start, end = map(int, rest.split("-"))
-        assert end >= start
-        return Window(key, start, end)
-
-    @staticmethod
-    def fromGffString(windowString):
-        w = Window.fromString(windowString)
-        w.start -= 1
-        return w
-
-    def subWindow(self, start, end):
-        assert start >= self.start
-        assert end   <= self.end
-        return Window(self.contigKey, start, end)
-
 
 def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorder"):
     """
@@ -174,22 +130,20 @@ def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorde
         if depthLimit is not None: return lst[:depthLimit]
         else: return lst
 
-    contigLocalId = cmpH5.referenceInfo(window.contigKey).ID
 
-    rowNumbers = cmpH5.readsInRange(contigLocalId, window.start, window.end,
-                                    justIndices=True)
-
+    winId, winStart, winEnd = window
+    rowNumbers = cmpH5.readsInRange(winId, winStart, winEnd, justIndices=True)
     rowNumbers = rowNumbers[cmpH5.MapQV[rowNumbers] >= minMapQV]
 
     if strategy == "fileorder":
         return depthCap(rowNumbers)
 
-    tStartTruncated = np.maximum(window.start, cmpH5.tStart[rowNumbers])
-    tEndTruncated   = np.minimum(window.end,   cmpH5.tEnd[rowNumbers])
+    tStartTruncated = np.maximum(winStart, cmpH5.tStart[rowNumbers])
+    tEndTruncated   = np.minimum(winEnd,   cmpH5.tEnd[rowNumbers])
     lengthsInWindow = tEndTruncated - tStartTruncated
 
     if strategy == "spanning":
-        return depthCap(rowNumbers[lengthsInWindow==(window.end-window.start)])
+        return depthCap(rowNumbers[lengthsInWindow==(winEnd-winStart)])
     elif strategy == "longest":
         ordering = np.lexsort((rowNumbers, -lengthsInWindow))
         return depthCap(rowNumbers[ordering])
@@ -217,12 +171,14 @@ def kSpannedIntervals(refWindow, k, start, end):
     """
     assert k >= 1
 
+    winId, winStart_, winEnd_ = refWindow
+
     # Translate the start, end to coordinate system where
     # refWindow.start is 0.
-    start = start - refWindow.start
-    end   = end - refWindow.start
+    start = start - winStart_
+    end   = end - winStart_
     winStart = 0
-    winEnd   = refWindow.end - refWindow.start
+    winEnd   = winEnd_ - winStart_
 
     # Truncate to bounds implied by refWindow
     start = np.maximum(winStart, start)
@@ -256,8 +212,8 @@ def kSpannedIntervals(refWindow, k, start, end):
         intervalsFound.append((x, y))
 
     # Translate intervals back
-    return [ (s + refWindow.start,
-              e + refWindow.start) for (s, e) in intervalsFound ]
+    return [ (s + winStart_,
+              e + winStart_) for (s, e) in intervalsFound ]
 
 
 def abut(intervals):
@@ -284,13 +240,14 @@ def holes(refWindow, intervals):
     "holes", which are the intervals of the refWindow not covered by
     the given subintervals.
     """
+    winId, winStart, winEnd = refWindow
     output = []
     intervals = sorted(intervals)
-    lastE = refWindow.start
+    lastE = winStart
     for (s, e) in intervals:
         if s > lastE:
             output.append((lastE, s))
         lastE = e
-    if lastE < refWindow.end:
-        output.append((lastE, refWindow.end))
+    if lastE < winEnd:
+        output.append((lastE, winEnd))
     return output
