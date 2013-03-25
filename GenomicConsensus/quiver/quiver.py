@@ -230,34 +230,38 @@ class QuiverWorker(object):
     def onChunk(self, referenceWindow, alnHits):
         # TODO
         # alnHits is ignored.  Rework the protocol to get rid of that argument.
-
         refId, refStart, refEnd = referenceWindow
-        domainStart, domainEnd = domain(referenceWindow)
-        domainLen = domainEnd - domainStart
+        _, eStart, eEnd = eWindow = reference.enlargedReferenceWindow(referenceWindow, options.referenceChunkOverlap)
 
+        # We call consensus on the enlarged window and then map back
+        # to the reference and clip the consensus at the implied
+        # bounds.  This seems to be more reliable thank cutting the
+        # consensus bluntly
         refContig = reference.byId[refId].sequence
-        refSequenceInWindow = refContig[refStart:refEnd].tostring()
+        refSequenceInEnlargedWindow = refContig[eStart:eEnd].tostring()
 
-        # Get the consensus.
-        css, variants = \
-            quiverConsensusAndVariantsForWindow(self._inCmpH5, referenceWindow,
+        #
+        # Get the consensus for the enlarged window.
+        #
+        css_, variants_ = \
+            quiverConsensusAndVariantsForWindow(self._inCmpH5, eWindow,
                                                 refContig, options.coverage, self.quiverConfig)
 
-        numQuiverVariants = len(variants)
-
-        ga = cc.Align(refSequenceInWindow, css.sequence)
+        #
+        # Restrict the consensus and variants to the reference window.
+        #
+        ga = cc.Align(refSequenceInEnlargedWindow, css_.sequence)
         targetPositions = cc.TargetToQueryPositions(ga)
+        cssStart = targetPositions[refStart-eStart]
+        cssEnd   = targetPositions[refEnd-eStart]
 
-        # Restrict the consensus and variants to the domain.
-        cssDomainStart = targetPositions[domainStart-refStart]
-        cssDomainEnd   = targetPositions[domainEnd-refStart]
-        domainCss = css.sequence[cssDomainStart:cssDomainEnd]
-        domainQv = css.confidence[cssDomainStart:cssDomainEnd]
-        domainVariants = [ v for v in variants
-                           if domainStart <= v.refStart < domainEnd ]
+        cssSequence    = css_.sequence[cssStart:cssEnd]
+        cssQv          = css_.confidence[cssStart:cssEnd]
+        variants       = [ v for v in variants_
+                           if refStart <= v.refStart < refEnd ]
 
         return QuiverWindowSummary(refId, refStart, refEnd,
-                                   domainCss, domainQv, domainVariants)
+                                   cssSequence, cssQv, variants)
 
 
 ContigConsensusChunk = collections.namedtuple("ContigConsensusChunk",

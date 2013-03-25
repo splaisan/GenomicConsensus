@@ -198,7 +198,7 @@ class PluralityResult(object):
     """
     def onStart(self):
         self.consensusByRefId = OrderedDict()
-        self.chunksReceivedById = defaultdict(int)
+        self.referenceBasesProcessedById = defaultdict(int)
         self.consumers = consumers(options.outputFilenames,
                                    PluralityLocusSummary._fields,
                                    options.variantConfidenceThreshold)
@@ -212,9 +212,9 @@ class PluralityResult(object):
         # so there is just a top level synchronous loop over refId,
         # and we don't have to worry about this trickiness.
         referenceWindow, pluralityResults = result
-        refId = referenceWindow[0]
+        refId, refStart, refEnd = referenceWindow
         refEntry = reference.byId[refId]
-        self.chunksReceivedById[refId] += 1
+        self.referenceBasesProcessedById[refId] += (refEnd - refStart)
 
         # Is this a refId we haven't seen before? If so, initialize its
         # consensus table.
@@ -228,9 +228,8 @@ class PluralityResult(object):
 
         # Did we finish processing this reference group?  If so, flush to
         # disk!
-        if self.chunksReceivedById[refId] == reference.numChunks(refId,
-                                                                 options.referenceChunkSize,
-                                                                 options.referenceWindow):
+        expectedRefBases = reference.numReferenceBases(refId, options.referenceWindow)
+        if self.referenceBasesProcessedById[refId] == expectedRefBases:
             broadcast((refId, self.consensusByRefId[refId]), self.consumers)
             del self.consensusByRefId[refId]
 

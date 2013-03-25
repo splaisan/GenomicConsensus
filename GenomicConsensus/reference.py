@@ -131,8 +131,7 @@ def windowToString(referenceWindow):
                          refStart,
                          refEnd)
 
-
-def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
+def enumerateChunks(refId, referenceStride, referenceWindow=None):
     """
     Enumerate all work chunks (restricted to the window, if provided).
     """
@@ -144,27 +143,26 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None, overlap=0):
     else:
         start, end = (0, referenceEntry.length)
 
-    # The last chunk only needs to reach 'end-overlap', because it
-    # will be extended to 'end' -- this prevents the generation of
-    # multiple chunks covering the last few bases of the reference
-    # (fixes bug #21940)
-    for chunkBegin in xrange(start, end-overlap, referenceStride):
+    for chunkBegin in xrange(start, end, referenceStride):
         yield (refId,
-               max(chunkBegin - overlap, 0),
-               min(chunkBegin + referenceStride + overlap, referenceEntry.length))
+               chunkBegin,
+               min(chunkBegin + referenceStride, end))
 
-def numChunks(refId, referenceStride, referenceWindow=None):
+def numReferenceBases(refId, referenceWindow=None):
     """
-    How many chunks will there be for the given refId and window restriction?
+    Termination is determined to be when the result collector has
+    build consensus corresponding to the exact number of reference
+    bases in the window under consideration.
     """
     assert isLoaded()
     assert (referenceWindow is None) or (refId == referenceWindow[0])
     referenceEntry = byId[refId]
     if referenceWindow:
         _, start, end = referenceWindow
+        end = min(end, referenceEntry.length)
     else:
-        start, end = (0, referenceEntry.length)
-    return int(math.ceil(float(end-start)/referenceStride))
+        start, end = 0, referenceEntry.length
+    return (end - start)
 
 def enumerateIds(referenceWindow=None):
     """
@@ -176,3 +174,7 @@ def enumerateIds(referenceWindow=None):
     else:
         refId, refStart, refEnd = referenceWindow
         yield refId
+
+def enlargedReferenceWindow(refWin, overlap):
+    refId, refStart, refEnd = refWin
+    return (refId, max(0, refStart - overlap), refEnd + overlap)

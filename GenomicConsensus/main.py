@@ -166,8 +166,7 @@ class ToolRunner(object):
         for _id in ids:
             chunks = reference.enumerateChunks(_id,
                                                options.referenceChunkSize,
-                                               options.referenceWindow,
-                                               options.referenceChunkOverlap)
+                                               options.referenceWindow)
             for chunk in chunks:
                 if self._aborting: return
 
