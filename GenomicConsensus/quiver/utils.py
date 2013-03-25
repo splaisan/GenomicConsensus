@@ -34,13 +34,8 @@ import numpy as np, itertools, logging, re
 from collections import Counter
 
 from GenomicConsensus.variants import *
-from GenomicConsensus.utils import error_probability_to_qv
+from GenomicConsensus.utils import *
 import ConsensusCore as cc
-
-# Some lisp functions we want
-fst   = lambda t: t[0]
-snd   = lambda t: t[1]
-third = lambda t: t[2]
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
     """

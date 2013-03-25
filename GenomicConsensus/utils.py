@@ -34,6 +34,14 @@ from __future__ import absolute_import
 import math, numpy as np, os.path, sys
 from pbcore.io.rangeQueries import projectIntoRange
 
+def die(msg):
+    print msg
+    sys.exit(-1)
+
+# Some lisp functions we want
+fst   = lambda t: t[0]
+snd   = lambda t: t[1]
+third = lambda t: t[2]
 
 # We truncate QVs at 93 because the FASTQ format downstream can only
 # support QVs in the range [0, 93] without lossage.
@@ -286,8 +294,3 @@ def holes(refWindow, intervals):
     if lastE < refWindow.end:
         output.append((lastE, refWindow.end))
     return output
-
-
-def die(msg):
-    print msg
-    sys.exit(-1)
