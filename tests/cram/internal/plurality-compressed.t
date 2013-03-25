@@ -1,9 +1,9 @@
 
 Check the gzip compressed output.
 
-  $ export DATA=$TESTDIR/../../data
-  $ export INPUT=$DATA/lambda/aligned_reads_1.cmp.h5
-  $ export REFERENCE=$DATA/lambda/lambdaNEB.fa
+  $ export DATA=/mnt/secondary/Share/Quiver/TestData/tinyLambda/
+  $ export INPUT=$DATA/aligned_reads_1.cmp.h5
+  $ export REFERENCE=$DATA/lambdaNEB.fa
   $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o variants.gff.gz
   $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o consensus.csv.gz
   $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o consensus.fa.gz
