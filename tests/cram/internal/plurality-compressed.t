@@ -1,34 +1,53 @@
+Run plurality on the small example file, and make sure the compressed
+output files are created correctly.
 
-Check the gzip compressed output.
+  $ export DATA=$TESTDIR/../../data
+  $ export INPUT=$DATA/hcv/aligned_reads.cmp.h5
+  $ export REFERENCE=$DATA/hcv/HCV_Ref_For_187140.fasta
+  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff.gz -o consensus.fq.gz $INPUT
 
-  $ export DATA=/mnt/secondary/Share/Quiver/TestData/tinyLambda/
-  $ export INPUT=$DATA/aligned_reads_1.cmp.h5
-  $ export REFERENCE=$DATA/lambdaNEB.fa
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o variants.gff.gz
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o consensus.csv.gz
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o consensus.fa.gz
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE $INPUT -o consensus.fq.gz
+I like to show the head of the output files inline here so that glaringly obvious changes will
+pop right out, but I verify that the files are exactly correct by looking at the md5 sums.
+
+First, the variants.gff:
+
   $ gunzip variants.gff.gz
-  $ head variants.gff
+  $ cat variants.gff
   ##gff-version 3
   ##pacbio-variant-version 1.4
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
-  ##sequence-region lambda_NEB3011 1 48502
-  lambda_NEB3011\t.\tinsertion\t119\t119\t.\t.\t.\tvariantSeq=G;coverage=2;confidence=15;frequency=2;length=1 (esc)
-  lambda_NEB3011\t.\tdeletion\t4517\t4517\t.\t.\t.\treference=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
-  lambda_NEB3011\t.\tinsertion\t6143\t6143\t.\t.\t.\tvariantSeq=T;coverage=2;confidence=15;frequency=2;length=1 (esc)
-  $ gunzip consensus.csv.gz
-  $ head consensus.csv
-  referenceId,referencePos,coverage,consensus,consensusConfidence,consensusFrequency
-  lambda_NEB3011,0,2,G,15,2
-  lambda_NEB3011,1,2,G,15,2
-  lambda_NEB3011,2,2,G,15,2
-  lambda_NEB3011,3,2,C,15,2
-  lambda_NEB3011,4,2,G,15,2
-  lambda_NEB3011,5,2,G,3,1
-  lambda_NEB3011,6,2,C,15,2
-  lambda_NEB3011,7,2,GG,3,1
-  lambda_NEB3011,8,2,A,15,2
+  ##sequence-region 5primeEnd 1 156
+  ##sequence-region 3primeEnd 1 386
+
+
+Examine consensus output.  This is identical to the reference
+
+  $ gunzip consensus.fq.gz
+  $ fold -60 consensus.fq
+  @5primeEnd|plurality
+  GGAACCGGTGAGTACACCGGAATTGCCAGGACGACCGGGTCCTTTCGTGGATAAACCCGC
+  TCAATGCCTGGAGATTTGGGCGTGCCCCCGCAAGACTGCTAGCCGAGTAGTGTTGGGTCG
+  CGAAAGGCCTTGTGGTACTGCCTGATAGGGTGCTTG
+  +
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  @3primeEnd|plurality
+  TACCTGGTCATAGCCTCCGTGAAGGCTCTCAGGCTCGCTGCATCCTCCGGGACTCCCTGA
+  CTTTCACAGATAACGACTAAGTCGTCGCCACACACGAGCATGGTGCAGTCCTGGAGCCCA
+  GCGGCTCGACAGGCTGCTTTGGCCTTGATGTAGCAGGTGAGGGTGTTACCACAGCTGGTC
+  GTCAGTACGCCGCTCGCGCGGCACCTGCGATAGCCGCAGTTTTCCCCCCTTGAATTAGTA
+  AGAGGGCCCCCGACATAGAGCCTCTCGGTGAGGGACTTGATGGCCACGCGGGCTTGGGGG
+  TCCAGGTCACAACATTGGTAAATTGCCTCCTCTGTACGGATATCGCTCTCAGTGACTGTG
+  GAGTCAAAGCAGCGGGTATCATACGA
+  +
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  DDDDDDDDDDDDDDDDDDDDDDDDDD
