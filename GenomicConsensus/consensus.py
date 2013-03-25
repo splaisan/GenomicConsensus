@@ -33,15 +33,12 @@
 import numpy as np
 
 class Consensus(object):
-    def __init__(self, refWindow, sequence, confidence, coverage):
+    def __init__(self, refWindow, sequence, confidence):
         assert (len(sequence) ==
-                len(confidence) ==
-                len(coverage))
+                len(confidence))
         self.refWindow  = refWindow
         self.sequence   = sequence
         self.confidence = confidence
-        self.coverage   = coverage
-
 
 #
 # Functions that produce a consensus sequence string for a window

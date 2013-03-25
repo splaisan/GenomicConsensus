@@ -468,9 +468,6 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     else:
         confidence = np.zeros(shape=len(quiverCss), dtype=int)
 
-    coverage = [50] * len(quiverCss)
-
     return Consensus(refWindow,
                      quiverCss,
-                     confidence,
-                     coverage)
+                     confidence)

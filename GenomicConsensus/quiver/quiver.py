@@ -132,6 +132,8 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     # 2) pull out the reads we will use for each interval
     # 3) call quiverConsensusForAlignments on the interval
     subConsensi = []
+    rowNumbersUsed = set()
+
     for interval in allIntervals:
         intStart, intEnd = interval
         intRefSeq = referenceContig[intStart:intEnd].tostring()
@@ -141,7 +143,6 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
             cssSeq = noEvidenceConsensusFactory(intRefSeq)
             css = Consensus(subWin,
                             cssSeq,
-                            [0]*len(cssSeq),
                             [0]*len(cssSeq))
         else:
             windowRefSeq = referenceContig[intStart:intEnd]
@@ -149,6 +150,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                  depthLimit=depthLimit,
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
+            rowNumbersUsed.update(rows)
 
             # TODO: Some further filtering: remove "stumpy reads"
             alns = cmpH5[rows]
@@ -163,15 +165,14 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     #    full window consensus
     cssSeq_  = "".join(sc.sequence for sc in subConsensi)
     cssConf_ = np.concatenate([sc.confidence for sc in subConsensi])
-    cssCov_  = np.concatenate([sc.coverage for sc in subConsensi])
     css = Consensus(refWindow,
                     cssSeq_,
-                    cssConf_,
-                    cssCov_)
+                    cssConf_)
 
     # 5) identify variants
+    siteCoverage = rangeQueries.getCoverageInRange(cmpH5, refWindow, list(rowNumbersUsed))
     variants = variantsFromConsensus(refWindow, refSequence,
-                                     cssSeq_, cssConf_, cssCov_,
+                                     cssSeq_, cssConf_, siteCoverage,
                                      options.aligner)
 
     # 6) Return
