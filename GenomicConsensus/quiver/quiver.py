@@ -39,12 +39,13 @@ from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
-from pbcore.io import rangeQueries, GffWriter
-from ..io.fastx import FastaWriter, FastqWriter
 from ..io.VariantsGffWriter import VariantsGffWriter
+from pbcore.io import (rangeQueries,
+                       GffWriter,
+                       FastaWriter,
+                       FastqWriter)
 
 import ConsensusCore as cc
-from GenomicConsensus.utils import noEvidenceConsensusCall, die
 from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *

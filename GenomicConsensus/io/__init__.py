@@ -32,4 +32,3 @@
 
 from __future__ import absolute_import
 from .VariantsGffWriter import VariantsGffWriter
-from .fastx import FastaWriter, FastqWriter

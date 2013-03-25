@@ -38,7 +38,8 @@ from collections import namedtuple
 from .. import reference
 from ..variants import Insertion, Deletion, Substitution
 from ..utils import fileFormat
-from ..io  import VariantsGffWriter, FastqWriter, FastaWriter
+from ..io  import VariantsGffWriter
+from pbcore.io import FastqWriter, FastaWriter
 
 # The output is written by "consumer" objects (opposite of generators)
 # Each consumer consumes (refId, tbl) tuples, where the tbl is the numpy
@@ -103,7 +104,7 @@ def fastaConsumer(file, **kwargs):
             refHeader = reference.idToName(refId) + "|plurality"
             seqArray = tbl["consensus"]
             logging.info("Writing FASTA output for %s." % refHeader)
-            writer.writeRecord(refHeader, seqArray)
+            writer.writeRecord(refHeader, "".join(seqArray))
     except Exception:
         print "Got exception"
         printErrorMessage("fastaConsumer")
@@ -120,8 +121,12 @@ def fastqConsumer(file, **kwargs):
             refHeader = reference.idToName(refId) + "|plurality"
             seqArray = tbl["consensus"]
             qvArray = tbl["consensusConfidence"]
+            lens = [len(s) for s in seqArray]
+            qvs = np.repeat(qvArray, lens)
             logging.info("Writing FASTQ output for %s." % refHeader)
-            writer.writeRecord(refHeader, seqArray, qvArray)
+            writer.writeRecord(refHeader,
+                               "".join(seqArray),
+                               qvs)
     except Exception:
         printErrorMessage("fastqConsumer")
     finally:
