@@ -60,6 +60,7 @@ class QuiverConfig(object):
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus="nocall",
                  computeConfidence=True,
+                 readStumpinessThreshold=0.1,
                  parameters=None):
 
         self.minMapQV                   = minMapQV
@@ -70,6 +71,7 @@ class QuiverConfig(object):
         self.refineDinucleotideRepeats  = refineDinucleotideRepeats
         self.noEvidenceConsensus        = noEvidenceConsensus
         self.computeConfidence          = computeConfidence
+        self.readStumpinessThreshold    = readStumpinessThreshold
         self.parameters                 = parameters
 
         # Convenience
@@ -91,6 +93,30 @@ QuiverWindowSummary = collections.namedtuple("QuiverWindowSummary",
                                               "variants"))      # list of Variant
 
 
+
+def filterAlnsForQuiver(refWindow, alns, quiverConfig):
+    """
+    Given alns (already clipped to the window bounds), filter out any
+    that are incompatible with Quiver.
+
+    By and large we avoid doing any filtering to avoid potential
+    reference bias in variant calling.
+
+    However at the moment the POA (and potentially other components)
+    breaks when there is a read of zero length.  So we throw away
+    reads that are "stumpy", where the aligner has inserted a large
+    gap, such that while the alignment technically spans the window,
+    it may not have any read content therein:
+
+          Ref   ATGATCCAGTTACTCCGATAAA
+          Read  ATG---------------TA-A
+          Win.     [              )
+    """
+    _, winStart, winEnd = refWindow
+    winLen = winEnd - winStart
+    minimumReadLength = quiverConfig.readStumpinessThreshold * winLen
+    return [ aln for aln in alns
+             if aln.readLength >= minimumReadLength ]
 
 def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                         depthLimit, quiverConfig):
@@ -152,9 +178,9 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                  strategy="longest")
             rowNumbersUsed.update(rows)
 
-            # TODO: Some further filtering: remove "stumpy reads"
             alns = cmpH5[rows]
-            clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
+            clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
+            clippedAlns = filterAlnsForQuiver(refWindow, clippedAlns_, quiverConfig)
             css = quiverConsensusForAlignments(subWin,
                                                intRefSeq,
                                                clippedAlns,
