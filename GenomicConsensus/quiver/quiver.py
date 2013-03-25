@@ -116,7 +116,7 @@ def filterAlnsForQuiver(refWindow, alns, quiverConfig):
     winLen = winEnd - winStart
     minimumReadLength = quiverConfig.readStumpinessThreshold * winLen
     return [ aln for aln in alns
-             if aln.readLength >= minimumReadLength ]
+             if aln.readLength >= (quiverConfig.readStumpinessThreshold * aln.referenceSpan) ]
 
 def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                         depthLimit, quiverConfig):
@@ -165,26 +165,31 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         intRefSeq = referenceContig[intStart:intEnd].tostring()
         subWin = subWindow(refWindow, interval)
 
-        if interval in coverageGaps:
-            cssSeq = noEvidenceConsensusFactory(intRefSeq)
-            css = Consensus(subWin,
-                            cssSeq,
-                            [0]*len(cssSeq))
-        else:
-            windowRefSeq = referenceContig[intStart:intEnd]
-            rows = readsInWindow(cmpH5, subWin,
-                                 depthLimit=depthLimit,
-                                 minMapQV=quiverConfig.minMapQV,
-                                 strategy="longest")
-            rowNumbersUsed.update(rows)
+        windowRefSeq = referenceContig[intStart:intEnd]
+        rows = readsInWindow(cmpH5, subWin,
+                             depthLimit=depthLimit,
+                             minMapQV=quiverConfig.minMapQV,
+                             strategy="longest")
+        rowNumbersUsed.update(rows)
 
-            alns = cmpH5[rows]
-            clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
-            clippedAlns = filterAlnsForQuiver(subWin, clippedAlns_, quiverConfig)
+        alns = cmpH5[rows]
+        clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
+        clippedAlns = filterAlnsForQuiver(subWin, clippedAlns_, quiverConfig)
+
+        if len([ aln for aln in clippedAlns
+                 if aln.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
+
             css = quiverConsensusForAlignments(subWin,
                                                intRefSeq,
                                                clippedAlns,
                                                quiverConfig)
+        else:
+
+            cssSeq = noEvidenceConsensusFactory(intRefSeq)
+            css = Consensus(subWin,
+                            cssSeq,
+                            [0]*len(cssSeq))
+
         subConsensi.append(css)
 
     # 4) glue the subwindow consensus objects together to form the
