@@ -32,13 +32,80 @@
 
 import numpy as np
 
+__all__ = [ "Consensus",
+            "totalLength",
+            "areContiguous",
+            "join",
+            "noCallAsConsensus",
+            "referenceAsConsensus",
+            "lowercaseReferenceAsConsensus",
+            "noEvidenceConsensusFactoryByName" ]
+
 class Consensus(object):
+    """
+    A multiple sequence consensus corresponding to a
+    (reference/scaffold) coordinate region
+    """
     def __init__(self, refWindow, sequence, confidence):
         assert (len(sequence) ==
                 len(confidence))
         self.refWindow  = refWindow
         self.sequence   = sequence
         self.confidence = confidence
+
+    def __cmp__(self, other):
+        return cmp(self.refWindow, other.refWindow)
+
+def totalLength(consensi):
+    """
+    Total length of reference/scaffold coordinate windows
+    """
+    return sum(cssChunk.refWindow[2] - cssChunk.refWindow[1]
+               for cssChunk in consensi)
+
+def areContiguous(refWindows):
+    """
+    Predicate that determines whether the reference/scaffold windows
+    are contiguous.
+    """
+    lastEnd = None
+    lastId  = None
+    for refWin in refWindows:
+        id, start, end = refWin
+        if ((lastId is not None and id != lastId) or
+            (lastEnd is not None and start != lastEnd)):
+            return False
+        lastEnd = end
+        lastId  = id
+    return True
+
+def join(consensi):
+    """
+    [Consensus] -> Consensus
+
+    String together all the consensus objects into a single consensus.
+    Will raise a ValueError if the reference windows are not
+    contiguous.
+    """
+    assert len(consensi) >= 1
+    sortedConsensi = sorted(consensi)
+    if not areContiguous([cssChunk.refWindow for cssChunk in sortedConsensi]):
+        raise ValueError, "Consensus chunks must be contiguous"
+
+    joinedRefWindow  = (sortedConsensi[0].refWindow[0],
+                        sortedConsensi[0].refWindow[1],
+                        sortedConsensi[-1].refWindow[2])
+    joinedSeq        = "".join([cssChunk.sequence for cssChunk in sortedConsensi])
+    joinedConfidence = np.concatenate([cssChunk.confidence for cssChunk in sortedConsensi])
+
+    return Consensus(joinedRefWindow,
+                     joinedSeq,
+                     joinedConfidence)
+
+#
+# Functions for calling the consensus for regions of inadequate
+# coverage
+#
 
 def noCallAsConsensus(referenceSequence):
     return "N" * len(referenceSequence)
@@ -53,3 +120,10 @@ noEvidenceConsensusFactoryByName = \
     { "nocall"             : noCallAsConsensus,
       "reference"          : referenceAsConsensus,
       "lowercasereference" : lowercaseReferenceAsConsensus}
+
+
+#
+# Naming convention for consensus contigs
+#
+def consensusContigName(referenceName, algorithmName):
+    return "%s|%s" % (referenceName, algorithmName)

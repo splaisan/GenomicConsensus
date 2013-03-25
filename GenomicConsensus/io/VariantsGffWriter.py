@@ -52,8 +52,9 @@ class VariantsGffWriter(object):
             self._gffWriter.writeHeader("##sequence-region %s 1 %d" \
                                             % (entry.name, entry.length))
 
-    def writeRecord(self, gffRecord):
-        self._gffWriter.writeRecord(gffRecord)
+    def writeVariants(self, variants):
+        for var in variants:
+            self._gffWriter.writeRecord(var.toGffRecord())
 
     def close(self):
         self._gffWriter.close()

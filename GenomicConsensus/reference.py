@@ -70,6 +70,10 @@ def anyKeyToId(stringKey):
     else:
         raise Exception, "Unknown reference name: %s" % stringKey
 
+def sequenceInWindow(window):
+    refId, refStart, refEnd = window
+    return byId[refId].sequence[refStart:refEnd]
+
 def isLoaded():
     return bool(byMD5)
 
@@ -151,7 +155,7 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None):
 def numReferenceBases(refId, referenceWindow=None):
     """
     Termination is determined to be when the result collector has
-    build consensus corresponding to the exact number of reference
+    built consensus corresponding to the exact number of reference
     bases in the window under consideration.
     """
     assert isLoaded()
@@ -176,5 +180,9 @@ def enumerateIds(referenceWindow=None):
         yield refId
 
 def enlargedReferenceWindow(refWin, overlap):
+    assert isLoaded()
     refId, refStart, refEnd = refWin
-    return (refId, max(0, refStart - overlap), refEnd + overlap)
+    contigLength = byId[refId].length
+    return (refId,
+            max(0, refStart - overlap),
+            min(refEnd + overlap, contigLength))

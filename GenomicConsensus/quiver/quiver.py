@@ -41,7 +41,6 @@ from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from ..io.VariantsGffWriter import VariantsGffWriter
 from pbcore.io import (rangeQueries,
-                       GffWriter,
                        FastaWriter,
                        FastqWriter)
 
@@ -87,20 +86,6 @@ class QuiverConfig(object):
         self.ccQuiverConfig             = self.parameters.quiverConfig
 
 
-#
-# The type used in the wire protocol.  Note that whereas plurality
-# passes a packet per locus, we pass a bigger packet per reference
-# window (1000bp, typically).
-#
-QuiverWindowSummary = collections.namedtuple("QuiverWindowSummary",
-                                             ("referenceId",
-                                              "referenceStart",
-                                              "referenceEnd",
-                                              "consensus",      # string
-                                              "qv",             # numpy array of uint8
-                                              "variants"))      # list of Variant
-
-
 
 def filterAlnsForQuiver(refWindow, alns, quiverConfig):
     """
@@ -120,11 +105,8 @@ def filterAlnsForQuiver(refWindow, alns, quiverConfig):
           Read  ATG---------------TA-A
           Win.     [              )
     """
-    _, winStart, winEnd = refWindow
-    winLen = winEnd - winStart
-    minimumReadLength = quiverConfig.readStumpinessThreshold * winLen
-    return [ aln for aln in alns
-             if aln.readLength >= (quiverConfig.readStumpinessThreshold * aln.referenceSpan) ]
+    return [ a for a in alns
+             if a.readLength >= (quiverConfig.readStumpinessThreshold * a.referenceSpan) ]
 
 def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                         depthLimit, quiverConfig):
@@ -145,28 +127,32 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     noEvidenceConsensusFactory = \
         noEvidenceConsensusFactoryByName[quiverConfig.noEvidenceConsensus]
 
-    # 1) identify the intervals with adequate coverage for quiver
-    #    consensus; restrict to intervals of length > 10
-    allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
-    starts = cmpH5.tStart[allRows]
-    ends   = cmpH5.tEnd[allRows]
-    intervals = [ (s, e)
-                  for (s, e) in kSpannedIntervals(refWindow,
-                                                  quiverConfig.minPoaCoverage,
-                                                  starts,
-                                                  ends)
-                  if (e - s) > 10 ]
+    if options.fancyChunking:
+        # 1) identify the intervals with adequate coverage for quiver
+        #    consensus; restrict to intervals of length > 10
+        allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
+        starts = cmpH5.tStart[allRows]
+        ends   = cmpH5.tEnd[allRows]
+        intervals = [ (s, e)
+                      for (s, e) in kSpannedIntervals(refWindow,
+                                                      quiverConfig.minPoaCoverage,
+                                                      starts,
+                                                      ends)
+                      if (e - s) > 10 ]
 
-    coverageGaps = holes(refWindow, intervals)
-    allIntervals = sorted(intervals + coverageGaps)
-    if len(allIntervals) > 1:
-        logging.info("Usable coverage in window %s in intervals: %r" %
-                     (reference.windowToString(refWindow), intervals))
+        coverageGaps = holes(refWindow, intervals)
+        allIntervals = sorted(intervals + coverageGaps)
+        if len(allIntervals) > 1:
+            logging.info("Usable coverage in window %s in intervals: %r" %
+                         (reference.windowToString(refWindow), intervals))
+
+    else:
+        allIntervals = [ (winStart, winEnd) ]
 
     # 2) pull out the reads we will use for each interval
     # 3) call quiverConsensusForAlignments on the interval
     subConsensi = []
-    rowNumbersUsed = set()
+    variants = []
 
     for interval in allIntervals:
         intStart, intEnd = interval
@@ -178,21 +164,24 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                              depthLimit=depthLimit,
                              minMapQV=quiverConfig.minMapQV,
                              strategy="longest")
-        rowNumbersUsed.update(rows)
-
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
         clippedAlns = filterAlnsForQuiver(subWin, clippedAlns_, quiverConfig)
 
-        if len([ aln for aln in clippedAlns
-                 if aln.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
+        if len([ a for a in clippedAlns
+                 if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
 
             css = quiverConsensusForAlignments(subWin,
                                                intRefSeq,
                                                clippedAlns,
                                                quiverConfig)
-        else:
 
+            siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
+            variants += variantsFromConsensus(refWindow, refSequence,
+                                              css.sequence, css.confidence, siteCoverage,
+                                              options.aligner)
+
+        else:
             cssSeq = noEvidenceConsensusFactory(intRefSeq)
             css = Consensus(subWin,
                             cssSeq,
@@ -202,22 +191,10 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
     # 4) glue the subwindow consensus objects together to form the
     #    full window consensus
-    cssSeq_  = "".join(sc.sequence for sc in subConsensi)
-    cssConf_ = np.concatenate([sc.confidence for sc in subConsensi])
-    css = Consensus(refWindow,
-                    cssSeq_,
-                    cssConf_)
+    css = join(subConsensi)
 
-    # 5) identify variants
-    siteCoverage = rangeQueries.getCoverageInRange(cmpH5, refWindow, list(rowNumbersUsed))
-    variants = variantsFromConsensus(refWindow, refSequence,
-                                     cssSeq_, cssConf_, siteCoverage,
-                                     options.aligner)
-
-    # 6) Return
+    # 5) Return
     return css, variants
-
-
 
 
 class QuiverWorker(object):
@@ -228,7 +205,9 @@ class QuiverWorker(object):
 
     def onChunk(self, referenceWindow):
         refId, refStart, refEnd = referenceWindow
-        _, eStart, eEnd = eWindow = reference.enlargedReferenceWindow(referenceWindow, options.referenceChunkOverlap)
+        eWindow = reference.enlargedReferenceWindow(referenceWindow,
+                                                    options.referenceChunkOverlap)
+        _, eStart, eEnd = eWindow
 
         # We call consensus on the enlarged window and then map back
         # to the reference and clip the consensus at the implied
@@ -257,82 +236,19 @@ class QuiverWorker(object):
         variants       = [ v for v in variants_
                            if refStart <= v.refStart < refEnd ]
 
-        return QuiverWindowSummary(refId, refStart, refEnd,
-                                   cssSequence, cssQv, variants)
+        consensusObj = Consensus(referenceWindow,
+                                 cssSequence,
+                                 cssQv)
+
+        return (referenceWindow, (consensusObj, variants))
 
 
-ContigConsensusChunk = collections.namedtuple("ContigConsensusChunk",
-                                              ("refStart", "refEnd", "consensus", "qv"))
-
-class QuiverResultCollector(object):
-
-    def onStart(self):
-        self.allVariants = []
-        # this is a map of refId -> [ContigConsensusChunk];
-        self.consensusChunks = collections.defaultdict(list)
-
-    def onResult(self, result):
-        assert result.consensus != None and isinstance(result.consensus, str)
-        self.allVariants += result.variants
-        cssChunk = ContigConsensusChunk(result.referenceStart,
-                                        result.referenceEnd,
-                                        result.consensus,
-                                        result.qv)
-        self.consensusChunks[result.referenceId].append(cssChunk)
-
-    def onFinish(self):
-        # 1. GFF output.
-        if options.gffOutputFilename:
-            # Dictionary of refId -> [Variant]
-            filteredVariantsByRefId = collections.defaultdict(list)
-            for v in self.allVariants:
-                if (v.confidence > options.variantConfidenceThreshold and
-                    v.coverage   > options.variantCoverageThreshold):
-                    filteredVariantsByRefId[v.refId].append(v)
-            # Sort variants before output
-            for refId in filteredVariantsByRefId:
-                filteredVariantsByRefId[refId].sort()
-            self.writeVariantsGff(options.gffOutputFilename, filteredVariantsByRefId)
-
-        # 2. FASTA output.  Currently unoptimized--will choke hard on
-        # very large references.
-        if options.fastaOutputFilename:
-            writer = FastaWriter(options.fastaOutputFilename)
-            for refId, unsortedChunks in self.consensusChunks.iteritems():
-                chunks = sorted(unsortedChunks)
-                css = "".join(chunk.consensus for chunk in chunks)
-                quiverHeader = reference.idToName(refId) + "|quiver"
-                writer.writeRecord(quiverHeader, css)
-            writer.close()
-
-        # 3. FASTQ output
-        if options.fastqOutputFilename:
-            writer = FastqWriter(options.fastqOutputFilename)
-            for refId, unsortedChunks in self.consensusChunks.iteritems():
-                chunks = sorted(unsortedChunks)
-                css = "".join(chunk.consensus for chunk in chunks)
-                qv = np.concatenate([chunk.qv for chunk in chunks])
-                quiverHeader = reference.idToName(refId) + "|quiver"
-                writer.writeRecord(quiverHeader, css, qv)
-            writer.close()
-
-
-    def writeVariantsGff(self, filename, filteredVariantsByRefId):
-        writer = VariantsGffWriter(options.gffOutputFilename,
-                                   " ".join(sys.argv),
-                                   reference.byId.values())
-        for id in reference.byId:
-            for v in filteredVariantsByRefId[id]:
-                writer.writeRecord(v.toGffRecord())
-        writer.close()
 
 #
 # Slave process/thread classes
 #
 class QuiverWorkerProcess(QuiverWorker, WorkerProcess): pass
 class QuiverWorkerThread(QuiverWorker, WorkerThread): pass
-class QuiverResultCollectorProcess(QuiverResultCollector, ResultCollectorProcess): pass
-class QuiverResultCollectorThread(QuiverResultCollector, ResultCollectorThread):  pass
 
 
 #
@@ -382,7 +298,8 @@ def configure(options, cmpH5):
 
     if not params.model.isCompatibleWithCmpH5(cmpH5):
         raise IncompatibleDataException(
-            "Selected Quiver parameter set is incompatible with this cmp.h5 file due to missing data tracks.")
+            "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
+            "due to missing data tracks.")
 
     if options.parameterSet == "best" and params.model != AllQVsModel:
         logging.warn(
@@ -400,6 +317,6 @@ def configure(options, cmpH5):
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
     if threaded:
-        return (QuiverWorkerThread,  QuiverResultCollectorThread)
+        return (QuiverWorkerThread,  ResultCollectorThread)
     else:
-        return (QuiverWorkerProcess, QuiverResultCollectorProcess)
+        return (QuiverWorkerProcess, ResultCollectorProcess)

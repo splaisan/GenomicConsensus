@@ -34,6 +34,7 @@ from __future__ import absolute_import
 
 from pbcore.io import Gff3Record, GffWriter
 from . import reference
+from .utils import CommonEqualityMixin
 import sys, time
 
 # Internally we use Python-style half-open intervals zero-based
@@ -48,7 +49,7 @@ __all__ = [ "Deletion",
             "Insertion",
             "Substitution" ]
 
-class Variant(object):
+class Variant(CommonEqualityMixin):
 
     HAPLOID = "haploid"
     HETEROZYGOUS = "heterozygous"
@@ -78,9 +79,9 @@ class Variant(object):
         self.frequency = frequency
         self.zygosity = zygosity
 
-    def __cmp__(self, other):
-        return cmp( (self.refId, self.refStart, self.sortingPrecedence),
-                    (other.refId, other.refStart, other.sortingPrecedence) )
+    def __lt__(self, other):
+        return ((self.refId, self.refStart, self.sortingPrecedence) <
+                (other.refId, other.refStart, self.refEnd, other.sortingPrecedence))
 
     def __repr__(self):
         return "%d:%d-%d; %s -> %s" \
@@ -137,7 +138,7 @@ class Substitution(Variant):
     gffType = "substitution"
 
     def __repr__(self):
-        return "Substitution" + super(Substitution, self).__repr__()
+        return "Substitution " + super(Substitution, self).__repr__()
 
     def __len__(self):
         return len(self.refSequence)

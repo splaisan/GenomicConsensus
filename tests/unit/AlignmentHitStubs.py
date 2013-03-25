@@ -81,6 +81,12 @@ class AlignmentHitStub(object):
             data = ungappedPulseArray(data)
         return data
 
+    def clippedTo(self, refStart, refEnd):
+        # Not really implemented.
+        assert refStart <= self.referenceStart <= self.referenceEnd <= refEnd
+        return self
+
+
     IPD                = _makePulseFeatureAccessor("IPD")
     PulseWidth         = _makePulseFeatureAccessor("PulseWidth")
     QualityValue       = _makePulseFeatureAccessor("QualityValue")
@@ -144,9 +150,10 @@ class ForwardAndReverseReads(object):
     - No plurality variants.
 
     """
+    referenceWindow = (1, 0, 20)
     reference                  = "CCAAAACCCCTTTTGGGGCC"
     expectedPluralityConsensus = "CCAAAACCCCTTTTGGGGCC"
-    referenceWindow = (1, 0, 100)
+    expectedPluralityVariants = []
 
     hit1 = AlignmentHitStub(0, FORWARD,
                             "CCAAAA-CCCCTTTTGGGGCC",
@@ -204,14 +211,6 @@ class ForwardAndReverseReads(object):
 
     hits = [hit1, hit2, hit3, hit4, hit5, hit6]
 
-    insertionVariant = Insertion(1, 6, 6, "-", "A")
-    deletionVariant  = Deletion(1, 15, 16, "G", "-")
-    substitutionVariant = Substitution(1, 3, 4, "A", "G")
-
-    allVariants = set([insertionVariant,
-                       deletionVariant,
-                       substitutionVariant])
-    pluralityVariants = set([])
 
 
 
@@ -257,9 +256,13 @@ class StaggeredReads(object):
         - plurality substitution C->G at 5;
         - plurality deletion of T at 9.
     """
-    reference                  = "GATTACAGATTACA"
-    expectedPluralityConsensus = "GATTAGAGAATACA"
-    referenceWindow = (1, 0, 100)
+    referenceWindow = (1, 0, 20)
+    reference                  = "GATTACAGATTACATTTTTT"
+    expectedPluralityConsensus = "GATTAGAGAATACANNNNNN"
+    expectedPluralityVariants = \
+        [ Substitution(1, 5, 6,  "C", "G", coverage=4, confidence=35, frequency=3),
+          Insertion   (1, 8, 8,  "",  "A", coverage=4, confidence=35, frequency=3),
+          Deletion    (1, 9, 10, "T", "",  coverage=3, confidence=35, frequency=2) ]
 
     hit1 = AlignmentHitStub(7, FORWARD,
                             "G-ATTA",
@@ -349,5 +352,3 @@ class BigReads(object):
                                   DeletionTag    = _("N" * k.length),
                                   MergeQV        = k.middlingQV)
                  for i in xrange(n) ]
-
-

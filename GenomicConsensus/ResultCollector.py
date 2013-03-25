@@ -30,10 +30,14 @@
 
 # Author: David Alexander, Jim Drake
 
-import cProfile, logging, os.path
+import cProfile, logging, os.path, sys
 from multiprocessing import Process
 from threading import Thread
+from collections import OrderedDict, defaultdict
 from .options import options
+from GenomicConsensus import reference, consensus
+from .io.VariantsGffWriter import VariantsGffWriter
+from pbcore.io import FastaWriter, FastqWriter
 
 class ResultCollector(object):
     """
@@ -72,13 +76,64 @@ class ResultCollector(object):
     #
 
     def onStart(self):
-        pass
+        self.referenceBasesProcessedById = OrderedDict()
+        for refId in reference.byId:
+            self.referenceBasesProcessedById[refId] = 0
+        self.variantsByRefId             = defaultdict(list)
+        self.consensusChunksByRefId      = defaultdict(list)
+
+        # open file writers
+        self.fastaWriter = self.fastqWriter = self.gffWriter = None
+        if options.fastaOutputFilename:
+            self.fastaWriter = FastaWriter(options.fastaOutputFilename)
+        if options.fastqOutputFilename:
+            self.fastqWriter = FastqWriter(options.fastqOutputFilename)
+        if options.gffOutputFilename:
+            self.gffWriter = VariantsGffWriter(options.gffOutputFilename,
+                                               " ".join(sys.argv),
+                                               reference.byId.values())
 
     def onResult(self, result):
-        pass
+        window, cssAndVariants = result
+        css, variants = cssAndVariants
+        self._recordNewResults(window, css, variants)
+        self._flushContigIfCompleted(window)
 
     def onFinish(self):
-        pass
+        logging.info("Analysis completed.")
+        if self.fastaWriter: self.fastaWriter.close()
+        if self.fastqWriter: self.fastqWriter.close()
+        if self.gffWriter: self.gffWriter.close()
+        logging.info("Output files completed.")
+
+    def _recordNewResults(self, window, css, variants):
+        refId, refStart, refEnd = window
+        self.consensusChunksByRefId[refId].append(css)
+        self.variantsByRefId[refId] += variants
+        self.referenceBasesProcessedById[refId] += (refEnd - refStart)
+
+    def _flushContigIfCompleted(self, window):
+        refId, _, _ = window
+        basesProcessed = self.referenceBasesProcessedById[refId]
+        requiredBases = reference.numReferenceBases(refId, options.referenceWindow)
+        if basesProcessed == requiredBases:
+            # This contig is done, so we can dump to file and delete
+            # the data structures.
+            css = consensus.join(self.consensusChunksByRefId[refId])
+            cssName = consensus.consensusContigName(reference.idToName(refId),
+                                                    options.algorithm)
+            if self.fastaWriter:
+                self.fastaWriter.writeRecord(cssName,
+                                             css.sequence)
+            if self.fastqWriter:
+                self.fastqWriter.writeRecord(cssName,
+                                             css.sequence,
+                                             css.confidence)
+            del self.consensusChunksByRefId[refId]
+
+            if self.gffWriter:
+                self.gffWriter.writeVariants(sorted(self.variantsByRefId[refId]))
+            del self.variantsByRefId[refId]
 
 class ResultCollectorProcess(ResultCollector, Process):
     def __init__(self, *args):

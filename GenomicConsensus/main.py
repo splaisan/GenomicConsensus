@@ -45,7 +45,7 @@ from GenomicConsensus.options import (importAdditionalDefaultOptions,
 
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
-from GenomicConsensus.rare import rare
+#from GenomicConsensus.rare import rare
 from GenomicConsensus.utils import rowNumberIsInReadStratum, die
 
 class ToolRunner(object):
@@ -181,7 +181,7 @@ class ToolRunner(object):
 
     def _printProfiles(self):
         for profile in glob.glob(os.path.join(options.temporaryDirectory, "*")):
-            pstats.Stats(profile).sort_stats("cumulative").print_stats(20)
+            pstats.Stats(profile).sort_stats("time").print_stats(20)
 
     def _cleanup(self):
         if options.doProfiling:

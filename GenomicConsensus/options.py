@@ -233,6 +233,12 @@ def parseOptions(relax=False):
              " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
              " convergence (getting trapped in local optimum) (Quiver only)")
 
+
+    parser.add_argument(
+        "--fancyChunking",
+        default=False,
+        help="Currently experimental chunking designed to handle coverage cutouts better")
+
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             print "  GenomicConsensus version: %s" % __VERSION__

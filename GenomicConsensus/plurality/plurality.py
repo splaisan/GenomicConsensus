@@ -33,93 +33,185 @@
 from __future__ import absolute_import
 
 import math, logging, numpy as np, random
-from collections import defaultdict, namedtuple, OrderedDict
-from bisect import bisect_left, bisect_right
 from itertools import izip
-from ..utils import probability_to_qv, noEvidenceConsensusCall, readsInWindow
+from collections import Counter
+from ..utils import *
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
-from ..alignment import AlignmentColumn
-from .consumers import consumers, broadcast
+from ..consensus import *
+from ..variants import *
 
 #
-# The type used in the wire protocol.
+# -----------  The actual algorithm code -------------
 #
-PluralityLocusSummary = namedtuple("PluralityLocusSummary",
-                                   ("referenceId",
-                                    "referencePos",
-                                    "coverage",
-                                    "consensus",
-                                    "consensusConfidence",
-                                    "consensusFrequency"))
 
-class PluralityAlignmentColumn(AlignmentColumn):
-    def __init__(self, *args):
-        super(PluralityAlignmentColumn,self).__init__(*args)
+def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
+                                  noEvidenceConsensusFactory=noCallAsConsensus,
+                                  realignHomopolymers=False):
+    """
+    Compute (Consensus, [Variant]) for this window, using the given
+    `alns`, by applying a straightforward column-oriented consensus
+    calling algorithm.
 
-    def confidence(self):
-        """
-        Implements AlignmentColumn.confidence
+    If the consensus cannot be called for a base, "N" will be placed
+    in the consensus sequence for that position.
 
-        Our plurality confidence metric is a phred-transformed
-        probability based on the assumption that each read is an
-        independent observation of the true base, with error
-        probability 0.15.
+    If `realignHomopolymers` is True, alignment gaps will be shuffled
+    in homopolymer regions in an attempt to maximize variant detection
+    sensitivity (not yet implemented, and may never be).
+    """
+    _, refStart, refEnd = refWindow
+    windowSize = refEnd - refStart
+    assert len(referenceSequenceInWindow) == windowSize
 
-        For a true genomic sequence G, we have a vector of reads X =
-        (X_1, X_2, ..., X_d) with values in S = {s_1, s_2, ..., s_k},
-        and corresponding frequencies N = {n_1, n_2, ..., n_k}---where
-        we have indexed the sets S and N in descending frequency
-        order.
+    #
+    # Build up these arrays in reference coordinates.
+    #
+    consensusSequence_   = []
+    consensusFrequency_  = []
+    effectiveCoverage_   = []
+    noEvidenceConsensus = noEvidenceConsensusFactory(referenceSequenceInWindow)
 
-        If we allow that
+    baseCallsMatrix = tabulateBaseCalls(refWindow, alns, realignHomopolymers)
 
-           Pr(X | G \not\in S) = (0.15)^d;
-           Pr(X | G = s_1)     = (0.85)^n_1 * (0.15)^(d-n_1);
-           Pr(X | G = s_2)     = (0.85)^n_2 * (0.15)^(d-n_2); etc.
+    for j in xrange(0, windowSize):
+        counter = Counter(baseCallsMatrix[:, j])
+        if "" in counter: counter.pop("")
 
-        and then impose an uninformative prior distribution on G, such
-        that the events G = s_i \forall i, G \not\in S, are all
-        equiprobable (which may or may not be reasonable---revisit
-        this later), then the respective posterior probabilities for G
-        can be found from the above formulas after normalizing by the
-        sum.
+        siteEffectiveCoverage = sum(counter.itervalues())
+        if siteEffectiveCoverage == 0:
+            siteConsensusFrequency = 0
+            siteConsensusSequence  = noEvidenceConsensus[j]
+        else:
+            siteConsensusFrequency, siteConsensusSequence = max(zip(counter.values(),
+                                                                    counter.keys()))
+        # Replace explicit gaps with empty string
+        if siteConsensusSequence == "-":
+            siteConsensusSequence = ""
 
-        Computations done in the log domain to prevent underflow.
-        """
-        p, q = 0.85, 0.15
-        log_p, log_q = map(math.log, (p, q))
-        d = self.coverage()
-        unnormalized_log_probs = []
-        for si, ni in self.orderedSnippetsAndFrequencies:
-            unnormalized_log_probs.append(ni * log_p + (d - ni) * log_q)
-        unnormalized_log_probs.append(d * log_q)
-        unnormalized_log_probs = np.array(unnormalized_log_probs)
+        consensusSequence_.append(siteConsensusSequence)
+        consensusFrequency_.append(siteConsensusFrequency)
+        effectiveCoverage_.append(siteEffectiveCoverage)
 
-        # calculate the sum in the log domain
-        log_sum = np.logaddexp.reduce(unnormalized_log_probs)
-        log_probs = unnormalized_log_probs - log_sum
-        return probability_to_qv(np.exp(log_probs[0]))
+    consensusConfidence_ = computePluralityConfidence(consensusFrequency_,
+                                                      effectiveCoverage_)
 
-    def consensus(self):
-        """Implements AlignmentColumn.consensus"""
-        consensusSnippet, consensusFrequency = self.mostFrequentItem()
-        return PluralityLocusSummary(self.referenceId,
-                                     self.referencePos,
-                                     self.coverage(),
-                                     consensusSnippet,
-                                     self.confidence(),
-                                     consensusFrequency)
+    #
+    # Now we need to put everything in consensus coordinates
+    #
+    consensusLens = map(len, consensusSequence_)
+    consensusSequence = "".join(consensusSequence_)
+    consensusConfidence = np.repeat(consensusConfidence_, consensusLens)
+    css = Consensus(refWindow, consensusSequence, consensusConfidence)
 
-class PluralityCaller(object):
+    #
+    # Derive variants from reference-coordinates consensus
+    #
+    variants = _computeVariants(refWindow,
+                                referenceSequenceInWindow,
+                                consensusSequence_,
+                                consensusConfidence_,
+                                effectiveCoverage_,
+                                consensusFrequency_)
+
+    return (css, variants)
+
+
+def _computeVariants(refWindow,
+                     refSequenceInWindow,
+                     consensusArray,
+                     consensusConfidenceArray,
+                     consensusCoverageArray,
+                     consensusFrequencyArray,
+                     minCoverage=3,
+                     minConfidence=20):
+    refId, refStart, refEnd = refWindow
+    windowSize = refEnd - refStart
+    assert len(refSequenceInWindow) == windowSize
+    assert len(consensusArray) == windowSize
+
+    vars = []
+    for j in xrange(windowSize):
+        refPos = j + refStart
+        refBase = refSequenceInWindow[j]
+        cssBases = consensusArray[j]
+        conf = consensusConfidenceArray[j]
+        cov  = consensusCoverageArray[j]
+        freq = consensusFrequencyArray[j]
+
+        if ((refBase != cssBases) and
+            (cov >= minCoverage) and
+            (conf >= minConfidence)):
+
+            if cssBases == "":
+                vars.append(Deletion(refId, refPos, refPos+1,
+                                     refBase, cssBases, cov, conf, freq))
+            else:
+                if len(cssBases) > 1:
+                    vars.append(Insertion(refId, refPos, refPos,
+                                          "", cssBases[:-1], cov, conf, freq))
+                if cssBases[-1] != refBase:
+                    vars.append(Substitution(refId, refPos, refPos+1,
+                                             refBase, cssBases[-1], cov, conf, freq))
+    return sorted(vars)
+
+def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
+    """
+    Go through the reads and build up the structured baseCallsMatrix
+    table, which tabulates the read bases occurring at each reference
+    coordinate in each read.  This code is somewhat tricky, read carefully.
+    """
+    _, refStart, refEnd = refWindow
+    windowSize = refEnd - refStart
+
+    baseCallsMatrix = np.zeros(shape=(len(alns), windowSize), dtype="S8")
+
+    for i, aln in enumerate(alns):
+        aln = aln.clippedTo(refStart, refEnd)
+        alnRef    = aln.reference(orientation="genomic")
+        alnRead   = aln.read(orientation="genomic")
+        if realignHomopolymers:
+            alnRef, alnRead =  normalizeHomopolymerGaps(alnRef, alnRead)
+
+        # Idea: scan through the ref, read; for each non-gap character
+        # in ref, record all non-gap characters seen in read since
+        # last ref gap.
+        readBases = []
+        accum = []
+        for (refBase, readBase) in izip(alnRef, alnRead):
+            if readBase != "-":
+                readBases.append(readBase)
+            if refBase != "-":
+                basesForRefPos = "".join(readBases) if readBases else "-"
+                accum.append(basesForRefPos)
+                readBases = []
+        s, e = (aln.referenceStart - refStart,
+                aln.referenceEnd   - refStart)
+        baseCallsMatrix[i, s:e] = accum
+    return baseCallsMatrix
+
+
+def computePluralityConfidence(consensusFrequency, effectiveCoverage):
+    """
+    Come up with a new simpler scheme.  Should only need frequency and
+    coverage.
+    """
+    confidence = np.empty_like(consensusFrequency)
+    confidence.fill(35)
+    return confidence
+
+
+#
+# --------------  Plurality Worker class --------------------
+#
+
+class PluralityWorker(object):
 
     # The type of the result that will be passed on to the result
     # collector is:
-    #     (ReferenceWindow, list of (Locus, Tuple)]
-    # where each Tuple must be convertible to a numpy array with dtype
-    # as below:
+    #     (ReferenceWindow, consensus, consensusQv, variants)
 
     def onStart(self):
         random.seed(42)
@@ -131,141 +223,19 @@ class PluralityCaller(object):
                                    strategy="longest",
                                    stratum=options.readStratum)
         alnHits = self._inCmpH5[rowNumbers]
-        return (referenceWindow, self.plurality(referenceWindow, alnHits))
+        return (referenceWindow,
+                pluralityConsensusAndVariants(referenceWindow,
+                                              reference.sequenceInWindow(referenceWindow),
+                                              alnHits))
 
-    @staticmethod
-    def plurality(referenceWindow, alignments):
-        """
-        Convenience method for tabulating plurality in a window.
-
-        Input: referenceWindow, iterable of alignmentHits
-        Output: list of (Locus, PluralityLocusSummary)
-
-        Plurality is tabulating the frequency of 'snippets'---strings
-        of one or more bases---in the reads, corresponding to each
-        reference position.  As the plurality 'consensus', we return
-        the most frequent snippet by column.
-        """
-        refId, refWindowStart, refWindowEnd = referenceWindow
-        alignmentColumns = {}
-
-        for hit in alignments:
-            alignedRefPositions = hit.referencePositions(orientation="genomic")
-
-            begin = bisect_left(alignedRefPositions, refWindowStart)
-            end = bisect_right(alignedRefPositions, refWindowEnd)
-
-            alignedRefPositions = alignedRefPositions[begin:end]
-            alignedRef          = hit.reference(orientation="genomic")[begin:end]
-            alignedRead         = hit.read(orientation="genomic")[begin:end]
-
-            readBases = []
-            for i, (refPos, refBase, readBase) in enumerate(izip(alignedRefPositions,
-                                                                 alignedRef,
-                                                                 alignedRead)):
-                if readBase != "-":
-                    readBases.append(readBase)
-
-                if refBase != "-":
-                    if (refId, refPos) not in alignmentColumns:
-                        alignmentColumns[refId, refPos] = \
-                            PluralityAlignmentColumn(refId, refPos, refBase)
-                    alignmentColumns[refId, refPos].addReadSnippet("".join(readBases))
-                    readBases = []
-
-        # Return (Locus, Tuple)
-        return [(locus, alnCol.consensus())
-                for locus, alnCol in alignmentColumns.iteritems()]
 
 
 # define both process and thread-based plurality callers
-class PluralityWorkerProcess(PluralityCaller,WorkerProcess):
-    pass
-
-class PluralityWorkerThread(PluralityCaller,WorkerThread):
-    pass
-
-
-class PluralityResult(object):
-    #
-    # The type used in the table built in the result collector process.
-    #
-    LOCUS_SUMMARY_DTYPE = [ ("referencePos",         np.uint32),
-                            ("coverage"            , np.uint32),
-                            ("consensus"           , "S8"),
-                            ("consensusConfidence" , np.uint8),
-                            ("consensusFrequency"  , np.uint32)]
-
-    """
-    Collect the plurality results, collate, and output.
-    """
-    def onStart(self):
-        self.consensusByRefId = OrderedDict()
-        self.referenceBasesProcessedById = defaultdict(int)
-        self.consumers = consumers(options.outputFilenames,
-                                   PluralityLocusSummary._fields,
-                                   options.variantConfidenceThreshold)
-
-    def onResult(self, result):
-        # This is trickier than it really ought to be.  We want to
-        # minimize memory consumption, so as soon as we have received
-        # all the results for a given reference group, we send the
-        # results to disk and then delete its consensus table---which
-        # takes up a ton of memory.  In 1.4 we should rewrite things
-        # so there is just a top level synchronous loop over refId,
-        # and we don't have to worry about this trickiness.
-        referenceWindow, pluralityResults = result
-        refId, refStart, refEnd = referenceWindow
-        refEntry = reference.byId[refId]
-        self.referenceBasesProcessedById[refId] += (refEnd - refStart)
-
-        # Is this a refId we haven't seen before? If so, initialize its
-        # consensus table.
-        if refId not in self.consensusByRefId:
-            self.initTable(refId, refEntry)
-
-        for locus, locusSummary in pluralityResults:
-            _, refPos = locus
-            assert _ == refId
-            self.installInTable(locusSummary, self.consensusByRefId[refId], refPos)
-
-        # Did we finish processing this reference group?  If so, flush to
-        # disk!
-        expectedRefBases = reference.numReferenceBases(refId, options.referenceWindow)
-        if self.referenceBasesProcessedById[refId] == expectedRefBases:
-            broadcast((refId, self.consensusByRefId[refId]), self.consumers)
-            del self.consensusByRefId[refId]
-
-    def onFinish(self):
-        logging.info("Analysis completed.")
-        for consumer in self.consumers:
-            consumer.close()
-
-    def initTable(self, refId, refEntry):
-            tbl = np.zeros(shape=refEntry.length,
-                           dtype=self.LOCUS_SUMMARY_DTYPE)
-            ra = tbl.view(np.recarray)
-            ra.consensus[:] = list(noEvidenceConsensusCall(refEntry.sequence.tostring(),
-                                                           options.noEvidenceConsensusCall))
-            self.consensusByRefId[refId] = tbl
-
-    def installInTable(self, locusSummary, tbl, rowNumber):
-        # The consensus field in the table is type S8, so can only
-        # store 8 characters.  On the odd chance that we detect an 9+
-        # character insertion, we lose its first bases.
-        tbl[rowNumber] = locusSummary._replace(consensus=locusSummary.consensus[-8:])[1:]
-
-
-# We define both process and thread-based plurality collectors.
-class PluralityResultCollectorProcess(PluralityResult, ResultCollectorProcess):
-    pass
-
-class PluralityResultCollectorThread(PluralityResult, ResultCollectorThread):
-    pass
-
+class PluralityWorkerProcess(PluralityWorker, WorkerProcess): pass
+class PluralityWorkerThread(PluralityWorker, WorkerThread): pass
 
 #
-# Plugin API
+#  --------------------- Plugin API --------------------------------
 #
 
 # Pluggable module API for algorithms:
@@ -297,9 +267,9 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
 
 def slaveFactories(threaded):
     if threaded:
-        return (PluralityWorkerThread,  PluralityResultCollectorThread)
+        return (PluralityWorkerThread,  ResultCollectorThread)
     else:
-        return (PluralityWorkerProcess, PluralityResultCollectorProcess)
+        return (PluralityWorkerProcess, ResultCollectorProcess)
 
 def configure(options, cmpH5):
     pass

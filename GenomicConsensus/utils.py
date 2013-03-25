@@ -43,6 +43,16 @@ fst   = lambda t: t[0]
 snd   = lambda t: t[1]
 third = lambda t: t[2]
 
+
+class CommonEqualityMixin(object):
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 # An exception for incompatible cmp.h5 files
 class IncompatibleDataException(Exception):
     pass
