@@ -317,3 +317,102 @@ def scoreMatrix(mms):
         scoreMatrix[:, j] = mutScores
 
     return scoreMatrix
+
+def domain(referenceWindow):
+    """
+    Calculate the "domain" within the referenceWindow---the region
+    where we are allowed to call variants, since there is overlap
+    between windows.
+    """
+    from GenomicConsensus.options import options
+    from GenomicConsensus import reference
+
+    refId, winStart, winEnd = referenceWindow
+    _, refGroupStart, refGroupEnd = \
+        options.referenceWindow or \
+        (refId, 0, reference.byId[refId].length)
+    domainStart = winStart if winStart==refGroupStart else min(winStart + 5, winEnd)
+    domainEnd   = winEnd   if winEnd  ==refGroupEnd   else max(winEnd   - 5, winStart)
+    return (domainStart, domainEnd)
+
+
+def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
+                          cssQvInWindow=None, siteCoverage=None, aligner="affine"):
+    """
+    Compare the consensus and the reference in this window, returning
+    a list of variants.
+    """
+    refId, refStart, refEnd = refWindow
+
+    if aligner == "affine":
+        align = cc.AlignWithAffineGapPenalty
+    else:
+        align = cc.Align
+
+    ga = align(refSequenceInWindow, cssSequenceInWindow)
+    variants =  variantsFromAlignment(ga, refWindow)
+
+    cssPosition = cc.TargetToQueryPositions(ga)
+
+    for v in variants:
+        # HACK ALERT: we are not really handling the scoring of
+        # deletions at the end of the window correctly here.  The
+        # correct fix will be to test an insertion at the end of the
+        # template, lengthening the consensusQv by one.
+        cssStart = min(cssPosition[v.refStart-refStart], len(cssQvInWindow)-1)
+
+        if siteCoverage  != None: v.coverage   = siteCoverage[v.refStart-refStart]
+        if cssQvInWindow != None: v.confidence = cssQvInWindow[cssStart]
+
+    return variants
+
+
+def dumpEvidence(evidenceDumpBaseDirectory,
+                 refWindow, refSequenceInWindow,
+                 clippedSpanningAlnsInWindow, clippedNonSpanningAlnsInWindow,
+                 poaConsensusInWindow, quiverConsensusInWindow, scoresMatrix):
+    # Format of evidence dump:
+    # evidence_dump/
+    #   ref000001/
+    #     0-1005/
+    #       reference.fa
+    #       reads.fa
+    #       poa-consensus.fa
+    #       quiver-consensus.fa
+    #       quiver-scores.h5
+    #     995-2005/
+    #       ...
+    join = os.path.join
+    refId, refStart, refEnd = refWindow
+    refName = reference.idToName(refId)
+    windowDirectory = join(evidenceDumpBaseDirectory,
+                           refName,
+                           "%d-%d" % (refStart, refEnd))
+    logging.info("Dumping evidence to %s" % (windowDirectory,))
+
+    if os.path.exists(windowDirectory):
+        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
+    os.makedirs(windowDirectory)
+    refFasta             = FastaWriter(join(windowDirectory, "reference.fa"))
+    readsFasta           = FastaWriter(join(windowDirectory, "reads.fa"))
+    poaConsensusFasta    = FastaWriter(join(windowDirectory, "poa-consensus.fa"))
+    quiverConsensusFasta = FastaWriter(join(windowDirectory, "quiver-consensus.fa"))
+
+    windowName = refName + (":%d-%d" % (refStart, refEnd))
+    refFasta.writeRecord(windowName, refSequenceInWindow)
+    refFasta.close()
+
+    poaConsensusFasta.writeRecord(windowName + "|poa", poaConsensusInWindow)
+    poaConsensusFasta.close()
+
+    quiverConsensusFasta.writeRecord(windowName + "|quiver", quiverConsensusInWindow)
+    quiverConsensusFasta.close()
+
+    # TODO: add row/col names to make the matrix interpretable
+    quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
+    ds = quiverScoreFile.create_dataset("Scores", data=scoresMatrix)
+    quiverScoreFile.close()
+
+    for aln in (clippedSpanningAlnsInWindow + clippedNonSpanningAlnsInWindow):
+        readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
+    readsFasta.close()
