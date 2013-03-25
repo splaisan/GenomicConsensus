@@ -170,8 +170,11 @@ def kSpannedIntervals(refWindow, k, start, end):
     always return the optimal solutions in the most common cases.
     """
     assert k >= 1
-
     winId, winStart_, winEnd_ = refWindow
+
+    # Truncate to bounds implied by refWindow
+    start = np.maximum(winStart_, start)
+    end   = np.minimum(winEnd_,   end)
 
     # Translate the start, end to coordinate system where
     # refWindow.start is 0.
@@ -179,10 +182,6 @@ def kSpannedIntervals(refWindow, k, start, end):
     end   = end - winStart_
     winStart = 0
     winEnd   = winEnd_ - winStart_
-
-    # Truncate to bounds implied by refWindow
-    start = np.maximum(winStart, start)
-    end   = np.minimum(winEnd,   end)
 
     positions = np.arange(winEnd - winStart, dtype=int)
     coverage = projectIntoRange(start, end,

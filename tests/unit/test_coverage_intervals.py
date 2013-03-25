@@ -60,6 +60,17 @@ def test_intervals_5():
                   kSpannedIntervals(refWindow, 3, start, end))
 
 
+def test_intervals_underflow():
+    """
+    I found an case that gave the wrong results due to an underflow.
+    Regression test here.
+    """
+    refWindow = (0, 5, 10)
+    tStart = np.arange(10, dtype=np.uint32)
+    tEnd   = tStart + 10
+    assert_equals([(5, 10)], kSpannedIntervals(refWindow, 3, tStart, tEnd))
+
+
 def test_abut():
     """
     Test abutting adjacent intervals
