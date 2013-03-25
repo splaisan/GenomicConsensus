@@ -346,19 +346,19 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
         align = cc.Align
 
     ga = align(refSequenceInWindow, cssSequenceInWindow)
-    variants =  variantsFromAlignment(ga, refWindow)
+    variants = variantsFromAlignment(ga, refWindow)
 
     cssPosition = cc.TargetToQueryPositions(ga)
 
     for v in variants:
-        # HACK ALERT: we are not really handling the scoring of
-        # deletions at the end of the window correctly here.  The
-        # correct fix will be to test an insertion at the end of the
-        # template, lengthening the consensusQv by one.
-        cssStart = min(cssPosition[v.refStart-refStart], len(cssQvInWindow)-1)
+        # HACK ALERT: we are not really handling the confidence or
+        # coverage for variants at last position of the window
+        # correctly here.
+        refPos_ = min(v.refStart-refStart, len(siteCoverage)-1)
+        cssPos_ = min(cssPosition[v.refStart-refStart], len(cssQvInWindow)-1)
 
-        if siteCoverage  != None: v.coverage   = siteCoverage[v.refStart-refStart]
-        if cssQvInWindow != None: v.confidence = cssQvInWindow[cssStart]
+        if siteCoverage  != None: v.coverage   = siteCoverage[refPos_]
+        if cssQvInWindow != None: v.confidence = cssQvInWindow[cssPos_]
 
     return variants
 
@@ -421,76 +421,6 @@ def subWindow(refWindow, subinterval):
     assert intE <= winEnd
     return winId, intS, intE
 
-def quiverConsensusForWindow(cmpH5, refWindow, referenceContig,
-                             depthLimit, quiverConfig):
-    """
-    High-level routine for calling the consensus for a
-    window of the genome given a cmp.h5.
-
-    Identifies the coverage contours of the window in order to
-    identify subintervals where a good consensus can be called.
-    Creates the desired "no evidence consensus" where there is
-    inadequate coverage.
-    """
-    # 1) identify the intervals with adequate coverage for quiver
-    #    consensus; restrict to intervals of length > 10
-    allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
-    starts = cmpH5.tStart[allRows]
-    ends   = cmpH5.tEnd[allRows]
-    intervals = [ (s, e)
-                  for (s, e) in kSpannedIntervals(refWindow,
-                                                  quiverConfig.minPoaCoverage,
-                                                  starts,
-                                                  ends)
-                  if (e - s) > 10 ]
-
-    coverageGaps = holes(refWindow, intervals)
-    allIntervals = sorted(intervals + coverageGaps)
-    assert holes(refWindow, allIntervals) == []
-
-    # 2) pull out the reads we will use for each interval
-    # 3) call quiverConsensusForAlignments on the interval
-    subConsensi = []
-    for interval in allIntervals:
-        intStart, intEnd = interval
-        intRefSeq = referenceContig[intStart:intEnd].tostring()
-        subWin = subWindow(refWindow, interval)
-
-        if interval in coverageGaps:
-            cssSeq = quiverConfig.noEvidenceConsensus(intRefSeq)
-            css = Consensus(subWin,
-                            cssSeq,
-                            [0]*len(cssSeq),
-                            [0]*len(cssSeq))
-        else:
-
-            windowRefSeq = referenceContig[intStart:intEnd]
-            rows = readsInWindow(cmpH5, subWin,
-                                 depthLimit=depthLimit,
-                                 minMapQV=quiverConfig.minMapQV,
-                                 strategy="longest")
-
-            # TODO: Some further filtering: remove "stumpy reads"
-            alns = cmpH5[rows]
-            clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
-            css = quiverConsensusForAlignments(subWin,
-                                               intRefSeq,
-                                               clippedAlns,
-                                               quiverConfig)
-        subConsensi.append(css)
-
-    # 4) glue the subwindow consensus objects together to form the
-    #    full window consensus
-    cssSeq_  = "".join(sc.sequence for sc in subConsensi)
-    cssConf_ = np.concatenate([sc.confidence for sc in subConsensi])
-    cssCov_  = np.concatenate([sc.coverage for sc in subConsensi])
-    return Consensus(refWindow,
-                     cssSeq_,
-                     cssConf_,
-                     cssCov_)
-
-
-
 def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     """
     Call consensus on this interval---without subdividing the interval
@@ -533,9 +463,12 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
         refineDinucleotideRepeats(mms)
     quiverCss = mms.Template()
 
-    # TODO: calculate confidence here
-    confidence = [0] * len(quiverCss)
-    coverage   = [0] * len(quiverCss)
+    if quiverConfig.computeConfidence:
+        confidence = consensusConfidence(mms)
+    else:
+        confidence = np.zeros(shape=len(quiverCss), dtype=int)
+
+    coverage = [50] * len(quiverCss)
 
     return Consensus(refWindow,
                      quiverCss,

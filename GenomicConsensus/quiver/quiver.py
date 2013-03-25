@@ -59,6 +59,7 @@ class QuiverConfig(object):
                  maxIterations=20,
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus="nocall",
+                 computeConfidence=True,
                  parameters=None):
 
         self.minMapQV                   = minMapQV
@@ -68,6 +69,7 @@ class QuiverConfig(object):
         self.maxIterations              = maxIterations
         self.refineDinucleotideRepeats  = refineDinucleotideRepeats
         self.noEvidenceConsensus        = noEvidenceConsensus
+        self.computeConfidence          = computeConfidence
         self.parameters                 = parameters
 
         # Convenience
@@ -87,6 +89,95 @@ QuiverWindowSummary = collections.namedtuple("QuiverWindowSummary",
                                               "consensus",      # string
                                               "qv",             # numpy array of uint8
                                               "variants"))      # list of Variant
+
+
+
+def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
+                                        depthLimit, quiverConfig):
+    """
+    High-level routine for calling the consensus for a
+    window of the genome given a cmp.h5.
+
+    Identifies the coverage contours of the window in order to
+    identify subintervals where a good consensus can be called.
+    Creates the desired "no evidence consensus" where there is
+    inadequate coverage.
+    """
+    winId, winStart, winEnd = refWindow
+    refSequence = referenceContig[winStart:winEnd].tostring()
+    logging.info("Quiver operating on window: %s" %
+                 reference.windowToString(refWindow))
+
+    noEvidenceConsensusFactory = \
+        noEvidenceConsensusFactoryByName[quiverConfig.noEvidenceConsensus]
+
+    # 1) identify the intervals with adequate coverage for quiver
+    #    consensus; restrict to intervals of length > 10
+    allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
+    starts = cmpH5.tStart[allRows]
+    ends   = cmpH5.tEnd[allRows]
+    intervals = [ (s, e)
+                  for (s, e) in kSpannedIntervals(refWindow,
+                                                  quiverConfig.minPoaCoverage,
+                                                  starts,
+                                                  ends)
+                  if (e - s) > 10 ]
+
+    coverageGaps = holes(refWindow, intervals)
+    allIntervals = sorted(intervals + coverageGaps)
+    if len(allIntervals) > 1:
+        logging.info("Usable coverage in window %s in intervals: %r" %
+                     (reference.windowToString(refWindow), intervals))
+
+    # 2) pull out the reads we will use for each interval
+    # 3) call quiverConsensusForAlignments on the interval
+    subConsensi = []
+    for interval in allIntervals:
+        intStart, intEnd = interval
+        intRefSeq = referenceContig[intStart:intEnd].tostring()
+        subWin = subWindow(refWindow, interval)
+
+        if interval in coverageGaps:
+            cssSeq = noEvidenceConsensusFactory(intRefSeq)
+            css = Consensus(subWin,
+                            cssSeq,
+                            [0]*len(cssSeq),
+                            [0]*len(cssSeq))
+        else:
+            windowRefSeq = referenceContig[intStart:intEnd]
+            rows = readsInWindow(cmpH5, subWin,
+                                 depthLimit=depthLimit,
+                                 minMapQV=quiverConfig.minMapQV,
+                                 strategy="longest")
+
+            # TODO: Some further filtering: remove "stumpy reads"
+            alns = cmpH5[rows]
+            clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
+            css = quiverConsensusForAlignments(subWin,
+                                               intRefSeq,
+                                               clippedAlns,
+                                               quiverConfig)
+        subConsensi.append(css)
+
+    # 4) glue the subwindow consensus objects together to form the
+    #    full window consensus
+    cssSeq_  = "".join(sc.sequence for sc in subConsensi)
+    cssConf_ = np.concatenate([sc.confidence for sc in subConsensi])
+    cssCov_  = np.concatenate([sc.coverage for sc in subConsensi])
+    css = Consensus(refWindow,
+                    cssSeq_,
+                    cssConf_,
+                    cssCov_)
+
+    # 5) identify variants
+    variants = variantsFromConsensus(refWindow, refSequence,
+                                     cssSeq_, cssConf_, cssCov_,
+                                     options.aligner)
+
+    # 6) Return
+    return css, variants
+
+
 
 
 class QuiverWorker(object):
@@ -114,26 +205,10 @@ class QuiverWorker(object):
         refSequenceInWindow = refContig[refStart:refEnd].tostring()
 
         # Get the consensus.
-        css = quiverConsensusForWindow(self._inCmpH5, referenceWindow,
-                                       refContig, options.coverage, self.quiverConfig)
+        css, variants = \
+            quiverConsensusAndVariantsForWindow(self._inCmpH5, referenceWindow,
+                                                refContig, options.coverage, self.quiverConfig)
 
-
-        # # Get the coverage for [refStart, refEnd], as we can actually
-        # # try to call an insertion at refEnd, in which case we
-        # # technically need the coverage there.
-        # siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5,
-        #                                                (refId, refStart, refEnd+1),
-        #                                                rowNumbers=[a.rowNumber
-        #                                                            for a in clippedAlns])
-
-        # # Calculate variants
-        # variants = variantsFromConsensus(referenceWindow, refSequence, css,
-        #                                  cssQv, siteCoverage, options.aligner)
-
-
-        # TODO: Fill this in
-        numPoaVariants = 0
-        variants = []
         numQuiverVariants = len(variants)
 
         ga = cc.Align(refSequenceInWindow, css.sequence)
