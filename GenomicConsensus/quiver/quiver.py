@@ -180,7 +180,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
             alns = cmpH5[rows]
             clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
-            clippedAlns = filterAlnsForQuiver(refWindow, clippedAlns_, quiverConfig)
+            clippedAlns = filterAlnsForQuiver(subWin, clippedAlns_, quiverConfig)
             css = quiverConsensusForAlignments(subWin,
                                                intRefSeq,
                                                clippedAlns,
