@@ -42,11 +42,13 @@ from GenomicConsensus.options import (importAdditionalDefaultOptions,
                                       options,
                                       parseOptions,
                                       consensusCoreVersion)
+from GenomicConsensus.utils import (rowNumberIsInReadStratum,
+                                    IncompatibleDataException,
+                                    die)
 
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
 #from GenomicConsensus.rare import rare
-from GenomicConsensus.utils import rowNumberIsInReadStratum, die
 
 class ToolRunner(object):
     """
@@ -160,7 +162,7 @@ class ToolRunner(object):
         try:
             self._algorithmConfiguration = self._algorithm.configure(options, cmpH5)
         except IncompatibleDataException as e:
-            die("Failure: %s", e.message)
+            die("Failure: %s" % e.message)
 
     def _mainLoop(self):
         # Split up reference genome into chunks and farm out the
