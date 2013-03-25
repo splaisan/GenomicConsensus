@@ -45,8 +45,34 @@ from ..io.VariantsGffWriter import VariantsGffWriter
 
 import ConsensusCore as cc
 from GenomicConsensus.utils import noEvidenceConsensusCall, die
+from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
+
+
+class QuiverConfig(object):
+    def __init__(self,
+                 minMapQV=10,
+                 minPoaCoverage=3,
+                 maxPoaCoverage=11,
+                 mutationSeparation=10,
+                 maxIterations=20,
+                 refineDinucleotideRepeats=True,
+                 noEvidenceConsensus="nocall",
+                 parameters=None):
+
+        self.minMapQV                   = minMapQV
+        self.minPoaCoverage             = minPoaCoverage
+        self.maxPoaCoverage             = maxPoaCoverage
+        self.mutationSeparation         = mutationSeparation
+        self.maxIterations              = maxIterations
+        self.refineDinucleotideRepeats  = refineDinucleotideRepeats
+        self.noEvidenceConsensus        = noEvidenceConsensus
+        self.parameters                 = parameters
+
+        # Convenience
+        self.model                      = self.parameters.model
+        self.ccQuiverConfig             = self.parameters.quiverConfig
 
 
 #
@@ -63,191 +89,63 @@ QuiverWindowSummary = collections.namedtuple("QuiverWindowSummary",
                                               "variants"))      # list of Variant
 
 
-def extractClippedAlignments(referenceWindow, coverage, alnHits):
-    """
-    Extract up to `coverage` clipped alignments from alnHits, where
-    spanning alignments are used first and then long nonspanning
-    alignments.  The return value is a tuple of the lists,
-      (clippedSpanningAlns, clippedNonSpanningAlns).
-    """
-    refId, refStart, refEnd = referenceWindow
-    spanningAlns = [a for a in alnHits
-                     if a.spansReferenceRange(refStart, refEnd)]
-    # HACK below is to work around bug 21232 until it can be properly fixed
-    nonSpanningAlns = [a for a in alnHits
-                       if not a.spansReferenceRange(refStart, refEnd)
-                       if referenceSpanWithinWindow(referenceWindow, a) > 0]  # <- HACK
-
-    # We always prefer spanning reads, and among partial passes,
-    # we favor those with a longer read length within the window.
-    nonSpanningAlns.sort(key=lambda aln: -referenceSpanWithinWindow(referenceWindow, aln))
-
-    def isStumpy(clippedAln):
-        # Predicate for "stumps", where for example the aligner may
-        # have inserted a large gap, such that while the alignment
-        # technically spans the window, it may not have any read
-        # content therein:
-        #
-        #   Ref   ATGATCCAGTTACTCCGATAAA
-        #   Read  ATG---------------TA-A
-        #   Win.     [              )
-        #
-        minimumReadLength = 0.1*(refEnd-refStart)
-        return (clippedAln.readLength < minimumReadLength)
-
-    # Some ugly logic for taking the best reads available until we
-    # reach the desired coverage. Couldn't get this to fit into a nice
-    # takewhile/filter functional style.
-    clippedSpanningAlns = []
-    clippedNonSpanningAlns = []
-    for aln in spanningAlns:
-        if len(clippedSpanningAlns) == coverage: break
-        ca = aln.clippedTo(refStart, refEnd)
-        if not isStumpy(ca):
-            clippedSpanningAlns.append(ca)
-    for aln in nonSpanningAlns:
-        if len(clippedSpanningAlns) + len(clippedNonSpanningAlns) == coverage: break
-        ca = aln.clippedTo(refStart, refEnd)
-        clippedNonSpanningAlns.append(ca)
-
-    return (clippedSpanningAlns, clippedNonSpanningAlns)
-
-
 class QuiverWorker(object):
 
     def onStart(self):
-        self.params = fetchParameterSet(self._inCmpH5,
-                                        options.parametersFile,
-                                        options.parameterSet)
-        logging.info("Using parameter set %s" % self.params.name)
-        self.model = self.params.model
+        # FIXME: move this out of onStart
+        params = fetchParameterSet(self._inCmpH5,
+                                   options.parametersFile,
+                                   options.parameterSet)
+        logging.info("Using parameter set %s" % params.name)
+
+        # FIXME: hook up other options!
+        self.quiverConfig = QuiverConfig(parameters=params)
+
 
     def onChunk(self, referenceWindow, alnHits):
-        POA_COVERAGE=11
+        # TODO
+        # alnHits is ignored.  Rework the protocol to get rid of that argument.
+
         refId, refStart, refEnd = referenceWindow
         domainStart, domainEnd = domain(referenceWindow)
         domainLen = domainEnd - domainStart
-        refSequence = reference.byId[refId].sequence[refStart:refEnd].tostring()
-        domainRefSequence = reference.byId[refId].sequence[domainStart:domainEnd].tostring()
 
-        clippedSpanningAlns, clippedNonSpanningAlns = \
-            extractClippedAlignments(referenceWindow, options.coverage, alnHits)
-        clippedAlns = clippedSpanningAlns + clippedNonSpanningAlns
-        coverageReport = "[span=%d, nonspan=%d]" % \
-            (len(clippedSpanningAlns), len(clippedNonSpanningAlns))
+        refContig = reference.byId[refId].sequence
+        refSequenceInWindow = refContig[refStart:refEnd].tostring()
 
-        # Get the coverage for [refStart, refEnd], as we can actually
-        # try to call an insertion at refEnd, in which case we
-        # technically need the coverage there.
-        siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5,
-                                                       (refId, refStart, refEnd+1),
-                                                       rowNumbers=[a.rowNumber
-                                                                   for a in clippedAlns])
+        # Get the consensus.
+        css = quiverConsensusForWindow(self._inCmpH5, referenceWindow,
+                                       refContig, options.coverage, self.quiverConfig)
 
-        # In the case where there are no spanning reads, we really
-        # cannot come up with a good consensus if the sequence is
-        # highly divergent from the reference.  By default, the
-        # behavior is to "nocall" the window in question, but if the
-        # user sets
-        #   --noEvidenceConsensusCall="reference", or
-        #   --noEvidenceConsensusCall="lowecasereference", the
-        # reference or its lowercase will be used instead.
 
-        if len(clippedSpanningAlns) < 3:
-            domainCss = noEvidenceConsensusCall(domainRefSequence,
-                                                options.noEvidenceConsensusCall)
-            domainQv  = np.zeros(domainLen, dtype=np.uint8)
-            domainVariants = []
-            return QuiverWindowSummary(refId, refStart, refEnd,
-                                       domainCss, domainQv, domainVariants)
+        # # Get the coverage for [refStart, refEnd], as we can actually
+        # # try to call an insertion at refEnd, in which case we
+        # # technically need the coverage there.
+        # siteCoverage = rangeQueries.getCoverageInRange(self._inCmpH5,
+        #                                                (refId, refStart, refEnd+1),
+        #                                                rowNumbers=[a.rowNumber
+        #                                                            for a in clippedAlns])
 
-        # Load the bits that POA cares about.
-        forwardStrandSequences = [a.read(orientation="genomic", aligned=False)
-                                  for a in clippedSpanningAlns]
-        # Load the bits that quiver cares about
-        mappedReads = [self.model.extractMappedRead(ca, refStart)
-                       for ca in clippedAlns]
+        # # Calculate variants
+        # variants = variantsFromConsensus(referenceWindow, refSequence, css,
+        #                                  cssQv, siteCoverage, options.aligner)
 
-        # Beyond this point, no more reference will be made to the
-        # pbcore alignment objects.
 
-        # If there are any spanning reads, we can construct a POA
-        # consensus as a starting point.  If there are no spanning
-        # reads, we use the reference.
-        if len(clippedSpanningAlns) == 0:
-            css = refSequence
-            numPoaVariants = None
-        else:
-            # We calculate a quick consensus estimate using the
-            # Partial Order Aligner (POA), which typically gets us to
-            # > 99% accuracy.  We have to lift the reference
-            # coordinates into coordinates within the POA consensus.
-            p = cc.PoaConsensus.FindConsensus(forwardStrandSequences[:POA_COVERAGE])
-            ga = cc.Align(refSequence, p.Sequence())
-            numPoaVariants = ga.Errors()
-            css = poaCss = p.Sequence()
-
-            # Lift reference coordinates onto the POA consensus coordinates
-            queryPositions = cc.TargetToQueryPositions(ga)
-            mappedReads = [lifted(queryPositions, mr) for mr in mappedReads]
-
-        # Load the reads, including QVs, into a MutationScorer, which is a
-        # principled and fast way to test potential refinements to our
-        # consensus sequence.
-        mms = cc.SparseSseQvMultiReadMutationScorer(self.params.quiverConfig, css)
-        for mr in mappedReads:
-            mms.AddRead(mr)
-
-        # Test mutations, improving the consensus
-        _, quiverConverged = refineConsensus(mms)
-
-        # Greedy algorithm can get trapped in a local minimum, which
-        # appears only to happen in practice in dinucleotide repeat
-        # regions.  Optionally sample +1/-1 repeat instance
-        if options.refineDinucleotideRepeats:
-            refineDinucleotideRepeats(mms)
-
-        quiverCss = css = mms.Template()
-        cssQv = consensusConfidence(mms)
-
-        ga = cc.Align(refSequence, css)
-        targetPositions = cc.TargetToQueryPositions(ga)
-
-        # Calculate variants
-        variants = variantsFromConsensus(referenceWindow, refSequence, css,
-                                         cssQv, siteCoverage, options.aligner)
-
+        # TODO: Fill this in
+        numPoaVariants = 0
+        variants = []
         numQuiverVariants = len(variants)
+
+        ga = cc.Align(refSequenceInWindow, css.sequence)
+        targetPositions = cc.TargetToQueryPositions(ga)
 
         # Restrict the consensus and variants to the domain.
         cssDomainStart = targetPositions[domainStart-refStart]
         cssDomainEnd   = targetPositions[domainEnd-refStart]
-        domainCss = css[cssDomainStart:cssDomainEnd]
-        domainQv = cssQv[cssDomainStart:cssDomainEnd]
+        domainCss = css.sequence[cssDomainStart:cssDomainEnd]
+        domainQv = css.confidence[cssDomainStart:cssDomainEnd]
         domainVariants = [ v for v in variants
                            if domainStart <= v.refStart < domainEnd ]
-
-        poaReport    = "POA unavailable" if numPoaVariants==None \
-                       else ("%d POA variants" % numPoaVariants)
-        quiverReport = "%d Quiver variants" % numQuiverVariants
-
-        logging.info("%s: %s, %s %s" %
-                     (reference.windowToString(referenceWindow),
-                      poaReport, quiverReport, coverageReport))
-
-        if not quiverConverged:
-            logging.info("%s: Quiver did not converge to MLE" % (referenceWindow,))
-
-        shouldDumpEvidence = \
-            ((options.dumpEvidence == "all") or
-             (options.dumpEvidence == "variants") and (numQuiverVariants > 0))
-
-        if shouldDumpEvidence:
-            quiverScores = scoreMatrix(mms)
-            dumpEvidence(options.evidenceDirectory,
-                         referenceWindow, refSequence,
-                         clippedSpanningAlns, clippedNonSpanningAlns,
-                         poaCss, quiverCss, quiverScores)
 
         return QuiverWindowSummary(refId, refStart, refEnd,
                                    domainCss, domainQv, domainVariants)

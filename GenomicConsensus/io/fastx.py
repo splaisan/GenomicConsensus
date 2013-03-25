@@ -140,8 +140,7 @@ class FastqWriter(object):
 
     @staticmethod
     def _qvArrayToString(qvArray):
-        assert qvArray.dtype == np.uint8
-        return np.minimum(33 + qvArray, 126).tostring()
+        return np.minimum(126, 33 + np.asarray(qvArray, dtype=np.uint8)).tostring()
 
     def writeRecord(self, sequenceHeader, sequenceArray, qualityArray):
         """

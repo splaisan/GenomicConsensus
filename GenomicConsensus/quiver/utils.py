@@ -35,6 +35,7 @@ from collections import Counter
 
 from GenomicConsensus.variants import *
 from GenomicConsensus.utils import *
+from GenomicConsensus.consensus import Consensus
 import ConsensusCore as cc
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
@@ -411,3 +412,132 @@ def dumpEvidence(evidenceDumpBaseDirectory,
     for aln in (clippedSpanningAlnsInWindow + clippedNonSpanningAlnsInWindow):
         readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
     readsFasta.close()
+
+
+def subWindow(refWindow, subinterval):
+    winId, winStart, winEnd = refWindow
+    intS, intE = subinterval
+    assert intS >= winStart
+    assert intE <= winEnd
+    return winId, intS, intE
+
+def quiverConsensusForWindow(cmpH5, refWindow, referenceContig,
+                             depthLimit, quiverConfig):
+    """
+    High-level routine for calling the consensus for a
+    window of the genome given a cmp.h5.
+
+    Identifies the coverage contours of the window in order to
+    identify subintervals where a good consensus can be called.
+    Creates the desired "no evidence consensus" where there is
+    inadequate coverage.
+    """
+    # 1) identify the intervals with adequate coverage for quiver
+    #    consensus; restrict to intervals of length > 10
+    allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
+    starts = cmpH5.tStart[allRows]
+    ends   = cmpH5.tEnd[allRows]
+    intervals = [ (s, e)
+                  for (s, e) in kSpannedIntervals(refWindow,
+                                                  quiverConfig.minPoaCoverage,
+                                                  starts,
+                                                  ends)
+                  if (e - s) > 10 ]
+
+    coverageGaps = holes(refWindow, intervals)
+    allIntervals = sorted(intervals + coverageGaps)
+    assert holes(refWindow, allIntervals) == []
+
+    # 2) pull out the reads we will use for each interval
+    # 3) call quiverConsensusForAlignments on the interval
+    subConsensi = []
+    for interval in allIntervals:
+        intStart, intEnd = interval
+        intRefSeq = referenceContig[intStart:intEnd].tostring()
+        subWin = subWindow(refWindow, interval)
+
+        if interval in coverageGaps:
+            cssSeq = quiverConfig.noEvidenceConsensus(intRefSeq)
+            css = Consensus(subWin,
+                            cssSeq,
+                            [0]*len(cssSeq),
+                            [0]*len(cssSeq))
+        else:
+
+            windowRefSeq = referenceContig[intStart:intEnd]
+            rows = readsInWindow(cmpH5, subWin,
+                                 depthLimit=depthLimit,
+                                 minMapQV=quiverConfig.minMapQV,
+                                 strategy="longest")
+
+            # TODO: Some further filtering: remove "stumpy reads"
+            alns = cmpH5[rows]
+            clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
+            css = quiverConsensusForAlignments(subWin,
+                                               intRefSeq,
+                                               clippedAlns,
+                                               quiverConfig)
+        subConsensi.append(css)
+
+    # 4) glue the subwindow consensus objects together to form the
+    #    full window consensus
+    cssSeq_  = "".join(sc.sequence for sc in subConsensi)
+    cssConf_ = np.concatenate([sc.confidence for sc in subConsensi])
+    cssCov_  = np.concatenate([sc.coverage for sc in subConsensi])
+    return Consensus(refWindow,
+                     cssSeq_,
+                     cssConf_,
+                     cssCov_)
+
+
+
+def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
+    """
+    Call consensus on this interval---without subdividing the interval
+    further.
+
+    Testable!
+
+    Clipping has already been done!
+    """
+    _, refStart, refEnd = refWindow
+
+    # Compute the POA consensus, which is our initial guess, and
+    # should typically be > 99.5% accurate
+    fwdSequences = [ a.read(orientation="genomic", aligned=False)
+                     for a in alns
+                     if a.spansReferenceRange(refStart, refEnd) ]
+    assert len(fwdSequences) >= quiverConfig.minPoaCoverage
+    p = cc.PoaConsensus.FindConsensus(fwdSequences[:quiverConfig.maxPoaCoverage])
+    ga = cc.Align(refSequence, p.Sequence())
+    numPoaVariants = ga.Errors()
+    poaCss = p.Sequence()
+
+    # Extract reads into ConsensusCore-compatible objects, and map them into the
+    # coordinates relative to the POA consensus
+    mappedReads = [ quiverConfig.model.extractMappedRead(aln, refStart)
+                    for aln in alns ]
+    queryPositions = cc.TargetToQueryPositions(ga)
+    mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
+
+    # Load the mapped reads into the mutation scorer, and iterate
+    # until convergence.
+    mms = cc.SparseSseQvMultiReadMutationScorer(quiverConfig.ccQuiverConfig, poaCss)
+    for mr in mappedReads:
+        mms.AddRead(mr)
+
+    # Iterate until covergence
+    # TODO: pass quiverConfig down here.
+    _, quiverConverged = refineConsensus(mms)
+    if quiverConfig.refineDinucleotideRepeats:
+        refineDinucleotideRepeats(mms)
+    quiverCss = mms.Template()
+
+    # TODO: calculate confidence here
+    confidence = [0] * len(quiverCss)
+    coverage   = [0] * len(quiverCss)
+
+    return Consensus(refWindow,
+                     quiverCss,
+                     confidence,
+                     coverage)
