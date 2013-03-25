@@ -63,12 +63,11 @@ class Worker(object):
                 self._resultsQueue.put(None)
                 break
             else:
-                coords, rowNumbers = datum
-                logging.debug("%s received work unit, coords=%s, # reads=%d"
-                              % (self.name, windowToString(coords), len(rowNumbers)))
+                coords = datum
+                logging.debug("%s received work unit, coords=%s"
+                              % (self.name, windowToString(coords)))
 
-                alnHits = self._inCmpH5[rowNumbers]
-                result = self.onChunk(coords, alnHits)
+                result = self.onChunk(coords)
                 self._resultsQueue.put(result)
 
         self.onFinish()

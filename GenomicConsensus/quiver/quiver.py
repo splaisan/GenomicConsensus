@@ -227,9 +227,7 @@ class QuiverWorker(object):
                                          parameters=params)
 
 
-    def onChunk(self, referenceWindow, alnHits):
-        # TODO
-        # alnHits is ignored.  Rework the protocol to get rid of that argument.
+    def onChunk(self, referenceWindow):
         refId, refStart, refEnd = referenceWindow
         _, eStart, eEnd = eWindow = reference.enlargedReferenceWindow(referenceWindow, options.referenceChunkOverlap)
 

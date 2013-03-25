@@ -169,16 +169,7 @@ class ToolRunner(object):
                                                options.referenceWindow)
             for chunk in chunks:
                 if self._aborting: return
-
-                # Pickle row numbers, not alnHits
-                rowNumbers = [rn for rn in self._inCmpH5.readsInRange(*chunk, justIndices=True)
-                              if self._inCmpH5[rn].MapQV >= options.mapQvThreshold]
-
-                if options.readStratum:
-                    rowNumbers = [ rn for rn in rowNumbers
-                                   if rowNumberIsInReadStratum(options.readStratum, rn) ]
-
-                self._workQueue.put( (chunk, rowNumbers) )
+                self._workQueue.put(chunk)
 
         # Write sentinels ("end-of-work-stream")
         for i in xrange(options.numWorkers):

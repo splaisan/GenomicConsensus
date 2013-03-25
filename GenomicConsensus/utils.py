@@ -112,7 +112,8 @@ def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
     return result
 
 
-def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorder"):
+def readsInWindow(cmpH5, window, depthLimit=None,
+                  minMapQV=0, strategy="fileorder", stratum=None):
     """
     Return up to `depthLimit` reads (as row numbers integers) where
     the mapped reference intersects the window.  If depthLimit is None,
@@ -130,7 +131,6 @@ def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorde
         if depthLimit is not None: return lst[:depthLimit]
         else: return lst
 
-
     winId, winStart, winEnd = window
     rowNumbers = cmpH5.readsInRange(winId, winStart, winEnd, justIndices=True)
     rowNumbers = rowNumbers[cmpH5.MapQV[rowNumbers] >= minMapQV]
@@ -141,6 +141,10 @@ def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorde
     tStartTruncated = np.maximum(winStart, cmpH5.tStart[rowNumbers])
     tEndTruncated   = np.minimum(winEnd,   cmpH5.tEnd[rowNumbers])
     lengthsInWindow = tEndTruncated - tStartTruncated
+
+    if stratum is not None:
+        rowNumbers = [ rn for rn in rowNumbers
+                       if rowNumberIsInReadStratum(stratum, rn) ]
 
     if strategy == "spanning":
         return depthCap(rowNumbers[lengthsInWindow==(winEnd-winStart)])

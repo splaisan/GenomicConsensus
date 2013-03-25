@@ -36,7 +36,7 @@ import math, logging, numpy as np, random
 from collections import defaultdict, namedtuple, OrderedDict
 from bisect import bisect_left, bisect_right
 from itertools import izip
-from ..utils import probability_to_qv, noEvidenceConsensusCall
+from ..utils import probability_to_qv, noEvidenceConsensusCall, readsInWindow
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
@@ -124,10 +124,13 @@ class PluralityCaller(object):
     def onStart(self):
         random.seed(42)
 
-    def onChunk(self, referenceWindow, alnHits):
-        if options.coverage != None:
-            coverage = min(len(alnHits), options.coverage)
-            alnHits = sorted(random.sample(alnHits, coverage))
+    def onChunk(self, referenceWindow):
+        rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
+                                   depthLimit=options.coverage,
+                                   minMapQV=options.mapQvThreshold,
+                                   strategy="longest",
+                                   stratum=options.readStratum)
+        alnHits = self._inCmpH5[rowNumbers]
         return (referenceWindow, self.plurality(referenceWindow, alnHits))
 
     @staticmethod

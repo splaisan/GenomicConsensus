@@ -38,7 +38,7 @@ import math, logging, numpy as np
 from collections import defaultdict, namedtuple, OrderedDict
 from bisect import bisect_left, bisect_right
 from itertools import izip
-from ..utils import error_probability_to_qv
+from ..utils import error_probability_to_qv, readsInWindow
 from ..options import options
 from .. import (io,
                 reference)
@@ -128,7 +128,13 @@ class RareCaller(object):
     # where each Tuple must be convertible to a numpy array with dtype
     # as below:
 
-    def onChunk(self, referenceWindow, alnHits):
+    def onChunk(self, referenceWindow):
+        rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
+                                depthLimit=options.coverage,
+                                minMapQV=options.mapQvThreshold,
+                                strategy="longest",
+                                stratum=options.readStratum)
+        alnHits = self._inCmpH5[rowNumbers]
         return (referenceWindow, self.rare(referenceWindow, alnHits))
 
     @staticmethod
