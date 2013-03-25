@@ -304,6 +304,7 @@ class QuiverResultCollector(object):
                 css = "".join(chunk.consensus for chunk in chunks)
                 quiverHeader = reference.idToName(refId) + "|quiver"
                 writer.writeRecord(quiverHeader, css)
+            writer.close()
 
         # 3. FASTQ output
         if options.fastqOutputFilename:
@@ -314,6 +315,7 @@ class QuiverResultCollector(object):
                 qv = np.concatenate([chunk.qv for chunk in chunks])
                 quiverHeader = reference.idToName(refId) + "|quiver"
                 writer.writeRecord(quiverHeader, css, qv)
+            writer.close()
 
 
     def writeVariantsGff(self, filename, filteredVariantsByRefId):
@@ -323,7 +325,7 @@ class QuiverResultCollector(object):
         for id in reference.byId:
             for v in filteredVariantsByRefId[id]:
                 writer.writeRecord(v.toGffRecord())
-
+        writer.close()
 
 #
 # Slave process/thread classes

@@ -105,9 +105,10 @@ def fastaConsumer(file, **kwargs):
             logging.info("Writing FASTA output for %s." % refHeader)
             writer.writeRecord(refHeader, seqArray)
     except Exception:
+        print "Got exception"
         printErrorMessage("fastaConsumer")
     finally:
-        file.close()
+        writer.close()
         return
 
 @consumer
@@ -124,7 +125,7 @@ def fastqConsumer(file, **kwargs):
     except Exception:
         printErrorMessage("fastqConsumer")
     finally:
-        file.close()
+        writer.close()
         return
 
 @consumer
@@ -181,7 +182,7 @@ def variantsGffConsumer(file, **kwargs):
     except Exception:
         printErrorMessage("variantsGffConsumer")
     finally:
-        file.close()
+        writer.close()
         return
 
 Locus = namedtuple("Locus", ("refPos", "refBase",

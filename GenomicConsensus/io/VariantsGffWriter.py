@@ -54,3 +54,6 @@ class VariantsGffWriter(object):
 
     def writeRecord(self, gffRecord):
         self._gffWriter.writeRecord(gffRecord)
+
+    def close(self):
+        self._gffWriter.close()

@@ -103,9 +103,6 @@ class WrappedWriter(object):
             self.newline()
             self.file.close()
 
-    def __del__(self):
-        self.close()
-
 
 class FastaWriter(object):
 
@@ -123,12 +120,8 @@ class FastaWriter(object):
         for chunk in chunks(OUTPUT_CHUNK_SIZE, sequenceArray):
             self.wrappedWriter.write("".join(chunk))
 
-
     def close(self):
         self.wrappedWriter.close()
-
-    def __del__(self):
-        self.close()
 
 class FastqWriter(object):
     """
@@ -166,6 +159,3 @@ class FastqWriter(object):
     def close(self):
         if not self.file.closed:
             self.file.close()
-
-    def __del__(self):
-        self.close()
