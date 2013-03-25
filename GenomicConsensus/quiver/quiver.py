@@ -191,7 +191,9 @@ class QuiverWorker(object):
         logging.info("Using parameter set %s" % params.name)
 
         # FIXME: hook up other options!
-        self.quiverConfig = QuiverConfig(parameters=params)
+        self.quiverConfig = QuiverConfig(minMapQV=options.mapQvThreshold,
+                                         noEvidenceConsensus=options.noEvidenceConsensusCall,
+                                         parameters=params)
 
 
     def onChunk(self, referenceWindow, alnHits):
