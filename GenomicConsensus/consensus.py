@@ -40,13 +40,6 @@ class Consensus(object):
         self.sequence   = sequence
         self.confidence = confidence
 
-#
-# Functions that produce a consensus sequence string for a window
-# where there is inadequate evidence.  Each takes as arguments a
-# reference window, and the sequence of the entire associated
-# reference contig.
-#
-
 def noCallAsConsensus(referenceSequence):
     return "N" * len(referenceSequence)
 
