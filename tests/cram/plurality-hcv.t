@@ -6,7 +6,7 @@ CSV output is correct.
   $ export DATA=$TESTDIR/../data
   $ export INPUT=$DATA/hcv/aligned_reads.cmp.h5
   $ export REFERENCE=$DATA/hcv/HCV_Ref_For_187140.fasta
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff -o consensus.fa $INPUT
+  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff -o consensus.fq $INPUT
 
 I like to show the head of the output files inline here so that glaringly obvious changes will
 pop right out, but I verify that the files are exactly correct by looking at the md5 sums.
@@ -26,12 +26,16 @@ First, the variants.gff:
 
 Examine consensus output.  This is identical to the reference
 
-  $ cat consensus.fa
-  >5primeEnd|plurality
+  $ fold -60 consensus.fq
+  @5primeEnd|plurality
   GGAACCGGTGAGTACACCGGAATTGCCAGGACGACCGGGTCCTTTCGTGGATAAACCCGC
   TCAATGCCTGGAGATTTGGGCGTGCCCCCGCAAGACTGCTAGCCGAGTAGTGTTGGGTCG
   CGAAAGGCCTTGTGGTACTGCCTGATAGGGTGCTTG
-  >3primeEnd|plurality
+  +
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  @3primeEnd|plurality
   TACCTGGTCATAGCCTCCGTGAAGGCTCTCAGGCTCGCTGCATCCTCCGGGACTCCCTGA
   CTTTCACAGATAACGACTAAGTCGTCGCCACACACGAGCATGGTGCAGTCCTGGAGCCCA
   GCGGCTCGACAGGCTGCTTTGGCCTTGATGTAGCAGGTGAGGGTGTTACCACAGCTGGTC
@@ -39,3 +43,11 @@ Examine consensus output.  This is identical to the reference
   AGAGGGCCCCCGACATAGAGCCTCTCGGTGAGGGACTTGATGGCCACGCGGGCTTGGGGG
   TCCAGGTCACAACATTGGTAAATTGCCTCCTCTGTACGGATATCGCTCTCAGTGACTGTG
   GAGTCAAAGCAGCGGGTATCATACGA
+  +
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
