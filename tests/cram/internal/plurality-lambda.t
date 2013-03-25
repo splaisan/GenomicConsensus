@@ -1,7 +1,7 @@
   $ export FASTADIFF=/home/UNIXHOME/dalexander/bin/fastadiff
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/lambda/job_038537.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/lambda/lambda.fasta
-  $ quiver -j${JOBS-8} --noEvidenceConsensusCall=nocall $INPUT -r $REFERENCE \
+  $ plurality -j${JOBS-8} --noEvidenceConsensusCall=nocall $INPUT -r $REFERENCE \
   > -o variants.gff -o css.fasta.gz -o css.fq.gz
   $ cat variants.gff
   ##gff-version 3
