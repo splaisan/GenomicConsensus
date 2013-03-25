@@ -277,13 +277,14 @@ class PluralityResultCollectorThread(PluralityResult, ResultCollectorThread):
 #    - name                            = str
 #    - availability                    = (bool, str)
 #    - additionalDefaultOptions        = dict (string->value)
-#    - compatibilityWithCmpH5(cmpH5)  -> (bool, str)
+#    - configure                      -> options -> cmph5 -> algorithm specific config object;
+#                                        (can raise IncompatibleDataException)
 #    - slaveFactories                 -> bool -> (class, class)
 
 __all__ = [ "name",
             "availability",
             "additionalDefaultOptions",
-            "compatibilityWithCmpH5",
+            "configure",
             "slaveFactories" ]
 
 name = "Plurality"
@@ -294,11 +295,11 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
                              "variantConfidenceThreshold" : 20,
                              "coverage"                   : 250 }
 
-def compatibilityWithCmpH5(cmpH5):
-    return (True, "OK")
-
 def slaveFactories(threaded):
     if threaded:
         return (PluralityWorkerThread,  PluralityResultCollectorThread)
     else:
         return (PluralityWorkerProcess, PluralityResultCollectorProcess)
+
+def configure(options, cmpH5):
+    pass

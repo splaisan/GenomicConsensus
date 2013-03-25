@@ -220,7 +220,7 @@ class RareResultCollectorThread(RareResult, ResultCollectorThread):
 __all__ = [ "name",
             "availability",
             "additionalDefaultOptions",
-            "compatibilityWithCmpH5",
+            "configure",
             "slaveFactories" ]
 
 name = "Rare variant analysis"
@@ -229,12 +229,11 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
                              "variantCoverageThreshold"   : 500,
                              "variantConfidenceThreshold" : 20 }
 
-def compatibilityWithCmpH5(cmpH5):
-    # TODO: check whether the cmp.h5 is CCS
-    return (True, "OK")
-
 def slaveFactories(threaded):
     if threaded:
         return (RareWorkerThread,  RareResultCollectorThread)
     else:
         return (RareWorkerProcess, RareResultCollectorProcess)
+
+def configure(options, cmpH5):
+    pass

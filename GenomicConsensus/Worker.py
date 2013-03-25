@@ -47,9 +47,10 @@ class Worker(object):
     distributed to compute workers, leaving the collector
     worker only O(genome length) work to do.
     """
-    def __init__(self, workQueue, resultsQueue):
+    def __init__(self, workQueue, resultsQueue, algorithmConfig):
         self._workQueue = workQueue
         self._resultsQueue = resultsQueue
+        self._algorithmConfig = algorithmConfig
 
     def _run(self):
         self._inCmpH5 = CmpH5Reader(options.inputFilename)

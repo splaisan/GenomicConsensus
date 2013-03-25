@@ -99,30 +99,28 @@ def bestSubset(mutationsAndScores, separation):
 
     return output
 
-def refineConsensus(mms, maxRounds=20):
+def refineConsensus(mms, quiverConfig):
     """
     Given a MultiReadMutationScorer, identify and apply favorable
     template mutations.  Return (consensus, didConverge) :: (str, bool)
     """
-    SEPARATION = 10
-    NEIGHBORHOOD = 15
     favorableMutationsAndScores = None
 
     converged = False
-    for round_ in range(1, maxRounds):
+    for round_ in range(1, quiverConfig.maxIterations):
 
         if favorableMutationsAndScores == None:
             mutationsToTry = uniqueSingleBaseMutations(mms.Template())
         else:
             favorableMutations = map(fst, favorableMutationsAndScores)
-            mutationsToTry = nearbyMutations(favorableMutations, mms.Template(), NEIGHBORHOOD)
+            mutationsToTry = nearbyMutations(favorableMutations, mms.Template(), quiverConfig.mutationNeighborhood)
 
         favorableMutationsAndScores = \
             [(m, mms.Score(m)) for m in
              filter(mms.FastIsFavorable, mutationsToTry)]
 
         if favorableMutationsAndScores:
-            bestMutations = map(fst, bestSubset(favorableMutationsAndScores, SEPARATION))
+            bestMutations = map(fst, bestSubset(favorableMutationsAndScores, quiverConfig.mutationSeparation))
             logging.debug("Applying mutations: %s" % [mut.ToString() for mut in bestMutations])
             mms.ApplyMutations(bestMutations)
         else:
@@ -458,7 +456,7 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Iterate until covergence
     # TODO: pass quiverConfig down here.
-    _, quiverConverged = refineConsensus(mms)
+    _, quiverConverged = refineConsensus(mms, quiverConfig)
     if quiverConfig.refineDinucleotideRepeats:
         refineDinucleotideRepeats(mms)
     quiverCss = mms.Template()

@@ -39,8 +39,9 @@ class ResultCollector(object):
     """
     Gathers results and writes to a file.
     """
-    def __init__(self, resultsQueue):
+    def __init__(self, resultsQueue, algorithmConfig):
         self._resultsQueue = resultsQueue
+        self._algorithmConfig = algorithmConfig
 
     def _run(self):
         self.onStart()

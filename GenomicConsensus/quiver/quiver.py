@@ -51,11 +51,17 @@ from GenomicConsensus.quiver.model import *
 
 
 class QuiverConfig(object):
+    """
+    Quiver configuration options
+
+    TODO: more doc
+    """
     def __init__(self,
                  minMapQV=10,
                  minPoaCoverage=3,
                  maxPoaCoverage=11,
                  mutationSeparation=10,
+                 mutationNeighborhood=20,
                  maxIterations=20,
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus="nocall",
@@ -67,6 +73,7 @@ class QuiverConfig(object):
         self.minPoaCoverage             = minPoaCoverage
         self.maxPoaCoverage             = maxPoaCoverage
         self.mutationSeparation         = mutationSeparation
+        self.mutationNeighborhood       = mutationNeighborhood
         self.maxIterations              = maxIterations
         self.refineDinucleotideRepeats  = refineDinucleotideRepeats
         self.noEvidenceConsensus        = noEvidenceConsensus
@@ -214,18 +221,9 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
 class QuiverWorker(object):
 
-    def onStart(self):
-        # FIXME: move this out of onStart
-        params = fetchParameterSet(self._inCmpH5,
-                                   options.parametersFile,
-                                   options.parameterSet)
-        logging.info("Using parameter set %s" % params.name)
-
-        # FIXME: hook up other options!
-        self.quiverConfig = QuiverConfig(minMapQV=options.mapQvThreshold,
-                                         noEvidenceConsensus=options.noEvidenceConsensusCall,
-                                         parameters=params)
-
+    @property
+    def quiverConfig(self):
+        return self._algorithmConfig
 
     def onChunk(self, referenceWindow):
         refId, refStart, refEnd = referenceWindow
@@ -342,7 +340,7 @@ class QuiverResultCollectorThread(QuiverResultCollector, ResultCollectorThread):
 __all__ = [ "name",
             "availability",
             "additionalDefaultOptions",
-            "compatibilityWithCmpH5",
+            "configure",
             "slaveFactories" ]
 
 name = "Quiver"
@@ -371,18 +369,19 @@ def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
     return params
 
 
-def compatibilityWithCmpH5(cmpH5):
+def configure(options, cmpH5):
     if cmpH5.readType != "standard":
-        return (False, "The Quiver algorithm requires a cmp.h5 file containing " + \
-                       "standard (non-CCS) reads.")
+        raise IncompatibleDataException(
+            "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
 
     params = fetchParameterSet(cmpH5,
                                options.parametersFile,
                                options.parameterSet)
+    logging.info("Using Quiver parameter set %s" % params.name)
 
     if not params.model.isCompatibleWithCmpH5(cmpH5):
-        return (False, "Selected Quiver parameter set is incompatible with this " + \
-                        "cmp.h5 file due to missing data tracks.")
+        raise IncompatibleDataException(
+            "Selected Quiver parameter set is incompatible with this cmp.h5 file due to missing data tracks.")
 
     if options.parameterSet == "best" and params.model != AllQVsModel:
         logging.warn(
@@ -391,7 +390,11 @@ def compatibilityWithCmpH5(cmpH5):
             " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
             "from an instrument using software version 1.3.1 or later.")
 
-    return (True, "OK")
+    quiverConfig = QuiverConfig(minMapQV=options.mapQvThreshold,
+                                noEvidenceConsensus=options.noEvidenceConsensusCall,
+                                parameters=params)
+    return quiverConfig
+
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.

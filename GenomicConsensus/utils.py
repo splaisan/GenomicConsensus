@@ -43,6 +43,10 @@ fst   = lambda t: t[0]
 snd   = lambda t: t[1]
 third = lambda t: t[2]
 
+# An exception for incompatible cmp.h5 files
+class IncompatibleDataException(Exception):
+    pass
+
 # We truncate QVs at 93 because the FASTQ format downstream can only
 # support QVs in the range [0, 93] without lossage.
 

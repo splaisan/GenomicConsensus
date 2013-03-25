@@ -58,6 +58,7 @@ class ToolRunner(object):
         self._workQueue = None
         self._slaves = None
         self._algorithm = None
+        self._algorithmConfiguration = None
         self._aborting = False
 
     def _setupLogging(self):
@@ -113,12 +114,12 @@ class ToolRunner(object):
         WorkerType, ResultCollectorType = self._algorithm.slaveFactories(options.threaded)
         self._slaves = []
         for i in xrange(options.numWorkers):
-            p = WorkerType(self._workQueue, self._resultsQueue)
+            p = WorkerType(self._workQueue, self._resultsQueue, self._algorithmConfiguration)
             self._slaves.append(p)
             p.start()
         logging.info("Launched compute slaves.")
 
-        rcp = ResultCollectorType(self._resultsQueue)
+        rcp = ResultCollectorType(self._resultsQueue, self._algorithmConfiguration)
         rcp.start()
         self._slaves.append(rcp)
         logging.info("Launched collector slave.")
@@ -153,10 +154,13 @@ class ToolRunner(object):
             die("Input CmpH5 file must be sorted.")
         if cmpH5.isEmpty:
             die("Input CmpH5 file must be nonempty.")
-        # Compatible with selected algorithm?
-        cmpH5isOK, msg = self._algorithm.compatibilityWithCmpH5(cmpH5)
-        if not cmpH5isOK:
-            die("Failure: %s" %  msg)
+
+    def _configureAlgorithm(self, options, cmpH5):
+        assert self._algorithm != None
+        try:
+            self._algorithmConfiguration = self._algorithm.configure(options, cmpH5)
+        except IncompatibleDataException as e:
+            die("Failure: %s", e.message)
 
     def _mainLoop(self):
         # Split up reference genome into chunks and farm out the
@@ -242,9 +246,10 @@ class ToolRunner(object):
         # file, and let the "real" open happen after the fork.
         with CmpH5Reader(options.inputFilename) as peekCmpH5:
             logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
+            logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
             self._loadReference(peekCmpH5)
             self._checkFileCompatibility(peekCmpH5)
-            logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
+            self._configureAlgorithm(options, peekCmpH5)
 
         if options.dumpEvidence:
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
