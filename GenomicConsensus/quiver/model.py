@@ -274,7 +274,7 @@ class NoQVsModel(Model):
 
 class AllQVsMergingByChannelModel(Model):
     name = "AllQVsMergingByChannelModel"
-    rank = -1
+    rank = 4
     requiredFeatures = set([ "InsertionQV",
                              "SubstitutionQV",
                              "DeletionQV",
