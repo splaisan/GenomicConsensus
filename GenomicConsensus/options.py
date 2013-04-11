@@ -143,19 +143,19 @@ def parseOptions(relax=False):
                         default=None,
                         help="Name of parameter set to select from the parameters file.")
 
-    parser.add_argument(
-        "--coverage", "-X",
-        action="store",
-        dest="coverage",
-        type=int,
-        default=None,
-        help="A designation of the maximum coverage level to be used for analysis." + \
-             " Exact interpretation is algorithm-specific.")
-    parser.add_argument("--mapQvThreshold", "-m",
+    parser.add_argument("--coverage", "-X",
                         action="store",
-                        dest="mapQvThreshold",
+                        dest="coverage",
+                        type=int,
+                        default=100,
+                        help="A designation of the maximum coverage level to be used for analysis." + \
+                             " Exact interpretation is algorithm-specific.")
+    parser.add_argument("--minMapQV", "-m",
+                        action="store",
+                        dest="minMapQV",
                         type=float,
-                        default=10.0)
+                        default=10,
+                        help="The minimum MapQV for reads that will be used for analysis.")
     parser.add_argument("--referenceChunkSize", "-C",
                         action="store",
                         dest="referenceChunkSize",
@@ -196,19 +196,19 @@ def parseOptions(relax=False):
         default=None,
         type=parseReadStratum)
 
-    #
-    # Default values for these arguments are algorithm specific.
-    # See 'additionalDefaultOptions' in each algorithm module.
-    #
-    parser.add_argument(
-        "--variantConfidenceThreshold", "-q",
-        action="store",
-        dest="variantConfidenceThreshold",
-        type=float)
-    parser.add_argument("--variantCoverageThreshold", "-x",
+    parser.add_argument("--minConfidence", "-q",
                         action="store",
-                        dest="variantCoverageThreshold",
-                        type=int)
+                        dest="minConfidence",
+                        type=int,
+                        default=40,
+                        help="The minimum confidence for a variant call to be output to variants.gff")
+    parser.add_argument("--minCoverage", "-x",
+                        action="store",
+                        dest="minCoverage",
+                        default=5,
+                        type=int,
+                        help="The minimum site coverage that must be achieved for variant calls and " + \
+                             "consensus to be calculated for a site.")
     parser.add_argument("--referenceChunkOverlap",
                         action="store",
                         dest="referenceChunkOverlap",
@@ -232,7 +232,6 @@ def parseOptions(relax=False):
         help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
              " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
              " convergence (getting trapped in local optimum) (Quiver only)")
-
 
     parser.add_argument(
         "--fancyChunking",

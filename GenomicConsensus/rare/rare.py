@@ -131,7 +131,7 @@ class RareCaller(object):
     def onChunk(self, referenceWindow):
         rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
                                 depthLimit=options.coverage,
-                                minMapQV=options.mapQvThreshold,
+                                minMapQV=options.minMapQV,
                                 strategy="longest",
                                 stratum=options.readStratum)
         alnHits = self._inCmpH5[rowNumbers]

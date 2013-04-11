@@ -2,7 +2,7 @@ from numpy.testing import assert_array_almost_equal
 from nose.tools import assert_equal
 import operator, numpy as np
 
-from GenomicConsensus.plurality.plurality import (tabulateBaseCalls,
+from GenomicConsensus.plurality.plurality import (PluralityConfig,
                                                   pluralityConsensusAndVariants,
                                                   _computeVariants)
 from AlignmentHitStubs import *
@@ -10,7 +10,8 @@ from AlignmentHitStubs import *
 def test_plurality1():
     css, variants = pluralityConsensusAndVariants(ForwardAndReverseReads.referenceWindow,
                                                   ForwardAndReverseReads.reference,
-                                                  ForwardAndReverseReads.hits)
+                                                  ForwardAndReverseReads.hits,
+                                                  PluralityConfig())
 
     assert_equal(ForwardAndReverseReads.expectedPluralityConsensus,
                  css.sequence)
@@ -22,7 +23,8 @@ def test_plurality1():
 def test_plurality2():
     css, variants = pluralityConsensusAndVariants(StaggeredReads.referenceWindow,
                                                   StaggeredReads.reference,
-                                                  StaggeredReads.hits)
+                                                  StaggeredReads.hits,
+                                                  PluralityConfig())
 
     assert_equal(StaggeredReads.expectedPluralityConsensus,
                  css.sequence)

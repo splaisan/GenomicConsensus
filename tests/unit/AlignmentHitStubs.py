@@ -86,7 +86,6 @@ class AlignmentHitStub(object):
         assert refStart <= self.referenceStart <= self.referenceEnd <= refEnd
         return self
 
-
     IPD                = _makePulseFeatureAccessor("IPD")
     PulseWidth         = _makePulseFeatureAccessor("PulseWidth")
     QualityValue       = _makePulseFeatureAccessor("QualityValue")
@@ -250,7 +249,6 @@ class StaggeredReads(object):
     REV READS:          t aatctctt          (hit4)
                             tctctt-attt     (hit5)
                                    a ttg    (hit6)
-
     Note:
         - plurality insertion of A at 8;
         - plurality substitution C->G at 5;
@@ -258,11 +256,11 @@ class StaggeredReads(object):
     """
     referenceWindow = (1, 0, 20)
     reference                  = "GATTACAGATTACATTTTTT"
-    expectedPluralityConsensus = "GATTAGAGAATACANNNNNN"
+    expectedPluralityConsensus = "NATTAGAGAATANNNNNNNN"
     expectedPluralityVariants = \
-        [ Substitution(1, 5, 6,  "C", "G", coverage=4, confidence=35, frequency=3),
-          Insertion   (1, 8, 8,  "",  "A", coverage=4, confidence=35, frequency=3),
-          Deletion    (1, 9, 10, "T", "",  coverage=3, confidence=35, frequency=2) ]
+        [ Substitution(1, 5, 6,  "C", "G", coverage=4, confidence=40, frequency=3),
+          Insertion   (1, 8, 8,  "",  "A", coverage=4, confidence=40, frequency=3),
+          Deletion    (1, 9, 10, "T", "",  coverage=3, confidence=40, frequency=2) ]
 
     hit1 = AlignmentHitStub(7, FORWARD,
                             "G-ATTA",

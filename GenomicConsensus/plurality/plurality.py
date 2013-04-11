@@ -43,13 +43,34 @@ from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from ..consensus import *
 from ..variants import *
 
+
+#
+# --------------- Configuration ----------------------
+#
+
+class PluralityConfig(object):
+    """
+    Plurality configuration options
+    """
+    def __init__(self,
+                 minMapQV=10,
+                 minCoverage=3,
+                 minConfidence=40,
+                 noEvidenceConsensus="nocall"):
+        self.minMapQV            = minMapQV
+        self.minCoverage         = minCoverage
+        self.minConfidence       = minConfidence
+        self.noEvidenceConsensus = noEvidenceConsensus
+        self.realignHomopolymers = False # not available yet
+
+
 #
 # -----------  The actual algorithm code -------------
 #
 
 def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
-                                  noEvidenceConsensusFactory=noCallAsConsensus,
-                                  realignHomopolymers=False):
+                                  pluralityConfig):
+
     """
     Compute (Consensus, [Variant]) for this window, using the given
     `alns`, by applying a straightforward column-oriented consensus
@@ -72,16 +93,18 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     consensusSequence_   = []
     consensusFrequency_  = []
     effectiveCoverage_   = []
+    noEvidenceConsensusFactory = \
+        noEvidenceConsensusFactoryByName[pluralityConfig.noEvidenceConsensus]
     noEvidenceConsensus = noEvidenceConsensusFactory(refWindow, referenceSequenceInWindow)
 
-    baseCallsMatrix = tabulateBaseCalls(refWindow, alns, realignHomopolymers)
+    baseCallsMatrix = tabulateBaseCalls(refWindow, alns)
 
     for j in xrange(0, windowSize):
         counter = Counter(baseCallsMatrix[:, j])
         if "" in counter: counter.pop("")
 
         siteEffectiveCoverage = sum(counter.itervalues())
-        if siteEffectiveCoverage < options.variantCoverageThreshold:
+        if siteEffectiveCoverage < pluralityConfig.minCoverage:
             siteConsensusFrequency = siteEffectiveCoverage
             siteConsensusSequence  = noEvidenceConsensus.sequence[j]
         else:
@@ -109,13 +132,15 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     #
     # Derive variants from reference-coordinates consensus
     #
-    variants = _computeVariants(refWindow,
-                                referenceSequenceInWindow,
-                                consensusSequence_,
-                                consensusConfidence_,
-                                effectiveCoverage_,
-                                consensusFrequency_)
-
+    variants_ = _computeVariants(refWindow,
+                                 referenceSequenceInWindow,
+                                 consensusSequence_,
+                                 consensusConfidence_,
+                                 effectiveCoverage_,
+                                 consensusFrequency_)
+    variants = filterVariants(pluralityConfig.minCoverage,
+                              pluralityConfig.minConfidence,
+                              variants_)
     return (css, variants)
 
 
@@ -141,10 +166,7 @@ def _computeVariants(refWindow,
         cov  = consensusCoverageArray[j]
         freq = consensusFrequencyArray[j]
 
-        if ((refBase != cssBases) and
-            (cov >= minCoverage) and
-            (conf >= minConfidence)):
-
+        if (refBase != cssBases):
             if cssBases == "":
                 vars.append(Deletion(refId, refPos, refPos+1,
                                      refBase, cssBases, cov, conf, freq))
@@ -199,7 +221,7 @@ def computePluralityConfidence(consensusFrequency, effectiveCoverage):
     coverage.
     """
     confidence = np.empty_like(consensusFrequency)
-    confidence.fill(35)
+    confidence.fill(40)
     return confidence
 
 
@@ -209,9 +231,9 @@ def computePluralityConfidence(consensusFrequency, effectiveCoverage):
 
 class PluralityWorker(object):
 
-    # The type of the result that will be passed on to the result
-    # collector is:
-    #     (ReferenceWindow, consensus, consensusQv, variants)
+    @property
+    def pluralityConfig(self):
+        return self._algorithmConfig
 
     def onStart(self):
         random.seed(42)
@@ -221,20 +243,19 @@ class PluralityWorker(object):
         noCallFn = noEvidenceConsensusFactoryByName[options.noEvidenceConsensusCall]
         refSeqInWindow = reference.sequenceInWindow(referenceWindow)
 
-        if workChunk.hasCoverage:
-            rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
-                                       depthLimit=options.coverage,
-                                       minMapQV=options.mapQvThreshold,
-                                       strategy="longest",
-                                       stratum=options.readStratum)
-            alnHits = self._inCmpH5[rowNumbers]
-            return (referenceWindow,
-                    pluralityConsensusAndVariants(referenceWindow, refSeqInWindow,
-                                                  alnHits, noCallFn))
-        else:
+        if not workChunk.hasCoverage:
             noCallCss = noCallFn(referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
+        rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
+                                   depthLimit=options.coverage,
+                                   minMapQV=options.minMapQV,
+                                   strategy="longest",
+                                   stratum=options.readStratum)
+        alnHits = self._inCmpH5[rowNumbers]
+        return (referenceWindow,
+                pluralityConsensusAndVariants(referenceWindow, refSeqInWindow,
+                                              alnHits, self.pluralityConfig))
 
 # define both process and thread-based plurality callers
 class PluralityWorkerProcess(PluralityWorker, WorkerProcess): pass
@@ -266,10 +287,8 @@ __all__ = [ "name",
 name = "Plurality"
 availability = (True, "OK")
 
-additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
-                             "variantCoverageThreshold"   : 5,
-                             "variantConfidenceThreshold" : 20,
-                             "coverage"                   : 250 }
+additionalDefaultOptions = { "referenceChunkOverlap"      : 0 }
+
 
 def slaveFactories(threaded):
     if threaded:
@@ -278,4 +297,8 @@ def slaveFactories(threaded):
         return (PluralityWorkerProcess, ResultCollectorProcess)
 
 def configure(options, cmpH5):
-    pass
+    pluralityConfig = PluralityConfig(minMapQV=options.minMapQV,
+                                      minCoverage=options.minCoverage,
+                                      minConfidence=options.minConfidence,
+                                      noEvidenceConsensus=options.noEvidenceConsensusCall)
+    return pluralityConfig

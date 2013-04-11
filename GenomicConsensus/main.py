@@ -175,8 +175,8 @@ class ToolRunner(object):
                 chunks = reference.fancyEnumerateChunks(self._inCmpH5,
                                                         _id,
                                                         options.referenceChunkSize,
-                                                        options.variantCoverageThreshold,
-                                                        options.mapQvThreshold,
+                                                        options.minCoverage,
+                                                        options.minMapQV,
                                                         options.referenceWindow)
             else:
                 chunks = reference.enumerateChunks(_id,

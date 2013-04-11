@@ -121,7 +121,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     """
     winId, winStart, winEnd = refWindow
     refSequence = referenceContig[winStart:winEnd].tostring()
-    logging.info("Quiver operating on window: %s" %
+    logging.info("Quiver operating on %s" %
                  reference.windowToString(refWindow))
 
     noEvidenceConsensusFactory = \
@@ -143,7 +143,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         coverageGaps = holes(refWindow, intervals)
         allIntervals = sorted(intervals + coverageGaps)
         if len(allIntervals) > 1:
-            logging.info("Usable coverage in window %s in intervals: %r" %
+            logging.info("Usable coverage in %s: %r" %
                          (reference.windowToString(refWindow), intervals))
 
     else:
@@ -180,11 +180,11 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
             variants_ = variantsFromConsensus(refWindow, refSequence,
                                               css.sequence, css.confidence, siteCoverage,
                                               options.aligner)
-            variants += filterVariants(options.variantCoverageThreshold,
-                                       options.variantConfidenceThreshold,
+            variants += filterVariants(options.minCoverage,
+                                       options.minConfidence,
                                        variants_)
         else:
-            css = noEvidenceConsensusFactory(intRefSeq)
+            css = noEvidenceConsensusFactory(subWin, intRefSeq)
 
         subConsensi.append(css)
 
@@ -204,9 +204,17 @@ class QuiverWorker(object):
 
     def onChunk(self, workChunk):
         referenceWindow  = workChunk.window
-        coverageInWindow = workChunk.hasCoverage
         refId, refStart, refEnd = referenceWindow
 
+        refSeqInWindow = reference.sequenceInWindow(referenceWindow)
+        noCallFn = noEvidenceConsensusFactoryByName[self.quiverConfig.noEvidenceConsensus]
+
+        # Quick cutout for no-coverage case
+        if not workChunk.hasCoverage:
+            noCallCss = noCallFn(referenceWindow, refSeqInWindow)
+            return (referenceWindow, (noCallCss, []))
+
+        # General case
         eWindow = reference.enlargedReferenceWindow(referenceWindow,
                                                     options.referenceChunkOverlap)
         _, eStart, eEnd = eWindow
@@ -265,9 +273,6 @@ __all__ = [ "name",
 name = "Quiver"
 availability = (True, "OK")
 additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
-                             "variantCoverageThreshold"   : 5,
-                             "variantConfidenceThreshold" : 40,
-                             "coverage"                   : 100,
                              "parameterSet"               : "best" }
 
 
@@ -310,7 +315,7 @@ def configure(options, cmpH5):
             " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
             "from an instrument using software version 1.3.1 or later.")
 
-    quiverConfig = QuiverConfig(minMapQV=options.mapQvThreshold,
+    quiverConfig = QuiverConfig(minMapQV=options.minMapQV,
                                 noEvidenceConsensus=options.noEvidenceConsensusCall,
                                 parameters=params)
     return quiverConfig
