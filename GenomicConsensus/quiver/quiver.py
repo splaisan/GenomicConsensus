@@ -53,8 +53,6 @@ from GenomicConsensus.quiver.model import *
 class QuiverConfig(object):
     """
     Quiver configuration options
-
-    TODO: more doc
     """
     def __init__(self,
                  minMapQV=10,
@@ -79,11 +77,15 @@ class QuiverConfig(object):
         self.noEvidenceConsensus        = noEvidenceConsensus
         self.computeConfidence          = computeConfidence
         self.readStumpinessThreshold    = readStumpinessThreshold
-        self.parameters                 = parameters
+        self.parameters                 = parameters or QuiverConfig._defaultQuiverParameters()
 
         # Convenience
         self.model                      = self.parameters.model
         self.ccQuiverConfig             = self.parameters.quiverConfig
+
+    @staticmethod
+    def _defaultQuiverParameters():
+        return loadParameterSets(findParametersFile())["unknown.NoQVsModel"]
 
 
 
