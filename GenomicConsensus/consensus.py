@@ -107,14 +107,20 @@ def join(consensi):
 # coverage
 #
 
-def noCallAsConsensus(referenceSequence):
-    return "N" * len(referenceSequence)
+def noCallAsConsensus(refWin, referenceSequence):
+    length = len(referenceSequence)
+    seq = np.empty(length, dtype="S1")
+    seq.fill("N")
+    conf = np.zeros(length, dtype=np.uint)
+    return Consensus(refWin, seq.tostring(), conf)
 
-def referenceAsConsensus(referenceSequence):
-    return referenceSequence.upper()
+def referenceAsConsensus(refWin, referenceSequence):
+    conf = np.zeros(len(referenceSequence), dtype=np.uint)
+    return Consensus(refWin, referenceSequence, conf)
 
-def lowercaseReferenceAsConsensus(referenceSequence):
-    return referenceSequence.lower()
+def lowercaseReferenceAsConsensus(refWin, referenceSequence):
+    conf = np.zeros(len(referenceSequence), dtype=np.uint)
+    return Consensus(refWin, referenceSequence.lower(), conf)
 
 noEvidenceConsensusFactoryByName = \
     { "nocall"             : noCallAsConsensus,

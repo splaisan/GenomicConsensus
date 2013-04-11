@@ -237,6 +237,7 @@ def parseOptions(relax=False):
     parser.add_argument(
         "--fancyChunking",
         default=False,
+        action="store_true",
         help="Currently experimental chunking designed to handle coverage cutouts better")
 
     class PrintVersionAction(argparse.Action):

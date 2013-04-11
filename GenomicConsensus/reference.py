@@ -36,6 +36,10 @@ import math, logging, re, numpy as np
 from collections import OrderedDict
 from pbcore.io import FastaReader, FastaRecord
 
+from ConsensusCore import CoveredIntervals
+from .utils import holes
+from .Chunk import WorkChunk
+
 class ReferenceContig(object):
     """
     A contig from a reference (i.e. FASTA) file.
@@ -72,7 +76,7 @@ def anyKeyToId(stringKey):
 
 def sequenceInWindow(window):
     refId, refStart, refEnd = window
-    return byId[refId].sequence[refStart:refEnd]
+    return byId[refId].sequence[refStart:refEnd].tostring()
 
 def isLoaded():
     return bool(byMD5)
@@ -148,9 +152,42 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None):
         start, end = (0, referenceEntry.length)
 
     for chunkBegin in xrange(start, end, referenceStride):
-        yield (refId,
+        win = (refId,
                chunkBegin,
                min(chunkBegin + referenceStride, end))
+        yield WorkChunk(win, True)
+
+def kCoveredIntervals(k, tStart, tEnd, winStart=None, winEnd=None):
+    winStart = winStart or np.min(tStart)
+    winEnd   = winEnd   or np.max(tStart)
+    return CoveredIntervals(k, tStart, tEnd, int(winStart), int(winEnd-winStart))
+
+def fancyEnumerateChunks(cmpH5, refId, referenceStride,
+                         minCoverage, minMapQV, referenceWindow=None):
+    """
+    Enumerate chunks, creating chunks with hasCoverage=False for
+    coverage cutouts.
+    """
+    referenceEntry = byId[refId]
+    if referenceWindow:
+        _, winStart, winEnd = referenceWindow
+    else:
+        winStart, winEnd = (0, referenceEntry.length)
+    startRow = cmpH5.referenceInfo(refId).StartRow
+    endRow   = cmpH5.referenceInfo(refId).EndRow
+    goodMapQVs = (cmpH5.MapQV[startRow:endRow] >= minMapQV)
+    coveredIntervals = kCoveredIntervals(minCoverage,
+                                         cmpH5.tStart[startRow:endRow][goodMapQVs],
+                                         cmpH5.tEnd[startRow:endRow][goodMapQVs],
+                                         winStart, winEnd)
+    unCoveredIntervals = holes((refId, winStart, winEnd), coveredIntervals)
+    for (s, e) in sorted(list(coveredIntervals) + unCoveredIntervals):
+        win = (refId, s, e)
+        if (s, e) in coveredIntervals:
+            for chunk in enumerateChunks(refId, referenceStride, (refId, s, e)):
+                yield chunk
+        else:
+            yield WorkChunk(win, False)
 
 def numReferenceBases(refId, referenceWindow=None):
     """

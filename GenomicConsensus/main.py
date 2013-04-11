@@ -144,6 +144,7 @@ class ToolRunner(object):
 
 
     def _loadReference(self, cmpH5):
+        logging.info("Loading reference")
         err = reference.loadFromFile(options.referenceFilename, cmpH5)
         if err:
             die("Error loading reference")
@@ -170,9 +171,17 @@ class ToolRunner(object):
         logging.debug("Starting main loop.")
         ids = reference.enumerateIds(options.referenceWindow)
         for _id in ids:
-            chunks = reference.enumerateChunks(_id,
-                                               options.referenceChunkSize,
-                                               options.referenceWindow)
+            if options.fancyChunking:
+                chunks = reference.fancyEnumerateChunks(self._inCmpH5,
+                                                        _id,
+                                                        options.referenceChunkSize,
+                                                        options.variantCoverageThreshold,
+                                                        options.mapQvThreshold,
+                                                        options.referenceWindow)
+            else:
+                chunks = reference.enumerateChunks(_id,
+                                                   options.referenceChunkSize,
+                                                   options.referenceWindow)
             for chunk in chunks:
                 if self._aborting: return
                 self._workQueue.put(chunk)

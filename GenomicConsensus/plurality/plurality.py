@@ -72,7 +72,7 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     consensusSequence_   = []
     consensusFrequency_  = []
     effectiveCoverage_   = []
-    noEvidenceConsensus = noEvidenceConsensusFactory(referenceSequenceInWindow)
+    noEvidenceConsensus = noEvidenceConsensusFactory(refWindow, referenceSequenceInWindow)
 
     baseCallsMatrix = tabulateBaseCalls(refWindow, alns, realignHomopolymers)
 
@@ -81,9 +81,9 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
         if "" in counter: counter.pop("")
 
         siteEffectiveCoverage = sum(counter.itervalues())
-        if siteEffectiveCoverage == 0:
-            siteConsensusFrequency = 0
-            siteConsensusSequence  = noEvidenceConsensus[j]
+        if siteEffectiveCoverage < options.variantCoverageThreshold:
+            siteConsensusFrequency = siteEffectiveCoverage
+            siteConsensusSequence  = noEvidenceConsensus.sequence[j]
         else:
             siteConsensusFrequency, siteConsensusSequence = max(zip(counter.values(),
                                                                     counter.keys()))
@@ -216,18 +216,24 @@ class PluralityWorker(object):
     def onStart(self):
         random.seed(42)
 
-    def onChunk(self, referenceWindow):
-        rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
-                                   depthLimit=options.coverage,
-                                   minMapQV=options.mapQvThreshold,
-                                   strategy="longest",
-                                   stratum=options.readStratum)
-        alnHits = self._inCmpH5[rowNumbers]
-        return (referenceWindow,
-                pluralityConsensusAndVariants(referenceWindow,
-                                              reference.sequenceInWindow(referenceWindow),
-                                              alnHits))
+    def onChunk(self, workChunk):
+        referenceWindow = workChunk.window
+        noCallFn = noEvidenceConsensusFactoryByName[options.noEvidenceConsensusCall]
+        refSeqInWindow = reference.sequenceInWindow(referenceWindow)
 
+        if workChunk.hasCoverage:
+            rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
+                                       depthLimit=options.coverage,
+                                       minMapQV=options.mapQvThreshold,
+                                       strategy="longest",
+                                       stratum=options.readStratum)
+            alnHits = self._inCmpH5[rowNumbers]
+            return (referenceWindow,
+                    pluralityConsensusAndVariants(referenceWindow, refSeqInWindow,
+                                                  alnHits, noCallFn))
+        else:
+            noCallCss = noCallFn(referenceWindow, refSeqInWindow)
+            return (referenceWindow, (noCallCss, []))
 
 
 # define both process and thread-based plurality callers
@@ -261,7 +267,7 @@ name = "Plurality"
 availability = (True, "OK")
 
 additionalDefaultOptions = { "referenceChunkOverlap"      : 0,
-                             "variantCoverageThreshold"   : 3,
+                             "variantCoverageThreshold"   : 5,
                              "variantConfidenceThreshold" : 20,
                              "coverage"                   : 250 }
 

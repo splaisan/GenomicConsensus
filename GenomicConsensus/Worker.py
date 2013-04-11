@@ -64,11 +64,13 @@ class Worker(object):
                 self._resultsQueue.put(None)
                 break
             else:
-                coords = datum
-                logging.debug("%s received work unit, coords=%s"
-                              % (self.name, windowToString(coords)))
+                if datum.hasCoverage:
+                    msg = "%s received work unit, coords=%s"
+                else:
+                    msg = "%s received work unit, coords=%s (inadequate coverage)"
+                logging.debug(msg % (self.name, windowToString(datum.window)))
 
-                result = self.onChunk(coords)
+                result = self.onChunk(datum)
                 self._resultsQueue.put(result)
 
         self.onFinish()
@@ -91,11 +93,11 @@ class Worker(object):
     def onStart(self):
         pass
 
-    def onChunk(self, referenceWindow, alnHits):
+    def onChunk(self, workChunk):
         """
         This function is the heart of the matter.
 
-        referenceWindow, alnHits -> result
+        workChunk -> result
         """
         pass
 

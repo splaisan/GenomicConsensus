@@ -184,10 +184,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                        options.variantConfidenceThreshold,
                                        variants_)
         else:
-            cssSeq = noEvidenceConsensusFactory(intRefSeq)
-            css = Consensus(subWin,
-                            cssSeq,
-                            [0]*len(cssSeq))
+            css = noEvidenceConsensusFactory(intRefSeq)
 
         subConsensi.append(css)
 
@@ -205,8 +202,11 @@ class QuiverWorker(object):
     def quiverConfig(self):
         return self._algorithmConfig
 
-    def onChunk(self, referenceWindow):
+    def onChunk(self, workChunk):
+        referenceWindow  = workChunk.window
+        coverageInWindow = workChunk.hasCoverage
         refId, refStart, refEnd = referenceWindow
+
         eWindow = reference.enlargedReferenceWindow(referenceWindow,
                                                     options.referenceChunkOverlap)
         _, eStart, eEnd = eWindow
