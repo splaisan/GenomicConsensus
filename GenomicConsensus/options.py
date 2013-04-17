@@ -235,7 +235,7 @@ def parseOptions(relax=False):
 
     parser.add_argument(
         "--fancyChunking",
-        default=False,
+        default=True,
         action="store_true",
         help="Currently experimental chunking designed to handle coverage cutouts better")
 
