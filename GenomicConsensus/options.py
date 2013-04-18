@@ -94,6 +94,10 @@ def parseOptions(relax=False):
                         dest="verbosity",
                         action="count",
                         help="Set the verbosity level.")
+    parser.add_argument("--quiet",
+                        dest="quiet",
+                        action="store_true",
+                        help="Turn off all logging, including warnings")
     parser.add_argument("-j",
                         "--numWorkers",
                         dest="numWorkers",

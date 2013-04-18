@@ -64,7 +64,9 @@ class ToolRunner(object):
         self._aborting = False
 
     def _setupLogging(self):
-        if options.verbosity >= 2:
+        if options.quiet:
+            logLevel = logging.ERROR
+        elif options.verbosity >= 2:
             logLevel = logging.DEBUG
         elif options.verbosity == 1:
             logLevel = logging.INFO
