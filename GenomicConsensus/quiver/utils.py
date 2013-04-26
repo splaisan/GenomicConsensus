@@ -135,17 +135,26 @@ def refineConsensus(mms, quiverConfig):
     logging.debug("Quiver: %d rounds" % round_)
     return (mms.Template(), converged)
 
+
+def _buildDinucleotideRepeatPattern(minRepeatCount):
+    allDinucs = [ a + b for a in "ACGT" for b in "ACGT" if a != b ]
+    pattern = "(" + "|".join(["(?:%s){%d,}" % (dinuc, minRepeatCount)
+                              for dinuc in allDinucs]) + ")"
+    return pattern
+
+dinucleotideRepeatPattern = _buildDinucleotideRepeatPattern(3)
+
 def findDinucleotideRepeats(s):
     """
-    string -> list( (length-2 string, (start_position, end_position)) )
+    string -> list( (start_position, end_position), length-2 string )
+
+    List is sorted, and [start_position, end_position) intervals are
+    disjoint
     """
-    repeatsFound = []
-    allDinucs = [ a + b for a in "ACGT" for b in "ACGT" if a != b ]
-    for dinuc in allDinucs:
-        matchIter = re.finditer("(?:%s){3,}" % dinuc, s)
-        for m in matchIter:
-            repeatsFound.append((dinuc, m.span()))
-    return repeatsFound
+
+    repeatsFound = [ (m.span(), s[m.start():m.start()+2])
+                     for m in re.finditer(dinucleotideRepeatPattern, s) ]
+    return sorted(repeatsFound)
 
 
 def refineDinucleotideRepeats(mms):
@@ -164,7 +173,7 @@ def refineDinucleotideRepeats(mms):
     for wobbling on every dinucleotide repeat in the window.
     """
     runningLengthDiff = 0
-    for (dinuc, (start_, end_)) in findDinucleotideRepeats(mms.Template()):
+    for ((start_, end_), dinuc) in findDinucleotideRepeats(mms.Template()):
         start = start_ + runningLengthDiff
         end   = end_   + runningLengthDiff
         assert mms.Template()[start:start+2] == dinuc    # probably remove this...
