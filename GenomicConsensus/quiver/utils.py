@@ -66,7 +66,7 @@ def nearbyMutations(mutations, tpl, neighborhoodSize):
     """
     Return mutations nearby the previously-tried mutations
     """
-    mutationPositions = map(cc.Mutation.Position, mutations)
+    mutationPositions = map(cc.Mutation.Start, mutations)
     nearbyPositions = set()
     for mp in mutationPositions:
         nearbyPositions.update(range(max(0, mp - neighborhoodSize),
@@ -91,10 +91,10 @@ def bestSubset(mutationsAndScores, separation):
     while input:
         best = max(input, key=snd)
         output.append(best)
-        nStart = best[0].Position() - separation
-        nEnd   = best[0].Position() + separation
+        nStart = best[0].Start() - separation
+        nEnd   = best[0].Start() + separation
         for t in input[:]:
-            if nStart <= t[0].Position() <= nEnd:
+            if nStart <= t[0].Start() <= nEnd:
                 input.remove(t)
 
     return output
@@ -113,14 +113,18 @@ def refineConsensus(mms, quiverConfig):
             mutationsToTry = uniqueSingleBaseMutations(mms.Template())
         else:
             favorableMutations = map(fst, favorableMutationsAndScores)
-            mutationsToTry = nearbyMutations(favorableMutations, mms.Template(), quiverConfig.mutationNeighborhood)
+            mutationsToTry = nearbyMutations(favorableMutations,
+                                             mms.Template(),
+                                             quiverConfig.mutationNeighborhood)
 
         favorableMutationsAndScores = \
             [(m, mms.Score(m)) for m in
              filter(mms.FastIsFavorable, mutationsToTry)]
 
         if favorableMutationsAndScores:
-            bestMutations = map(fst, bestSubset(favorableMutationsAndScores, quiverConfig.mutationSeparation))
+            bestMutationsAndScores = bestSubset(favorableMutationsAndScores,
+                                                quiverConfig.mutationSeparation)
+            bestMutations = map(fst, bestMutationsAndScores)
             logging.debug("Applying mutations: %s" % [mut.ToString() for mut in bestMutations])
             mms.ApplyMutations(bestMutations)
         else:
@@ -143,6 +147,7 @@ def findDinucleotideRepeats(s):
             repeatsFound.append((dinuc, m.span()))
     return repeatsFound
 
+
 def refineDinucleotideRepeats(mms):
     """
     We have observed a couple instances where we call the consensus to
@@ -157,39 +162,21 @@ def refineDinucleotideRepeats(mms):
 
     To resolve this issue, we need to explore the likelihood change
     for wobbling on every dinucleotide repeat in the window.
-
-    This code is not to be emulated!  It is a stopgap until we can
-    bake efficient multi-base mutation testing into ConsensusCore.
     """
-    def wobble(mms, dinuc, startPos, repeatCountDiff):
-        b1, b2 = dinuc
-        if repeatCountDiff == -1:
-            mms.ApplyMutations([cc.Mutation(cc.DELETION, start, "-")])
-            mms.ApplyMutations([cc.Mutation(cc.DELETION, start, "-")])
-        elif repeatCountDiff == 1:
-            mms.ApplyMutations([cc.Mutation(cc.INSERTION, start, b2)])
-            mms.ApplyMutations([cc.Mutation(cc.INSERTION, start, b1)])
-
-    for (dinuc, (start, end)) in findDinucleotideRepeats(mms.Template()):
-        currentScore = mms.BaselineScore()
-        wobble(mms, dinuc, start, 1)
-        scoreP1 = mms.BaselineScore()
-
-        wobble(mms, dinuc, start, -1)
-        wobble(mms, dinuc, start, -1)
-        scoreN1 = mms.BaselineScore()
-
-        bestIdx = np.argmax([scoreN1, currentScore, scoreP1])
-
-        if bestIdx == 0:
-            continue
-        elif bestIdx == 1:
-            wobble(mms, dinuc, start, 1)
-            continue
-        else:
-            wobble(mms, dinuc, start, 1)
-            wobble(mms, dinuc, start, 1)
-            continue
+    runningLengthDiff = 0
+    for (dinuc, (start_, end_)) in findDinucleotideRepeats(mms.Template()):
+        start = start_ + runningLengthDiff
+        end   = end_   + runningLengthDiff
+        assert mms.Template()[start:start+2] == dinuc    # probably remove this...
+        insMut = cc.Mutation(cc.INSERTION, start, start, dinuc)
+        delMut = cc.Mutation(cc.DELETION, start, start + 2, "")
+        insScore = mms.Score(insMut)
+        delScore = mms.Score(delMut)
+        if max(insScore, delScore) > 0:
+            goodMut = insMut if (insScore > 0) else delMut
+            logging.debug("Applying dinucleotide mutation: %s" % goodMut.ToString())
+            mms.ApplyMutations([goodMut])
+            runningLengthDiff += goodMut.LengthDiff()
 
 def consensusConfidence(mms, positions=None):
     """
@@ -205,7 +192,7 @@ def consensusConfidence(mms, positions=None):
     allMutations = uniqueSingleBaseMutations(css, positions)
     cssQv = []
 
-    for pos, muts in itertools.groupby(allMutations, lambda m: m.Position()):
+    for pos, muts in itertools.groupby(allMutations, cc.Mutation.Start):
         # Current score is '0'; exp(0) = 1
         altScores = [mms.FastScore(m) for m in muts]
         with np.errstate(over="ignore", under="ignore"):
