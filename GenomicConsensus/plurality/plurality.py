@@ -44,6 +44,8 @@ from ..consensus import *
 from ..variants import *
 
 
+from ConsensusCore import BinomialSurvival
+
 #
 # --------------- Configuration ----------------------
 #
@@ -220,8 +222,19 @@ def computePluralityConfidence(consensusFrequency, effectiveCoverage):
     Come up with a new simpler scheme.  Should only need frequency and
     coverage.
     """
+    assert len(consensusFrequency) == len(effectiveCoverage)
     confidence = np.empty_like(consensusFrequency)
-    confidence.fill(40)
+
+    for idx in xrange(len(consensusFrequency)):
+        # Generate a phred-transformed p-value.  p-value is Prob[X > k-1]
+        # where X ~ Binom(n, p) where n is total coverage, p is
+        # the gross error rate (~0.15), k is the number of reads in the
+        # plurality.  Scores capped at 93.
+        k = consensusFrequency[idx]
+        n = effectiveCoverage[idx]
+        p = 0.15
+        confidence[idx] = min(93, BinomialSurvival(k - 1, n, 0.15, True))
+
     return confidence
 
 
