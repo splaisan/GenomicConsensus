@@ -1,4 +1,3 @@
-  $ export FASTADIFF=/home/UNIXHOME/dalexander/bin/fastadiff
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/lambda/job_038537.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/lambda/lambda.fasta
   $ plurality -j${JOBS-8} --noEvidenceConsensusCall=nocall $INPUT -r $REFERENCE \
@@ -13,4 +12,4 @@
   ##sequence-region lambda_NEB3011 1 48502
 
   $ gunzip css.fasta.gz
-  $ $FASTADIFF -c FALSE css.fasta $REFERENCE
+  $ fastadiff -c FALSE css.fasta $REFERENCE

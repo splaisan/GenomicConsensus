@@ -24,7 +24,9 @@ def test_plurality2():
     css, variants = pluralityConsensusAndVariants(StaggeredReads.referenceWindow,
                                                   StaggeredReads.reference,
                                                   StaggeredReads.hits,
-                                                  PluralityConfig())
+                                                  PluralityConfig(minConfidence=0,
+                                                                  minCoverage=0))
+
 
     assert_equal(StaggeredReads.expectedPluralityConsensus,
                  css.sequence)

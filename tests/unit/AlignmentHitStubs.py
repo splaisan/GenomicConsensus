@@ -256,11 +256,11 @@ class StaggeredReads(object):
     """
     referenceWindow = (1, 0, 20)
     reference                  = "GATTACAGATTACATTTTTT"
-    expectedPluralityConsensus = "NATTAGAGAATANNNNNNNN"
+    expectedPluralityConsensus = "GATTAGAGAATACANNNNNN"
     expectedPluralityVariants = \
-        [ Substitution(1, 5, 6,  "C", "G", coverage=4, confidence=40, frequency=3),
-          Insertion   (1, 8, 8,  "",  "A", coverage=4, confidence=40, frequency=3),
-          Deletion    (1, 9, 10, "T", "",  coverage=3, confidence=40, frequency=2) ]
+        [ Substitution(1, 5, 6,  "C", "G", coverage=4, confidence=19, frequency=3),
+          Insertion   (1, 8, 8,  "",  "A", coverage=4, confidence=19, frequency=3),
+          Deletion    (1, 9, 10, "T", "",  coverage=3, confidence=12, frequency=2) ]
 
     hit1 = AlignmentHitStub(7, FORWARD,
                             "G-ATTA",

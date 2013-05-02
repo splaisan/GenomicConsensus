@@ -72,7 +72,6 @@ class PluralityConfig(object):
 
 def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
                                   pluralityConfig):
-
     """
     Compute (Consensus, [Variant]) for this window, using the given
     `alns`, by applying a straightforward column-oriented consensus
@@ -106,7 +105,8 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
         if "" in counter: counter.pop("")
 
         siteEffectiveCoverage = sum(counter.itervalues())
-        if siteEffectiveCoverage < pluralityConfig.minCoverage:
+        if ((siteEffectiveCoverage == 0) or
+            (siteEffectiveCoverage < pluralityConfig.minCoverage)):
             siteConsensusFrequency = siteEffectiveCoverage
             siteConsensusSequence  = noEvidenceConsensus.sequence[j]
         else:
@@ -151,9 +151,8 @@ def _computeVariants(refWindow,
                      consensusArray,
                      consensusConfidenceArray,
                      consensusCoverageArray,
-                     consensusFrequencyArray,
-                     minCoverage=3,
-                     minConfidence=20):
+                     consensusFrequencyArray):
+
     refId, refStart, refEnd = refWindow
     windowSize = refEnd - refStart
     assert len(refSequenceInWindow) == windowSize
@@ -168,7 +167,7 @@ def _computeVariants(refWindow,
         cov  = consensusCoverageArray[j]
         freq = consensusFrequencyArray[j]
 
-        if (refBase != cssBases):
+        if (refBase != cssBases) and (refBase != "N") and (cssBases != "N"):
             if cssBases == "":
                 vars.append(Deletion(refId, refPos, refPos+1,
                                      refBase, cssBases, cov, conf, freq))
@@ -233,7 +232,7 @@ def computePluralityConfidence(consensusFrequency, effectiveCoverage):
         k = consensusFrequency[idx]
         n = effectiveCoverage[idx]
         p = 0.15
-        confidence[idx] = min(93, BinomialSurvival(k - 1, n, 0.15, True))
+        confidence[idx] = min(40, BinomialSurvival(k - 1, n, 0.15, True))
 
     return confidence
 
