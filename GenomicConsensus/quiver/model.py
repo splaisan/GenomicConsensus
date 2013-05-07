@@ -49,7 +49,8 @@ __all__ = [ "ParameterSet",
             "findParametersFile",
             "loadParameterSets",
             "bestParameterSet",
-            "majorityChemistry" ]
+            "majorityChemistry",
+            "allQVsLoaded" ]
 
 
 _basicParameterNames = [ "Match",
@@ -288,3 +289,7 @@ class NoQVsMergingByChannelModel(Model):
     rank = -1
     requiredFeatures = set([])
     parameterNames = _mergeByChannelParameterNames
+
+
+def allQVsLoaded(cmpH5):
+    return AllQVsModel.isCompatibleWithCmpH5(cmpH5)

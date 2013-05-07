@@ -310,7 +310,7 @@ def configure(options, cmpH5):
             "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
             "due to missing data tracks.")
 
-    if options.parameterSet == "best" and params.model != AllQVsModel:
+    if options.parameterSet == "best" and not allQVsLoaded(cmpH5):
         logging.warn(
             "This .cmp.h5 file lacks some of the QV data tracks that are required " +
             "for optimal performance of the Quiver algorithm.  For optimal results" +
