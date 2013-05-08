@@ -161,7 +161,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         intRefSeq = referenceContig[intStart:intEnd].tostring()
         subWin = subWindow(refWindow, interval)
 
-        windowRefSeq = referenceContig[intStart:intEnd]
+        windowRefSeq = referenceContig[intStart:intEnd].tostring()
         rows = readsInWindow(cmpH5, subWin,
                              depthLimit=depthLimit,
                              minMapQV=quiverConfig.minMapQV,
@@ -185,6 +185,15 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
             variants += filterVariants(options.minCoverage,
                                        options.minConfidence,
                                        variants_)
+
+            # Check for dump
+            shouldDumpEvidence = \
+                ((options.dumpEvidence == "all") or
+                 (options.dumpEvidence == "variants") and (len(variants) > 0))
+            if shouldDumpEvidence:
+                dumpEvidence(options.evidenceDirectory,
+                             subWin, windowRefSeq,
+                             clippedAlns, css)
         else:
             css = noEvidenceConsensusFactory(subWin, intRefSeq)
 
@@ -196,6 +205,51 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
     # 5) Return
     return css, variants
+
+def dumpEvidence(evidenceDumpBaseDirectory,
+                 refWindow, refSequence, alns,
+                 quiverConsensus):
+    # Format of evidence dump:
+    # evidence_dump/
+    #   ref000001/
+    #     0-1005/
+    #       reference.fa
+    #       reads.fa
+    #       consensus.fa
+    #       quiver-scores.h5
+    #     995-2005/
+    #       ...
+    join = os.path.join
+    refId, refStart, refEnd = refWindow
+    refName = reference.idToName(refId)
+    windowDirectory = join(evidenceDumpBaseDirectory,
+                           refName,
+                           "%d-%d" % (refStart, refEnd))
+    logging.info("Dumping evidence to %s" % (windowDirectory,))
+
+    if os.path.exists(windowDirectory):
+        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
+    os.makedirs(windowDirectory)
+    refFasta       = FastaWriter(join(windowDirectory, "reference.fa"))
+    readsFasta     = FastaWriter(join(windowDirectory, "reads.fa"))
+    consensusFasta = FastaWriter(join(windowDirectory, "consensus.fa"))
+
+    windowName = refName + (":%d-%d" % (refStart, refEnd))
+    refFasta.writeRecord(windowName, refSequence)
+    refFasta.close()
+
+    consensusFasta.writeRecord(windowName + "|quiver", quiverConsensus.sequence)
+    consensusFasta.close()
+
+    rowNames, columnNames, scores = scoreMatrix(quiverConsensus.mms)
+    quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
+    quiverScoreFile.create_dataset("Scores", data=scores)
+    quiverScoreFile.create_dataset("RowNames", data=rowNames)
+    quiverScoreFile.create_dataset("ColumnNames", data=columnNames)
+    quiverScoreFile.close()
+    for aln in alns:
+        readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
+    readsFasta.close()
 
 
 class QuiverWorker(object):

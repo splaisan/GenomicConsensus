@@ -287,25 +287,54 @@ def lifted(queryPositions, mappedRead):
     return cc.MappedRead(mappedRead.Features,
                          mappedRead.Strand,
                          newStart,
-                         newEnd)
+                         newEnd,
+                         mappedRead.ReadIdentifier)
+
+
+_typeMap = { cc.INSERTION    : "Ins",
+             cc.DELETION     : "Del",
+             cc.SUBSTITUTION : "Sub" }
+
+def _shortMutationDescription(mut, tpl):
+    """
+    More compact and uniform mutation description strings
+    Examples:
+
+    201 Ins . > G
+    201 Sub C > T
+    201 Del C > .
+    """
+    _type = _typeMap[mut.Type()]
+    _pos = mut.Start()
+    _oldBase = "." if mut.Type() == cc.INSERTION \
+               else tpl[_pos]
+    _newBase = "." if mut.Type() == cc.DELETION \
+               else mut.NewBases()
+    return "%d %s %s > %s" % (_pos, _type, _oldBase, _newBase)
 
 def scoreMatrix(mms):
     """
-    Produce a matrix S where S_{ij} represents the score delta of
-    mutation j against read i.
+    Returns (rowNames, columnNames, S)
 
-    TODO: add row/column names
+    where:
+      - S is a matrix where S_{ij} represents the score delta
+        of mutation j against read i
+      - rowNames[i] is the name of read i
+      - columnNames[j] is an identifier for mutation j, encoding the
+        position, type, and base change
     """
     css = mms.Template()
     allMutations = sorted(uniqueSingleBaseMutations(css))
     shape = (mms.NumReads(), len(allMutations))
     scoreMatrix = np.zeros(shape)
-
     for j, mut in enumerate(allMutations):
         mutScores = mms.Scores(mut)
         scoreMatrix[:, j] = mutScores
-
-    return scoreMatrix
+    rowNames = [ mms.Read(i).ReadIdentifier
+                 for i in xrange(mms.NumReads()) ]
+    columnNames = [ _shortMutationDescription(mut, css)
+                    for mut in allMutations ]
+    return (rowNames, columnNames, scoreMatrix)
 
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
@@ -337,58 +366,6 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
         if cssQvInWindow != None: v.confidence = cssQvInWindow[cssPos_]
 
     return variants
-
-
-def dumpEvidence(evidenceDumpBaseDirectory,
-                 refWindow, refSequenceInWindow,
-                 clippedSpanningAlnsInWindow, clippedNonSpanningAlnsInWindow,
-                 poaConsensusInWindow, quiverConsensusInWindow, scoresMatrix):
-    # Format of evidence dump:
-    # evidence_dump/
-    #   ref000001/
-    #     0-1005/
-    #       reference.fa
-    #       reads.fa
-    #       poa-consensus.fa
-    #       quiver-consensus.fa
-    #       quiver-scores.h5
-    #     995-2005/
-    #       ...
-    join = os.path.join
-    refId, refStart, refEnd = refWindow
-    refName = reference.idToName(refId)
-    windowDirectory = join(evidenceDumpBaseDirectory,
-                           refName,
-                           "%d-%d" % (refStart, refEnd))
-    logging.info("Dumping evidence to %s" % (windowDirectory,))
-
-    if os.path.exists(windowDirectory):
-        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
-    os.makedirs(windowDirectory)
-    refFasta             = FastaWriter(join(windowDirectory, "reference.fa"))
-    readsFasta           = FastaWriter(join(windowDirectory, "reads.fa"))
-    poaConsensusFasta    = FastaWriter(join(windowDirectory, "poa-consensus.fa"))
-    quiverConsensusFasta = FastaWriter(join(windowDirectory, "quiver-consensus.fa"))
-
-    windowName = refName + (":%d-%d" % (refStart, refEnd))
-    refFasta.writeRecord(windowName, refSequenceInWindow)
-    refFasta.close()
-
-    poaConsensusFasta.writeRecord(windowName + "|poa", poaConsensusInWindow)
-    poaConsensusFasta.close()
-
-    quiverConsensusFasta.writeRecord(windowName + "|quiver", quiverConsensusInWindow)
-    quiverConsensusFasta.close()
-
-    # TODO: add row/col names to make the matrix interpretable
-    quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
-    ds = quiverScoreFile.create_dataset("Scores", data=scoresMatrix)
-    quiverScoreFile.close()
-
-    for aln in (clippedSpanningAlnsInWindow + clippedNonSpanningAlnsInWindow):
-        readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
-    readsFasta.close()
-
 
 def subWindow(refWindow, subinterval):
     winId, winStart, winEnd = refWindow
