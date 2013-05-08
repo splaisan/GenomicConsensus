@@ -33,6 +33,7 @@
 import numpy as np
 
 __all__ = [ "Consensus",
+            "QuiverConsensus",
             "totalLength",
             "areContiguous",
             "join",
@@ -55,6 +56,17 @@ class Consensus(object):
 
     def __cmp__(self, other):
         return cmp(self.refWindow, other.refWindow)
+
+class QuiverConsensus(Consensus):
+    """
+    A QuiverConsensus object carries an additional field, `mms`, which
+    is the ConsensusCore MultiReadMutationScorer object, which can be
+    used to perform some post-hoc analyses (diploid, sample mixture, etc)
+    """
+    def __init__(self, refWindow, sequence, confidence, mms):
+        super(QuiverConsensus, self).__init__(refWindow, sequence, confidence)
+        self.mms = mms
+
 
 def totalLength(consensi):
     """

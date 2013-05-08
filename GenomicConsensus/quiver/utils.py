@@ -35,7 +35,7 @@ from collections import Counter
 
 from GenomicConsensus.variants import *
 from GenomicConsensus.utils import *
-from GenomicConsensus.consensus import Consensus
+from GenomicConsensus.consensus import QuiverConsensus
 import ConsensusCore as cc
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
@@ -451,7 +451,6 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
         mms.AddRead(mr)
 
     # Iterate until covergence
-    # TODO: pass quiverConfig down here.
     _, quiverConverged = refineConsensus(mms, quiverConfig)
     if quiverConfig.refineDinucleotideRepeats:
         refineDinucleotideRepeats(mms)
@@ -462,6 +461,7 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     else:
         confidence = np.zeros(shape=len(quiverCss), dtype=int)
 
-    return Consensus(refWindow,
-                     quiverCss,
-                     confidence)
+    return QuiverConsensus(refWindow,
+                           quiverCss,
+                           confidence,
+                           mms)
