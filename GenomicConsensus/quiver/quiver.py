@@ -282,7 +282,7 @@ def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
     parametersFile = findParametersFile(parametersFileOrDirectory)
     logging.info("Using Quiver parameter sets from %s" % parametersFile)
     parameterSets = loadParameterSets(parametersFile)
-    if options.parameterSet == "best":
+    if parameterSetName == "best":
         chemistry = majorityChemistry(cmpH5)
         params = bestParameterSet(parameterSets.values(),
                                   chemistry,
