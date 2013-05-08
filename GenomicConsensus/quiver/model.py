@@ -229,10 +229,12 @@ class Model(object):
         MappedRead.
         """
         assert aln.referenceSpan > 0
+        readIdentifier = aln.readName
         return cc.MappedRead(cls.extractFeatures(aln),
                              int(aln.RCRefStrand),
                              int(aln.referenceStart - windowStart),
-                             int(aln.referenceEnd   - windowStart))
+                             int(aln.referenceEnd   - windowStart),
+                             readIdentifier)
 
 
 class AllQVsModel(Model):
