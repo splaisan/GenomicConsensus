@@ -308,23 +308,6 @@ def scoreMatrix(mms):
 
     return scoreMatrix
 
-def domain(referenceWindow):
-    """
-    Calculate the "domain" within the referenceWindow---the region
-    where we are allowed to call variants, since there is overlap
-    between windows.
-    """
-    from GenomicConsensus.options import options
-    from GenomicConsensus import reference
-
-    refId, winStart, winEnd = referenceWindow
-    _, refGroupStart, refGroupEnd = \
-        options.referenceWindow or \
-        (refId, 0, reference.byId[refId].length)
-    domainStart = winStart if winStart==refGroupStart else min(winStart + 5, winEnd)
-    domainEnd   = winEnd   if winEnd  ==refGroupEnd   else max(winEnd   - 5, winStart)
-    return (domainStart, domainEnd)
-
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
                           cssQvInWindow=None, siteCoverage=None, aligner="affine"):
