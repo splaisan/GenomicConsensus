@@ -250,6 +250,13 @@ class AllQVsModel(Model):
 
     parameterNames = _basicParameterNames
 
+def allQVsLoaded(cmpH5):
+    """
+    Does this cmp.h5 file have the complete set of QV features?
+    """
+    return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
+
+
 class NoMergeQVModel(Model):
     """
     This model is intended for cmp.h5 files produced using the
@@ -289,7 +296,3 @@ class NoQVsMergingByChannelModel(Model):
     rank = -1
     requiredFeatures = set([])
     parameterNames = _mergeByChannelParameterNames
-
-
-def allQVsLoaded(cmpH5):
-    return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
