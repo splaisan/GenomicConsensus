@@ -151,7 +151,6 @@ def findDinucleotideRepeats(s):
     List is sorted, and [start_position, end_position) intervals are
     disjoint
     """
-
     repeatsFound = [ (m.span(), s[m.start():m.start()+2])
                      for m in re.finditer(dinucleotideRepeatPattern, s) ]
     return sorted(repeatsFound)
