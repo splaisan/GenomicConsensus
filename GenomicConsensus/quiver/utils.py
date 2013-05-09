@@ -374,6 +374,28 @@ def subWindow(refWindow, subinterval):
     assert intE <= winEnd
     return winId, intS, intE
 
+def filterAlnsForQuiver(refWindow, alns, quiverConfig):
+    """
+    Given alns (already clipped to the window bounds), filter out any
+    that are incompatible with Quiver.
+
+    By and large we avoid doing any filtering to avoid potential
+    reference bias in variant calling.
+
+    However at the moment the POA (and potentially other components)
+    breaks when there is a read of zero length.  So we throw away
+    reads that are "stumpy", where the aligner has inserted a large
+    gap, such that while the alignment technically spans the window,
+    it may not have any read content therein:
+
+          Ref   ATGATCCAGTTACTCCGATAAA
+          Read  ATG---------------TA-A
+          Win.     [              )
+    """
+    return [ a for a in alns
+             if a.readLength >= (quiverConfig.readStumpinessThreshold * a.referenceSpan) ]
+
+
 def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     """
     Call consensus on this interval---without subdividing the interval
