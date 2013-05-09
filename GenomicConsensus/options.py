@@ -241,7 +241,14 @@ def parseOptions(relax=False):
         "--fancyChunking",
         default=True,
         action="store_true",
-        help="Currently experimental chunking designed to handle coverage cutouts better")
+        help="Adaptive reference chunking designed to handle coverage cutouts better")
+
+    parser.add_argument(
+        "--simpleChunking",
+        dest="fancyChunking",
+        action="store_false",
+        help="Disable adaptive reference chunking")
+
 
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
