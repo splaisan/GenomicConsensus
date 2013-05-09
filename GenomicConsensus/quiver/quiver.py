@@ -49,45 +49,6 @@ from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
 
-
-class QuiverConfig(object):
-    """
-    Quiver configuration options
-    """
-    def __init__(self,
-                 minMapQV=10,
-                 minPoaCoverage=3,
-                 maxPoaCoverage=11,
-                 mutationSeparation=10,
-                 mutationNeighborhood=20,
-                 maxIterations=20,
-                 refineDinucleotideRepeats=True,
-                 noEvidenceConsensus="nocall",
-                 computeConfidence=True,
-                 readStumpinessThreshold=0.1,
-                 parameters=None):
-
-        self.minMapQV                   = minMapQV
-        self.minPoaCoverage             = minPoaCoverage
-        self.maxPoaCoverage             = maxPoaCoverage
-        self.mutationSeparation         = mutationSeparation
-        self.mutationNeighborhood       = mutationNeighborhood
-        self.maxIterations              = maxIterations
-        self.refineDinucleotideRepeats  = refineDinucleotideRepeats
-        self.noEvidenceConsensus        = noEvidenceConsensus
-        self.computeConfidence          = computeConfidence
-        self.readStumpinessThreshold    = readStumpinessThreshold
-        self.parameters                 = parameters or QuiverConfig._defaultQuiverParameters()
-
-        # Convenience
-        self.model                      = self.parameters.model
-        self.ccQuiverConfig             = self.parameters.quiverConfig
-
-    @staticmethod
-    def _defaultQuiverParameters():
-        return loadParameterSets(findParametersFile())["unknown.NoQVsModel"]
-
-
 def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                         depthLimit, quiverConfig):
     """
