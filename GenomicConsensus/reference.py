@@ -157,9 +157,7 @@ def enumerateChunks(refId, referenceStride, referenceWindow=None):
                min(chunkBegin + referenceStride, end))
         yield WorkChunk(win, True)
 
-def kCoveredIntervals(k, tStart, tEnd, winStart=None, winEnd=None):
-    winStart = winStart or np.min(tStart)
-    winEnd   = winEnd   or np.max(tStart)
+def kCoveredIntervals(k, tStart, tEnd, winStart, winEnd):
     return CoveredIntervals(k, tStart, tEnd, int(winStart), int(winEnd-winStart))
 
 def fancyEnumerateChunks(cmpH5, refId, referenceStride,
