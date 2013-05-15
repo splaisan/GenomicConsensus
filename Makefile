@@ -37,10 +37,12 @@ clean:
 	-rm -f nosetests.xml
 	-find . -name "*.pyc" | xargs rm -f
 
+tags:
+	find GenomicConsensus -name "*.py" | xargs etags
 
 # Aliases
 docs: doc
 check: tests
 test: tests
 
-.PHONY: check test tests doc docs clean
+.PHONY: check test tests doc docs clean tags
