@@ -74,13 +74,8 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
         starts = cmpH5.tStart[allRows]
         ends   = cmpH5.tEnd[allRows]
-        intervals = [ (s, e)
-                      for (s, e) in kSpannedIntervals(refWindow,
-                                                      quiverConfig.minPoaCoverage,
-                                                      starts,
-                                                      ends)
-                      if (e - s) > 10 ]
-
+        intervals = kSpannedIntervals(refWindow, quiverConfig.minPoaCoverage,
+                                      starts, ends, minLength=10)
         coverageGaps = holes(refWindow, intervals)
         allIntervals = sorted(intervals + coverageGaps)
         if len(allIntervals) > 1:

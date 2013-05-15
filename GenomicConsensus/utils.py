@@ -167,7 +167,7 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         return depthCap(rowNumbers[ordering])
 
 
-def kSpannedIntervals(refWindow, k, start, end):
+def kSpannedIntervals(refWindow, k, start, end, minLength=0):
     """
     Find intervals in the window that are k-spanned by the reads.
 
@@ -230,7 +230,9 @@ def kSpannedIntervals(refWindow, k, start, end):
 
     # Translate intervals back
     return [ (s + winStart_,
-              e + winStart_) for (s, e) in intervalsFound ]
+              e + winStart_)
+             for (s, e) in intervalsFound
+             if e - s >= minLength ]
 
 
 def abut(intervals):
