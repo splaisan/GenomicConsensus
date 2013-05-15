@@ -30,15 +30,14 @@
 
 # Author: David Alexander
 
-from GenomicConsensus.utils import die
-from GenomicConsensus.quiver.utils import asFloatFeature, fst, snd
-import ConsensusCore as cc
-
-import numpy as np, ConfigParser, collections
+import numpy as np, ConfigParser, collections, logging
 from glob import glob
 from os.path import join
 from pkg_resources import resource_filename, Requirement
 
+from GenomicConsensus.utils import die
+from GenomicConsensus.quiver.utils import asFloatFeature, fst, snd
+import ConsensusCore as cc
 
 __all__ = [ "ParameterSet",
             "AllQVsModel",
@@ -46,147 +45,35 @@ __all__ = [ "ParameterSet",
             "NoQVsModel",
             "AllQVsMergingByChannelModel",
             "NoQVsMergingByChannelModel",
-            "findParametersFile",
-            "loadParameterSets",
-            "bestParameterSet",
-            "majorityChemistry",
+            "QuiverConfig",
             "allQVsLoaded",
-            "QuiverConfig"  ]
+            "loadParameterSet",
+            "loadQuiverConfig" ]
 
+_basicParameterNames = \
+          [ "Match"           ,
+            "Mismatch"        , "MismatchS",
+            "Branch"          , "BranchS",
+            "DeletionN"       ,
+            "DeletionWithTag" , "DeletionWithTagS",
+            "Nce"             , "NceS",
+            "Merge"           , "MergeS" ]
 
-_basicParameterNames = [ "Match",
-                         "Mismatch",
-                         "MismatchS",
-                         "Branch",
-                         "BranchS",
-                         "DeletionN",
-                         "DeletionWithTag",
-                         "DeletionWithTagS",
-                         "Nce",
-                         "NceS",
-                         "Merge",
-                         "MergeS" ]
+_mergeByChannelParameterNames = \
+          [ "Match"           ,
+            "Mismatch"        , "MismatchS",
+            "Branch"          , "BranchS",
+            "DeletionN"       ,
+            "DeletionWithTag" , "DeletionWithTagS",
+            "Nce"             , "NceS",
+            "Merge_A"         , "Merge_C",
+            "Merge_G"         , "Merge_T",
+            "MergeS_A"        , "MergeS_C",
+            "MergeS_G"        , "MergeS_T" ]
 
-_mergeByChannelParameterNames = [ "Match",
-                                  "Mismatch",
-                                  "MismatchS",
-                                  "Branch",
-                                  "BranchS",
-                                  "DeletionN",
-                                  "DeletionWithTag",
-                                  "DeletionWithTagS",
-                                  "Nce",
-                                  "NceS",
-                                  "Merge_A",
-                                  "Merge_C",
-                                  "Merge_G",
-                                  "Merge_T",
-                                  "MergeS_A",
-                                  "MergeS_C",
-                                  "MergeS_G",
-                                  "MergeS_T" ]
-
-
-class ParameterSet(object):
-    def __init__(self, name, model, chemistry, quiverConfig):
-        self.name         = name
-        self.chemistry    = chemistry
-        self.model        = model
-        self.quiverConfig = quiverConfig
-
-def _getResourcesDirectory():
-    return resource_filename(Requirement.parse("GenomicConsensus"),
-                             "GenomicConsensus/quiver/resources")
-
-def majorityChemistry(cmpH5):
-    """
-    For the moment, we are doing Quiver analyses based on the majority
-    chemistry represented in the cmp.h5 file.  Admittedly this could
-    lead to suboptimal Quiver performance on mixed-chemistry cmp.h5
-    files, but it is expedient.  Tie-breaking is done by alphabetical
-    order of chemistry name.
-    """
-    chemistries = cmpH5.movieInfoTable.SequencingChemistry
-    counts = collections.Counter(chemistries).most_common()
-    sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
-    return sortedCounts[0][0]
-
-def findParametersFile(filenameOrDirectory=None):
-    if filenameOrDirectory is None:
-        filenameOrDirectory = _getResourcesDirectory()
-
-    # Given a full path to an .ini file, return the path
-    if filenameOrDirectory.endswith(".ini"):
-        return filenameOrDirectory
-
-    # Given a path to a bundle (the directory with a date as its
-    # name), return the path to the .ini file within
-    foundInThisBundle = glob(join(filenameOrDirectory,
-                                  "GenomicConsensus/QuiverParameters.ini"))
-    if foundInThisBundle:
-        return foundInThisBundle[0]
-
-    # Given a directory containing bundles, return the path to the
-    # .ini file within the lexically largest bundle subdirectory
-    foundInBundlesBelow = glob(join(filenameOrDirectory,
-                                    "*/GenomicConsensus/QuiverParameters.ini"))
-    if foundInBundlesBelow:
-        return sorted(foundInBundlesBelow)[-1]
-
-    raise ValueError("Unable to find parameter set file (QuiverParameters.ini)")
-
-def _buildParameterSet(parameterSetName, nameValuePairs):
-    chem, modelName = parameterSetName.split(".")[:2]
-    if    modelName == "AllQVsModel":    model = AllQVsModel
-    elif  modelName == "NoMergeQVModel": model = NoMergeQVModel
-    elif  modelName == "NoQVsModel":     model = NoQVsModel
-    elif  modelName == "AllQVsMergingByChannelModel": model = AllQVsMergingByChannelModel
-    elif  modelName == "NoQVsMergingByChannelModel":  model = NoQVsMergingByChannelModel
-    else:
-        logging.error("Found parameter set for unrecognized model: %s" % modelName)
-        return None
-
-    if map(fst, nameValuePairs) != model.parameterNames:
-        die("Malformed parameter set file")
-
-    qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
-    quiverConfig = cc.QuiverConfig(qvModelParams,
-                                   cc.ALL_MOVES,
-                                   cc.BandingOptions(4, 5),
-                                   -12.5)
-    return ParameterSet(parameterSetName, model, chem, quiverConfig)
-
-def loadParameterSets(iniFilename):
-    # returns dict: name -> ParameterSet
-    cp = ConfigParser.ConfigParser()
-    cp.optionxform=str
-    cp.read([iniFilename])
-    sections = cp.sections()
-    parameterSets = {}
-    for sectionName in sections:
-        parameterSet = _buildParameterSet(sectionName, cp.items(sectionName))
-        if parameterSet:
-            parameterSets[sectionName] = parameterSet
-    return parameterSets
-
-def bestParameterSet(parameterSets, chemistry, qvsAvailable):
-    fallbackParameterSets = \
-        [ paramSet for paramSet in parameterSets
-          if paramSet.chemistry == "unknown"
-          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
-    perChemistryParameterSets = \
-        [ paramSet for paramSet in parameterSets
-          if paramSet.chemistry == chemistry
-          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
-    # Find the best one, under the assumption that a chemistry-trained
-    # parameter set is always better than the "unknown" chemistry set.
-    if perChemistryParameterSets:
-        return max(perChemistryParameterSets, key=lambda ps: ps.model.rank)
-    elif fallbackParameterSets:
-        return max(fallbackParameterSets,     key=lambda ps: ps.model.rank)
-    else:
-        raise Exception("Quiver: No applicable parameter set found!")
-
+#
+# Model classes
+#
 
 class Model(object):
 
@@ -237,45 +124,19 @@ class Model(object):
                              int(aln.referenceEnd   - windowStart),
                              readIdentifier)
 
-
 class AllQVsModel(Model):
     name = "AllQVsModel"
-
-    # Rank is used to determine whether one model is better than another,
-    # all else being equal
     rank = 3
-
-    requiredFeatures = set([ "InsertionQV",
-                             "SubstitutionQV",
-                             "DeletionQV",
-                             "DeletionTag",
-                             "MergeQV"       ])
-
+    requiredFeatures = { "InsertionQV", "SubstitutionQV",
+                         "DeletionQV" , "DeletionTag"   , "MergeQV" }
     parameterNames = _basicParameterNames
-
-def allQVsLoaded(cmpH5):
-    """
-    Does this cmp.h5 file have the complete set of QV features?
-    """
-    return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
-
 
 class NoMergeQVModel(Model):
-    """
-    This model is intended for cmp.h5 files produced using the
-    ResequencingQVs workflow using bas.h5 files that lack the MergeQV
-    (i.e. Primary software pre-1.3.1).
-    """
     name = "NoMergeQVModel"
     rank = 2
-
-    requiredFeatures = set([ "InsertionQV",
-                             "SubstitutionQV",
-                             "DeletionQV",
-                             "DeletionTag"])
-
+    requiredFeatures = { "InsertionQV", "SubstitutionQV",
+                         "DeletionQV" , "DeletionTag"   }
     parameterNames = _basicParameterNames
-
 
 class NoQVsModel(Model):
     name = "NoQVsModel"
@@ -286,12 +147,7 @@ class NoQVsModel(Model):
 class AllQVsMergingByChannelModel(Model):
     name = "AllQVsMergingByChannelModel"
     rank = 4
-    requiredFeatures = set([ "InsertionQV",
-                             "SubstitutionQV",
-                             "DeletionQV",
-                             "DeletionTag",
-                             "MergeQV"       ])
-
+    requiredFeatures = AllQVsModel.requiredFeatures
     parameterNames = _mergeByChannelParameterNames
 
 class NoQVsMergingByChannelModel(Model):
@@ -301,11 +157,122 @@ class NoQVsMergingByChannelModel(Model):
     parameterNames = _mergeByChannelParameterNames
 
 
+#
+#   Code for accessing the ConsensusCore quiver parameter sets
+#   from the .ini config file.
+#
+
+class ParameterSet(object):
+    def __init__(self, name, model, chemistry, quiverConfig):
+        self.name         = name
+        self.chemistry    = chemistry
+        self.model        = model
+        self.quiverConfig = quiverConfig
+
+def _getResourcesDirectory():
+    return resource_filename(Requirement.parse("GenomicConsensus"),
+                             "GenomicConsensus/quiver/resources")
+
+def _majorityChemistry(cmpH5):
+    """
+    For the moment, we are doing Quiver analyses based on the majority
+    chemistry represented in the cmp.h5 file.  Admittedly this could
+    lead to suboptimal Quiver performance on mixed-chemistry cmp.h5
+    files, but it is expedient.  Tie-breaking is done by alphabetical
+    order of chemistry name.
+    """
+    chemistries = cmpH5.movieInfoTable.SequencingChemistry
+    counts = collections.Counter(chemistries).most_common()
+    sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
+    return sortedCounts[0][0]
+
+def _findParametersFile(filenameOrDirectory=None):
+    if filenameOrDirectory is None:
+        filenameOrDirectory = _getResourcesDirectory()
+
+    # Given a full path to an .ini file, return the path
+    if filenameOrDirectory.endswith(".ini"):
+        return filenameOrDirectory
+
+    # Given a path to a bundle (the directory with a date as its
+    # name), return the path to the .ini file within
+    foundInThisBundle = glob(join(filenameOrDirectory,
+                                  "GenomicConsensus/QuiverParameters.ini"))
+    if foundInThisBundle:
+        return foundInThisBundle[0]
+
+    # Given a directory containing bundles, return the path to the
+    # .ini file within the lexically largest bundle subdirectory
+    foundInBundlesBelow = glob(join(filenameOrDirectory,
+                                    "*/GenomicConsensus/QuiverParameters.ini"))
+    if foundInBundlesBelow:
+        return sorted(foundInBundlesBelow)[-1]
+
+    raise ValueError("Unable to find parameter set file (QuiverParameters.ini)")
+
+def _buildParameterSet(parameterSetName, nameValuePairs):
+    chem, modelName = parameterSetName.split(".")[:2]
+    if    modelName == "AllQVsModel":    model = AllQVsModel
+    elif  modelName == "NoMergeQVModel": model = NoMergeQVModel
+    elif  modelName == "NoQVsModel":     model = NoQVsModel
+    elif  modelName == "AllQVsMergingByChannelModel": model = AllQVsMergingByChannelModel
+    elif  modelName == "NoQVsMergingByChannelModel":  model = NoQVsMergingByChannelModel
+    else:
+        logging.error("Found parameter set for unrecognized model: %s" % modelName)
+        return None
+
+    if map(fst, nameValuePairs) != model.parameterNames:
+        die("Malformed parameter set file")
+
+    qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
+    quiverConfig = cc.QuiverConfig(qvModelParams,
+                                   cc.ALL_MOVES,
+                                   cc.BandingOptions(4, 5),
+                                   -12.5)
+    return ParameterSet(parameterSetName, model, chem, quiverConfig)
+
+def _loadParameterSets(iniFilename):
+    # returns dict: name -> ParameterSet
+    cp = ConfigParser.ConfigParser()
+    cp.optionxform=str
+    cp.read([iniFilename])
+    sections = cp.sections()
+    parameterSets = {}
+    for sectionName in sections:
+        parameterSet = _buildParameterSet(sectionName, cp.items(sectionName))
+        if parameterSet:
+            parameterSets[sectionName] = parameterSet
+    return parameterSets
+
+def _bestParameterSet(parameterSets, chemistry, qvsAvailable):
+    fallbackParameterSets = \
+        [ paramSet for paramSet in parameterSets.itervalues()
+          if paramSet.chemistry == "unknown"
+          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
+    perChemistryParameterSets = \
+        [ paramSet for paramSet in parameterSets.itervalues()
+          if paramSet.chemistry == chemistry
+          if paramSet.model.requiredFeatures.issubset(qvsAvailable) ]
+    # Find the best one, under the assumption that a chemistry-trained
+    # parameter set is always better than the "unknown" chemistry set.
+    if perChemistryParameterSets:
+        return max(perChemistryParameterSets, key=lambda ps: ps.model.rank)
+    elif fallbackParameterSets:
+        return max(fallbackParameterSets,     key=lambda ps: ps.model.rank)
+    else:
+        raise Exception("Quiver: No applicable parameter set found!")
+
+
+#
+#  QuiverConfig: the kitchen sink class of quiver options
+#
+
 class QuiverConfig(object):
     """
     Quiver configuration options
     """
     def __init__(self,
+                 parameters,
                  minMapQV=10,
                  minPoaCoverage=3,
                  maxPoaCoverage=11,
@@ -315,8 +282,7 @@ class QuiverConfig(object):
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus="nocall",
                  computeConfidence=True,
-                 readStumpinessThreshold=0.1,
-                 parameters=None):
+                 readStumpinessThreshold=0.1):
 
         self.minMapQV                   = minMapQV
         self.minPoaCoverage             = minPoaCoverage
@@ -328,7 +294,7 @@ class QuiverConfig(object):
         self.noEvidenceConsensus        = noEvidenceConsensus
         self.computeConfidence          = computeConfidence
         self.readStumpinessThreshold    = readStumpinessThreshold
-        self.parameters                 = parameters or QuiverConfig._defaultQuiverParameters()
+        self.parameters                 = parameters
 
         # Convenience
         self.model                      = self.parameters.model
@@ -336,4 +302,30 @@ class QuiverConfig(object):
 
     @staticmethod
     def _defaultQuiverParameters():
-        return loadParameterSets(findParametersFile())["unknown.NoQVsModel"]
+        return loadQuiverConfig("unknown.NoQVsModel")
+
+
+#
+#   Convenience functions
+#
+
+def allQVsLoaded(cmpH5):
+    """
+    Does this cmp.h5 file have the complete set of QV features?
+    """
+    return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
+
+def loadParameterSet(parameterSetNameOrCmpH5, parametersFile=None):
+    parametersFile = _findParametersFile(parametersFile)
+    sets = _loadParameterSets(parametersFile)
+    if isinstance(parameterSetNameOrCmpH5, str):
+        params = sets[parameterSetNameOrCmpH5]
+    else:
+        chemistry = _majorityChemistry(parameterSetNameOrCmpH5)
+        qvsAvailable = parameterSetNameOrCmpH5.pulseFeaturesAvailable()
+        params = _bestParameterSet(sets, chemistry, qvsAvailable)
+    return params
+
+def loadQuiverConfig(parameterSetNameOrCmpH5, parametersFile=None, **quiverConfigOpts):
+    params = loadParameterSet(parameterSetNameOrCmpH5, parametersFile)
+    return QuiverConfig(parameters=params, **quiverConfigOpts)

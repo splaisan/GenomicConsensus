@@ -33,16 +33,13 @@
 from __future__ import absolute_import
 
 
-import collections, h5py, math, logging, numpy as np, os, pprint
-import sys, time
+import h5py, logging, os
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
-from ..io.VariantsGffWriter import VariantsGffWriter
 from pbcore.io import (rangeQueries,
-                       FastaWriter,
-                       FastqWriter)
+                       FastaWriter)
 
 import ConsensusCore as cc
 from GenomicConsensus.consensus import *
@@ -266,50 +263,30 @@ additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
                              "parameterSet"               : "best" }
 
 
-def fetchParameterSet(cmpH5, parametersFileOrDirectory, parameterSetName):
-    parametersFile = findParametersFile(parametersFileOrDirectory)
-    logging.info("Using Quiver parameter sets from %s" % parametersFile)
-    parameterSets = loadParameterSets(parametersFile)
-    if parameterSetName == "best":
-        chemistry = majorityChemistry(cmpH5)
-        params = bestParameterSet(parameterSets.values(),
-                                  chemistry,
-                                  cmpH5.pulseFeaturesAvailable())
-    else:
-        try:
-            params = parameterSets[parameterSetName]
-        except:
-            die("Quiver: no available parameter set named %s" % parameterSetName)
-    return params
-
-
 def configure(options, cmpH5):
     if cmpH5.readType != "standard":
         raise IncompatibleDataException(
             "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
 
-    params = fetchParameterSet(cmpH5,
-                               options.parametersFile,
-                               options.parameterSet)
+    if options.parameterSet == "best":
+        params = loadParameterSet(cmpH5, options.parametersFile)
+        if not allQVsLoaded(cmpH5):
+            logging.warn(
+                "This .cmp.h5 file lacks some of the QV data tracks that are required " +
+                "for optimal performance of the Quiver algorithm.  For optimal results" +
+                " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
+                "from an instrument using software version 1.3.1 or later.")
+    else:
+        params = loadParameterSet(options.parameterSet, options.parametersFile)
+        if not params.model.isCompatibleWithCmpH5(cmpH5):
+            raise IncompatibleDataException(
+                "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
+                "due to missing data tracks.")
+
     logging.info("Using Quiver parameter set %s" % params.name)
-
-    if not params.model.isCompatibleWithCmpH5(cmpH5):
-        raise IncompatibleDataException(
-            "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
-            "due to missing data tracks.")
-
-    if options.parameterSet == "best" and not allQVsLoaded(cmpH5):
-        logging.warn(
-            "This .cmp.h5 file lacks some of the QV data tracks that are required " +
-            "for optimal performance of the Quiver algorithm.  For optimal results" +
-            " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
-            "from an instrument using software version 1.3.1 or later.")
-
-    quiverConfig = QuiverConfig(minMapQV=options.minMapQV,
-                                noEvidenceConsensus=options.noEvidenceConsensusCall,
-                                parameters=params)
-    return quiverConfig
-
+    return QuiverConfig(minMapQV=options.minMapQV,
+                        noEvidenceConsensus=options.noEvidenceConsensusCall,
+                        parameters=params)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.

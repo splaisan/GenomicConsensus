@@ -2,20 +2,17 @@
 # Test aspects of the loading of quiver parameter sets from .ini files
 #
 
-from numpy.testing import assert_array_almost_equal
 from nose.tools import assert_equal
-import operator, numpy as np
 from os.path import dirname as up
 
-from GenomicConsensus.quiver.model import *
-
+import GenomicConsensus.quiver.model as m
 
 class StubParameterSet(object):
     def __init__(self, name):
         chem, modelName = name.split(".")[:2]
-        if    modelName=="AllQVsModel":    model = AllQVsModel
-        elif  modelName=="NoMergeQVModel": model = NoMergeQVModel
-        elif  modelName=="NoQVsModel":     model = NoQVsModel
+        if    modelName=="AllQVsModel":    model = m.AllQVsModel
+        elif  modelName=="NoMergeQVModel": model = m.NoMergeQVModel
+        elif  modelName=="NoQVsModel":     model = m.NoQVsModel
         self.name         = name
         self.chemistry    = chem
         self.model        = model
@@ -35,36 +32,36 @@ class TestBestParameterSet:
 
     def test_bestParameterSet_1(self):
         assert_equal("C5.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C5", []).name)
+                     m._bestParameterSet(self.parameterSets, "C5", []).name)
         assert_equal("C5.NoMergeQVModel",
-                     bestParameterSet(self.parameterSets.values(), "C5",
-                                      NoMergeQVModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C5",
+                                      m.NoMergeQVModel.requiredFeatures).name)
         assert_equal("C5.AllQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C5",
-                                      AllQVsModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C5",
+                                      m.AllQVsModel.requiredFeatures).name)
 
     def test_bestParameterSet_2(self):
         # Try C6, where there is only one trained parameter set
         assert_equal("C6.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C6", []).name)
+                     m._bestParameterSet(self.parameterSets, "C6", []).name)
         assert_equal("C6.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C6",
-                                      NoMergeQVModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C6",
+                                        m.NoMergeQVModel.requiredFeatures).name)
         assert_equal("C6.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C6",
-                                      AllQVsModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C6",
+                                        m.AllQVsModel.requiredFeatures).name)
 
     def test_bestParameterSet_3(self):
         # Try the "future" chemistry C7, where we don't have access to
         # any trained parameter sets yet
         assert_equal("unknown.NoQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C7", []).name)
+                     m._bestParameterSet(self.parameterSets, "C7", []).name)
         assert_equal("unknown.NoMergeQVModel",
-                     bestParameterSet(self.parameterSets.values(), "C7",
-                                      NoMergeQVModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C7",
+                                        m.NoMergeQVModel.requiredFeatures).name)
         assert_equal("unknown.AllQVsModel",
-                     bestParameterSet(self.parameterSets.values(), "C7",
-                                      AllQVsModel.requiredFeatures).name)
+                     m._bestParameterSet(self.parameterSets, "C7",
+                                        m.AllQVsModel.requiredFeatures).name)
 
 
 class TestLoadingBundledParameters:
@@ -73,7 +70,7 @@ class TestLoadingBundledParameters:
         """
         Make sure that the bundled parameter set in resources/ works.
         """
-        paramSets = loadParameterSets(findParametersFile())
+        paramSets = m._loadParameterSets(m._findParametersFile())
         assert "C2.AllQVsModel" in paramSets
 
 
@@ -85,9 +82,9 @@ class TestLoadingBundledParameters:
               GenomicConsensus/
                 QuiverParameters.ini
         """
-        quiverParamsIni = findParametersFile()
+        quiverParamsIni = m._findParametersFile()
         X = up(up(up(quiverParamsIni)))
-        paramSets = loadParameterSets(findParametersFile(X))
+        paramSets = m._loadParameterSets(m._findParametersFile(X))
         assert "C2.AllQVsModel" in paramSets
 
     def test_loadParameterSetFromDir2(self):
@@ -98,7 +95,7 @@ class TestLoadingBundledParameters:
               GenomicConsensus/
                 QuiverParameters.ini
         """
-        quiverParamsIni = findParametersFile()
+        quiverParamsIni = m._findParametersFile()
         X = up(up(quiverParamsIni))
-        paramSets = loadParameterSets(findParametersFile(X))
+        paramSets = m._loadParameterSets(m._findParametersFile(X))
         assert "C2.AllQVsModel" in paramSets
