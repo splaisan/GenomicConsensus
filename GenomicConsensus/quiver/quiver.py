@@ -49,8 +49,8 @@ from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
 
-def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
-                                        depthLimit, quiverConfig):
+def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
+                                  depthLimit, quiverConfig):
     """
     High-level routine for calling the consensus for a
     window of the genome given a cmp.h5.
@@ -91,7 +91,7 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         allIntervals = [ (winStart, winEnd) ]
 
     # 2) pull out the reads we will use for each interval
-    # 3) call quiverConsensusForAlignments on the interval
+    # 3) call consensusForAlignments on the interval
     subConsensi = []
     variants = []
 
@@ -107,15 +107,15 @@ def quiverConsensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                              strategy="longest")
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
-        clippedAlns = filterAlnsForQuiver(subWin, clippedAlns_, quiverConfig)
+        clippedAlns = filterAlns(subWin, clippedAlns_, quiverConfig)
 
         if len([ a for a in clippedAlns
                  if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
 
-            css = quiverConsensusForAlignments(subWin,
-                                               intRefSeq,
-                                               clippedAlns,
-                                               quiverConfig)
+            css = consensusForAlignments(subWin,
+                                         intRefSeq,
+                                         clippedAlns,
+                                         quiverConfig)
 
             siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
             variants_ = variantsFromConsensus(refWindow, refSequence,
@@ -225,8 +225,8 @@ class QuiverWorker(object):
         # Get the consensus for the enlarged window.
         #
         css_, variants_ = \
-            quiverConsensusAndVariantsForWindow(self._inCmpH5, eWindow,
-                                                refContig, options.coverage, self.quiverConfig)
+            consensusAndVariantsForWindow(self._inCmpH5, eWindow,
+                                          refContig, options.coverage, self.quiverConfig)
 
         #
         # Restrict the consensus and variants to the reference window.

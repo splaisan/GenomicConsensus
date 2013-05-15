@@ -374,7 +374,7 @@ def subWindow(refWindow, subinterval):
     assert intE <= winEnd
     return winId, intS, intE
 
-def filterAlnsForQuiver(refWindow, alns, quiverConfig):
+def filterAlns(refWindow, alns, quiverConfig):
     """
     Given alns (already clipped to the window bounds), filter out any
     that are incompatible with Quiver.
@@ -396,7 +396,7 @@ def filterAlnsForQuiver(refWindow, alns, quiverConfig):
              if a.readLength >= (quiverConfig.readStumpinessThreshold * a.referenceSpan) ]
 
 
-def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
+def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     """
     Call consensus on this interval---without subdividing the interval
     further.
