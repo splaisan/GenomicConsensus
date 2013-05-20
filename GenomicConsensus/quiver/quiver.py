@@ -175,8 +175,9 @@ def dumpEvidence(evidenceDumpBaseDirectory,
     rowNames, columnNames, scores = scoreMatrix(quiverConsensus.mms)
     quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
     quiverScoreFile.create_dataset("Scores", data=scores)
-    quiverScoreFile.create_dataset("RowNames", data=rowNames)
-    quiverScoreFile.create_dataset("ColumnNames", data=columnNames)
+    vlen_str = h5py.special_dtype(vlen=str)
+    quiverScoreFile.create_dataset("RowNames", data=rowNames, dtype=vlen_str)
+    quiverScoreFile.create_dataset("ColumnNames", data=columnNames, dtype=vlen_str)
     quiverScoreFile.close()
     for aln in alns:
         readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
