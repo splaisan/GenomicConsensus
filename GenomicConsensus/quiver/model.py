@@ -319,7 +319,11 @@ def loadParameterSet(parameterSetNameOrCmpH5, parametersFile=None):
     parametersFile = _findParametersFile(parametersFile)
     sets = _loadParameterSets(parametersFile)
     if isinstance(parameterSetNameOrCmpH5, str):
-        params = sets[parameterSetNameOrCmpH5]
+        try:
+            params = sets[parameterSetNameOrCmpH5]
+        except:
+            die("Quiver: no available parameter set named %s" % \
+                parameterSetNameOrCmpH5)
     else:
         chemistry = _majorityChemistry(parameterSetNameOrCmpH5)
         qvsAvailable = parameterSetNameOrCmpH5.pulseFeaturesAvailable()
