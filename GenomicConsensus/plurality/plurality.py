@@ -167,7 +167,11 @@ def _computeVariants(refWindow,
         cov  = consensusCoverageArray[j]
         freq = consensusFrequencyArray[j]
 
-        if (refBase != cssBases) and (refBase != "N") and (cssBases != "N"):
+        if (refBase  != cssBases) and \
+           (refBase  != "N")      and \
+           (cssBases != "N")      and \
+           (cssBases == "" or cssBases.isupper()):
+
             if cssBases == "":
                 vars.append(Deletion(refId, refPos, refPos+1,
                                      refBase, cssBases, cov, conf, freq))
