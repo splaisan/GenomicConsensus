@@ -330,11 +330,12 @@ def scoreMatrix(mms):
     for j, mut in enumerate(allMutations):
         mutScores = mms.Scores(mut)
         scoreMatrix[:, j] = mutScores
+    baselineScores =  np.array(mms.BaselineScores())
     rowNames = [ mms.Read(i).ReadIdentifier
                  for i in xrange(mms.NumReads()) ]
     columnNames = [ _shortMutationDescription(mut, css)
                     for mut in allMutations ]
-    return (rowNames, columnNames, scoreMatrix)
+    return (rowNames, columnNames, baselineScores, scoreMatrix)
 
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,

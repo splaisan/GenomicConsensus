@@ -172,12 +172,13 @@ def dumpEvidence(evidenceDumpBaseDirectory,
     consensusFasta.writeRecord(windowName + "|quiver", quiverConsensus.sequence)
     consensusFasta.close()
 
-    rowNames, columnNames, scores = scoreMatrix(quiverConsensus.mms)
+    rowNames, columnNames, baselineScores, scores = scoreMatrix(quiverConsensus.mms)
     quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
     quiverScoreFile.create_dataset("Scores", data=scores)
     vlen_str = h5py.special_dtype(vlen=str)
     quiverScoreFile.create_dataset("RowNames", data=rowNames, dtype=vlen_str)
     quiverScoreFile.create_dataset("ColumnNames", data=columnNames, dtype=vlen_str)
+    quiverScoreFile.create_dataset("BaselineScores", data=baselineScores)
     quiverScoreFile.close()
     for aln in alns:
         readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
