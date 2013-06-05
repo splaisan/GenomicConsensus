@@ -288,6 +288,7 @@ def configure(options, cmpH5):
     logging.info("Using Quiver parameter set %s" % params.name)
     return QuiverConfig(minMapQV=options.minMapQV,
                         noEvidenceConsensus=options.noEvidenceConsensusCall,
+                        refineDinucleotideRepeats=options.refineDinucleotideRepeats,
                         parameters=params)
 
 def slaveFactories(threaded):
