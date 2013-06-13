@@ -217,6 +217,12 @@ def parseOptions(relax=False):
                         action="store",
                         dest="referenceChunkOverlap",
                         type=int)
+    parser.add_argument("--disableHdf5ChunkCache",
+                        action="store_true",
+                        default=False,
+                        help="Disable the HDF5 chunk cache.  This option reduces memory consumption " + \
+                             "dramatically for processing cmp.h5 files containing a large number of " +
+                             "reference groups, with a modest negative effect on performance.")
     parser.add_argument(
         "--noEvidenceConsensusCall",
         action="store",

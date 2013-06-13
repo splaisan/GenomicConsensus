@@ -33,9 +33,9 @@
 import cProfile, logging, os.path
 from multiprocessing import Process
 from threading import Thread
-from pbcore.io import CmpH5Reader
 from .options import options
 from .reference import windowToString
+from .utils import loadCmpH5
 
 class Worker(object):
     """
@@ -53,7 +53,8 @@ class Worker(object):
         self._algorithmConfig = algorithmConfig
 
     def _run(self):
-        self._inCmpH5 = CmpH5Reader(options.inputFilename)
+        self._inCmpH5 = loadCmpH5(options.inputFilename,
+                                  disableChunkCache=options.disableHdf5ChunkCache)
         self.onStart()
 
         while True:

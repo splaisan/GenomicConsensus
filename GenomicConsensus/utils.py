@@ -31,8 +31,9 @@
 # Author: David Alexander
 
 from __future__ import absolute_import
-import math, numpy as np, os.path, sys
+import h5py, math, numpy as np, os.path, sys
 from pbcore.io.rangeQueries import projectIntoRange
+from pbcore.io import CmpH5Reader
 
 def die(msg):
     print msg
@@ -275,3 +276,20 @@ def filterVariants(minCoverage, minConfidence, variants):
     return [ v for v in variants
              if ((v.coverage >= minCoverage) and
                  (v.confidence >= minConfidence)) ]
+
+
+def loadCmpH5(filename, disableChunkCache=False):
+    """
+    Get a CmpH5Reader object, disabling the chunk cache if requested.
+    """
+    filename = os.path.abspath(os.path.expanduser(filename))
+    if not disableChunkCache:
+        file = h5py.File(filename, "r")
+    else:
+        propfaid = h5py.h5p.create(h5py.h5p.FILE_ACCESS)
+        propfaid.set_cache(0, 0, 0, 0)
+        fid = h5py.h5f.open(filename,
+                            flags=h5py.h5f.ACC_RDONLY,
+                            fapl=propfaid)
+        file = h5py.File(fid)
+    return CmpH5Reader(file)

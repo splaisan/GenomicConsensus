@@ -142,6 +142,7 @@ class ToolRunner(object):
         store it as self._inCmpH5.
         """
         fname = options.inputFilename
+        logging.debug("Before open on main process, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
         self._inCmpH5 = CmpH5Reader(fname)
 
 
@@ -263,6 +264,7 @@ class ToolRunner(object):
             self._loadReference(peekCmpH5)
             self._checkFileCompatibility(peekCmpH5)
             self._configureAlgorithm(options, peekCmpH5)
+        logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
 
         if options.dumpEvidence:
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
@@ -297,7 +299,7 @@ class ToolRunner(object):
             self._printProfiles()
 
         # close h5 file.
-        del self._inCmpH5
+        self._inCmpH5.close()
         return 0
 
 
