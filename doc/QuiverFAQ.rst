@@ -74,6 +74,8 @@ The name **Quiver** reflects a consensus-calling algorithm that is
 
 How do I run Quiver?
 --------------------
+
+If you have
 For general instructions on installing and running, see the
 HowToQuiver_ document.
 
@@ -121,20 +123,21 @@ avoid using the reference even in zero coverage regions.
 What is Quiver's accuracy?
 --------------------------
 Quiver's expected accuracy is a function of coverage.  Using the C2
-chemistry, our nominal expected accuracy levels are as follows:
+and P4-C2 chemistries, our nominal expected accuracy levels are as
+follows:
 
 +--------+---------+
 |Coverage|Expected |
 |        |consensus|
 |        |accuracy |
 +========+=========+
-|5x      | > Q20   |
+|10x     | > Q30   |
 +--------+---------+
-|20x     | > Q30   |
+|20x     | > Q40   |
 +--------+---------+
-|40x     | > Q40   |
+|40x     | > Q50   |
 +--------+---------+
-|60x     | > Q50   |
+|60-80x  | ~ Q60   |
 +--------+---------+
 
 The "Q" values we refer to are Phred-scaled
@@ -268,12 +271,6 @@ Deletions and substitutions should be fairly easy to spot; to view
 insertions, right-click on the reference base and select "View
 Insertions Before...".
 
-Another approach is to use the ``--dumpEvidence`` flag, which will
-output a directory for each window surrounding a called variant,
-containing all the reads clipped to the window.  You can use an
-independent consensus calling approach or build and view a multiple
-alignment from these reads.
-
 
 What are the filtering parameters that Quiver uses?
 ---------------------------------------------------
@@ -289,18 +286,6 @@ variants by quality and coverage.
   5x, by default---this is configurable using ``-x=value``.
   Further, they will not be called if the confidence (Phred-scaled)
   does not exceed 40---configurable using ``-q=value``.
-
-
-What is the best way to call consensus on an amplicon dataset?
---------------------------------------------------------------
-In an amplicon dataset, focused regions of a genome have been
-amplified, ideally with minimal off-target amplification.  If you
-provide Quiver a reference that is the full genome, not just the
-amplified regions, it will get tripped up by the large regions
-
-To avoid this problem, it is best to split out each amplicon region of
-the reference into its own reference contig.
-
 
 
 What happens when my sample is a mixture, or diploid?

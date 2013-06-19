@@ -2,9 +2,11 @@
 How to install and use Quiver
 =============================
 
-Quiver is now bundled in the 1.4 release of SMRTanalysis.  If you do
-not have the 1.4 version yet, or you want to install the very latest
-bleeding-edge code, you may follow the instructions below.
+Quiver is bundled in SMRTanalysis version 1.4 and later.  The easiest
+way to get Quiver is to install the most recent version of SMRTanalysis.
+
+If you want to install Quiver as a standalone package from the latest
+bleeding-edge code, follow the instructions below.
 
 *Note: please install this software on an isolated machine that does
 not have SMRTanalysis installed.  Older versions of SMRTanalysis
@@ -14,9 +16,8 @@ overriding ``virtualenv``-installed modules.*
 Background
 ----------
 **Quiver** is an algorithm for calling highly accurate consensus from
-multiple PacBio reads, using a Hidden Markov Model exploiting both
-the basecalls and QV metrics to infer the true underlying DNA
-sequence.
+multiple PacBio reads, using a pair-HMM exploiting both the basecalls
+and QV metrics to infer the true underlying DNA sequence.
 
 Quiver is available through the ``quiver`` script from the
 ``GenomicConsensus`` package.  To use Quiver, the following PacBio
@@ -143,51 +144,18 @@ will be suboptimal.
 Step 4: Highly-accurate assembly consensus
 ``````````````````````````````````````````
 Quiver enables consensus accuracies on genome assemblies at accuracies
-greater than Q50 (one error per 100,000 bases).  At the present moment
-this is not a streamlined workflow---we are working on this right now.
+approaching or even exceeding Q60 (one error per million bases).  If
+you use the HGAP assembly protocol in SMRTportal 2.0 or later, Quiver
+runs automatically as the final "assembly polishing" step.
 
-Here are the current steps needed to get a high-accuracy assembly
-using Quiver:
+If you want to use Quiver to *manually* polish an assembly, you need to:
 
-- Start with a rough assembly---from any platform or assembly
-  technique; PacBio users can use the `Allora` or `CeleraAssembler`
-  workflows to generate a rough assembly.
-
-- The output of the assembly is a FASTA file; at the present time the
-  user must download this FASTA file and then import it as a new
-  reference into SMRTPortal.
-
-- Run a ``RS_Mapping_QVs`` job using the original data files, and
-  the rough assembly FASTA file as a reference.
-
-The output of the `RS_Mapping_QVs` job is the cmp.h5 file you will now
-feed to Quiver::
-
-    $ quiver -j8 aligned_reads.cmp.h5     \
-    >    -r path/to/rough-assembly.fasta  \
-    >    -o quiver-assembly.fasta
-
-The ``quiver-assembly.fasta`` file contains the refined assembly. If
-you have consisently high coverage across the genome, the quality
-should be quite high.  Note that Quiver does *not* join contigs---it
-merely refines their accuracy.
-
-
-Learn About Quiver
-------------------
-
-We have some presentations available giving some detail about how the
-Quiver algorithm works and how to use it:
-
-- An FAQ_ doc
-- A `practical guide`_ to using Quiver for resequencing and assembly consensus calling.
-- A `technical summary`_ of the Quiver algorithm (work in progress).
-
-Experimental users are welcome to learn how to use the Quiver APIs by
-read the source file ``GenomicConsensus/quiver/demo.py``.  However,
-note that this demo is optimized for didactic simplicity, not
-consensus accuracy.  After understanding the demo code, look at
-``quiver.py`` to see how we handle edge cases that limit accuracy.
+- upload your draft assembly to SMRTportal as a new reference,
+- run the Resequencing protocol to call the consensus of your PacBio
+  reads as oriented by the draft assembly.  The variants output will
+  show the "corrections" made by Quiver, while the consensus
+  FASTA/FASTQ output contain the sequence and quality of the polished
+  assembly.
 
 
 Known issues
@@ -197,6 +165,14 @@ lower that causes the interpreter to crash during shutdown.  Use
 Python 2.7.3 or newer.
 
 
-.. _`practical guide`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverPracticum/quiver-practicum.pdf
-.. _`technical summary`: https://github.com/PacificBiosciences/ConsensusCore/raw/master/doc/Presentations/QuiverSummary/slides.pdf
-.. _FAQ: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst
+Resources
+---------
+Here is an `FAQ document`_ to address common issues.
+
+For a technical summary of some of the details of how Quiver works, I
+recommend reading the supplementary material of our 2013 *Nature
+Methods* `HGAP paper`_
+
+
+.. _`FAQ document`: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst
+.. _`HGAP paper`:
