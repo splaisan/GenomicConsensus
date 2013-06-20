@@ -62,6 +62,25 @@ def uniqueSingleBaseMutations(templateSequence, positions=None):
             yield cc.Mutation(cc.DELETION, tplStart, "-")
         prevTplBase = tplBase
 
+def allSingleBaseMutations(templateSequence, positions=None):
+    """
+    Same as ``uniqueSingleBaseMutations``, but no filtering as to
+    whether the mutated sequences are unique.
+    """
+    allBases = "ACGT"
+    positions = positions or xrange(0, len(templateSequence))
+    for tplStart in positions:
+        tplBase = templateSequence[tplStart]
+        # snvs
+        for subsBase in allBases:
+            if subsBase != tplBase:
+                yield cc.Mutation(cc.SUBSTITUTION, tplStart, subsBase)
+        # Insertions
+        for insBase in allBases:
+            yield cc.Mutation(cc.INSERTION, tplStart, insBase)
+        # Deletion
+        yield cc.Mutation(cc.DELETION, tplStart, "-")
+
 def nearbyMutations(mutations, tpl, neighborhoodSize):
     """
     Return mutations nearby the previously-tried mutations
@@ -125,8 +144,15 @@ def refineConsensus(mms, quiverConfig):
             bestMutationsAndScores = bestSubset(favorableMutationsAndScores,
                                                 quiverConfig.mutationSeparation)
             bestMutations = map(fst, bestMutationsAndScores)
-            logging.debug("Applying mutations: %s" % [mut.ToString() for mut in bestMutations])
+
+            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                logging.debug("Round %d: Score=%f" % (round_, mms.BaselineScore()))
+                mutsApplied = "\n"+"\n".join(["\t\t[" + mut.ToString() + \
+                                              "\t" + str(mms.Score(mut)) + "]"
+                                         for mut in bestMutations])
+                logging.debug("Applying mutations: %s" % mutsApplied)
             mms.ApplyMutations(bestMutations)
+
         else:
             # If we can't find any favorable mutations, our work is done.
             converged = True
@@ -324,7 +350,7 @@ def scoreMatrix(mms):
         position, type, and base change
     """
     css = mms.Template()
-    allMutations = sorted(uniqueSingleBaseMutations(css))
+    allMutations = sorted(allSingleBaseMutations(css))
     shape = (mms.NumReads(), len(allMutations))
     scoreMatrix = np.zeros(shape)
     for j, mut in enumerate(allMutations):
