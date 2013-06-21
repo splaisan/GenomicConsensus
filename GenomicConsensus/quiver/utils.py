@@ -235,28 +235,6 @@ def consensusConfidence(mms, positions=None):
 
     return np.array(cssQv, dtype=np.uint8)
 
-
-def inverseMutations(windowStart, variant):
-    """
-    Given a (potentially multibase) variant, return the list of single
-    base mutations that 'undo' the variant.
-    """
-    start = variant.refStart - windowStart
-    length = len(variant)
-    if isinstance(variant, Insertion):
-        ms = [cc.Mutation(cc.DELETION, pos, "-")
-              for pos in xrange(start, start+length)]
-    elif isinstance(variant, Deletion):
-        ms = [cc.Mutation(cc.INSERTION, start, base)
-              for base in variant.refSequence]
-    elif isinstance(variant, Substitution):
-        ms = [cc.Mutation(cc.SUBSTITUTION, pos, base)
-              for (pos, base) in zip(range(start, start+length),
-                                     variant.refSequence)]
-    else:
-        raise Exception, "Should not reach here"
-    return ms
-
 def variantsFromAlignment(a, refWindow):
     """
     Extract the variants implied by a pairwise alignment to the
