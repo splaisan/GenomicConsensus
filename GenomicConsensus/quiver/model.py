@@ -117,11 +117,7 @@ class Model(object):
         MappedRead.
         """
         assert aln.referenceSpan > 0
-        #readIdentifier = aln.readName
-        readIdentifier = "m%d/%06d/%d" % \
-                         (aln.MovieID,
-                          aln.HoleNumber,
-                          aln.rStart)
+        readIdentifier = str(aln.rowNumber)
         return cc.MappedRead(cls.extractFeatures(aln),
                              int(aln.RCRefStrand),
                              int(aln.referenceStart - windowStart),

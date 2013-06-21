@@ -323,7 +323,8 @@ def scoreMatrix(mms):
     where:
       - S is a matrix where S_{ij} represents the score delta
         of mutation j against read i
-      - rowNames[i] is the name of read i
+      - rowNames[i] is an identifier name for the the read i---presently
+        we use the the row number within the cmp.h5, encoded as a string
       - columnNames[j] is an identifier for mutation j, encoding the
         position, type, and base change
     """

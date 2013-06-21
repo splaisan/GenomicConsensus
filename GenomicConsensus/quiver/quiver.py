@@ -45,6 +45,7 @@ import ConsensusCore as cc
 from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
+from GenomicConsensus.quiver.evidence import dumpEvidence
 
 def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                   depthLimit, quiverConfig):
@@ -136,53 +137,6 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
     # 5) Return
     return css, variants
-
-def dumpEvidence(evidenceDumpBaseDirectory,
-                 refWindow, refSequence, alns,
-                 quiverConsensus):
-    # Format of evidence dump:
-    # evidence_dump/
-    #   ref000001/
-    #     0-1005/
-    #       reference.fa
-    #       reads.fa
-    #       consensus.fa
-    #       quiver-scores.h5
-    #     995-2005/
-    #       ...
-    join = os.path.join
-    refId, refStart, refEnd = refWindow
-    refName = reference.idToName(refId)
-    windowDirectory = join(evidenceDumpBaseDirectory,
-                           refName,
-                           "%d-%d" % (refStart, refEnd))
-    logging.info("Dumping evidence to %s" % (windowDirectory,))
-
-    if os.path.exists(windowDirectory):
-        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
-    os.makedirs(windowDirectory)
-    refFasta       = FastaWriter(join(windowDirectory, "reference.fa"))
-    readsFasta     = FastaWriter(join(windowDirectory, "reads.fa"))
-    consensusFasta = FastaWriter(join(windowDirectory, "consensus.fa"))
-
-    windowName = refName + (":%d-%d" % (refStart, refEnd))
-    refFasta.writeRecord(windowName, refSequence)
-    refFasta.close()
-
-    consensusFasta.writeRecord(windowName + "|quiver", quiverConsensus.sequence)
-    consensusFasta.close()
-
-    rowNames, columnNames, baselineScores, scores = scoreMatrix(quiverConsensus.mms)
-    quiverScoreFile = h5py.File(join(windowDirectory, "quiver-scores.h5"))
-    quiverScoreFile.create_dataset("Scores", data=scores)
-    vlen_str = h5py.special_dtype(vlen=str)
-    quiverScoreFile.create_dataset("RowNames", data=rowNames, dtype=vlen_str)
-    quiverScoreFile.create_dataset("ColumnNames", data=columnNames, dtype=vlen_str)
-    quiverScoreFile.create_dataset("BaselineScores", data=baselineScores)
-    quiverScoreFile.close()
-    for aln in alns:
-        readsFasta.writeRecord(aln.readName, aln.read(orientation="genomic", aligned=False))
-    readsFasta.close()
 
 
 class QuiverWorker(object):
