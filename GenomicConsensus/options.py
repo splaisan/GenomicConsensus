@@ -65,8 +65,8 @@ def parseOptions(relax=False):
     """Parse the options and perform some due diligence on them, allowing for
     unit tests to relax things a bit.
     """
-    desc = "Compute genomic consensus and call variants relative to the reference.."
-    parser = argparse.ArgumentParser(description=desc)
+    desc = "Compute genomic consensus and call variants relative to the reference."
+    parser = argparse.ArgumentParser(description=desc, add_help=False)
 
     def checkInputFile(path):
         if not os.path.isfile(path):
@@ -79,118 +79,94 @@ def parseOptions(relax=False):
         except:
             parser.error("Output file %s cannot be written." % (path,))
 
-    parser.add_argument("inputFilename",
-                        type=str,
-                        help="The input cmp.h5 file")
-    parser.add_argument("-o", "--outputFilename",
-                        dest="outputFilenames",
-                        required=not relax,
-                        type=str,
-                        action="append",
-                        default=[],
-                        help="The output filename(s), as a comma-separated list.")
-    parser.add_argument("--verbose",
-                        "-v",
-                        dest="verbosity",
-                        action="count",
-                        help="Set the verbosity level.")
-    parser.add_argument("--quiet",
-                        dest="quiet",
-                        action="store_true",
-                        help="Turn off all logging, including warnings")
-    parser.add_argument("-j",
-                        "--numWorkers",
-                        dest="numWorkers",
-                        type=int,
-                        default=1,
-                        help="The number of worker processes to be used")
-    parser.add_argument("--profile",
-                        action="store_true",
-                        dest="doProfiling",
-                        default=False,
-                        help="Enable Python-level profiling (using cProfile).")
-    parser.add_argument("--referenceFilename", "--reference", "-r",
-                        action="store",
-                        dest="referenceFilename",
-                        type=str,
-                        required=not relax,
-                        help="The filename of the reference FASTA file")
 
+    basics = parser.add_argument_group("Basic required options")
+    basics.add_argument(
+        "inputFilename",
+        type=str,
+        help="The input cmp.h5 file")
+    basics.add_argument(
+        "--referenceFilename", "--reference", "-r",
+        action="store",
+        dest="referenceFilename",
+        type=str,
+        required=not relax,
+        help="The filename of the reference FASTA file")
+    basics.add_argument(
+        "-o", "--outputFilename",
+        dest="outputFilenames",
+        required=not relax,
+        type=str,
+        action="append",
+        default=[],
+        help="The output filename(s), as a comma-separated list." + \
+             "Valid output formats are .fa/.fasta, .fq/.fastq, .gff")
+
+    parallelism = parser.add_argument_group("Parallelism")
+    parallelism.add_argument(
+        "-j", "--numWorkers",
+        dest="numWorkers",
+        type=int,
+        default=1,
+        help="The number of worker processes to be used")
+
+    filtering = parser.add_argument_group("Output filtering")
+    filtering.add_argument(
+        "--minConfidence", "-q",
+        action="store",
+        dest="minConfidence",
+        type=int,
+        default=40,
+        help="The minimum confidence for a variant call to be output to variants.gff")
+    filtering.add_argument(
+        "--minCoverage", "-x",
+        action="store",
+        dest="minCoverage",
+        default=5,
+        type=int,
+        help="The minimum site coverage that must be achieved for variant calls and " + \
+             "consensus to be calculated for a site.")
+    filtering.add_argument(
+        "--noEvidenceConsensusCall",
+        action="store",
+        choices=["nocall", "reference", "lowercasereference"],
+        default="lowercasereference",
+        help="The consensus base that will be output for sites with no effective coverage.")
+
+
+    readSelection = parser.add_argument_group("Read selection/filtering")
+    readSelection.add_argument(
+        "--coverage", "-X",
+        action="store",
+        dest="coverage",
+        type=int,
+        default=100,
+        help="A designation of the maximum coverage level to be used for analysis." + \
+             " Exact interpretation is algorithm-specific.")
+    readSelection.add_argument(
+        "--minMapQV", "-m",
+        action="store",
+        dest="minMapQV",
+        type=float,
+        default=10,
+        help="The minimum MapQV for reads that will be used for analysis.")
     # Since the reference isn't loaded at options processing time, we
     # can't grok the referenceWindow specified until later.  We store
     # it as a string (referenceWindowAsString) and it will later be
     # interpreted and stored as a proper window tuple (referenceWindow)
-    parser.add_argument("--referenceWindow", "-w",
-                        action="store",
-                        dest="referenceWindowAsString",
-                        type=str,
-                        help="The window of the reference to be processed, in the format" + \
-                             " refGroup:refStart-refEnd (default: entire reference).    "     )
-
-    parser.add_argument("--algorithm",
-                        action="store",
-                        dest="algorithm",
-                        type=str,
-                        default="plurality")
-    parser.add_argument("--parametersFile", "-P",
-                        dest="parametersFile",
-                        type=str,
-                        default=None,
-                        help="Parameter set filename (QuiverParameters.ini), or directory D " + \
-                             "such that either D/*/GenomicConsensus/QuiverParameters.ini, "   + \
-                             "or D/GenomicConsensus/QuiverParameters.ini, is found.  In the " + \
-                             "former case, the lexically largest path is chosen.")
-    parser.add_argument("--parameterSet", "-p",
-                        action="store",
-                        dest="parameterSet",
-                        type=str,
-                        default=None,
-                        help="Name of parameter set to select from the parameters file.")
-
-    parser.add_argument("--coverage", "-X",
-                        action="store",
-                        dest="coverage",
-                        type=int,
-                        default=100,
-                        help="A designation of the maximum coverage level to be used for analysis." + \
-                             " Exact interpretation is algorithm-specific.")
-    parser.add_argument("--minMapQV", "-m",
-                        action="store",
-                        dest="minMapQV",
-                        type=float,
-                        default=10,
-                        help="The minimum MapQV for reads that will be used for analysis.")
-    parser.add_argument("--referenceChunkSize", "-C",
-                        action="store",
-                        dest="referenceChunkSize",
-                        type=int,
-                        default=500)
-    parser.add_argument("--queueSize", "-Q",
-                        action="store",
-                        dest="queueSize",
-                        type=int,
-                        default=200)
-    parser.add_argument("--threaded", "-T",
-                        action="store_true",
-                        dest="threaded",
-                        default=False,
-                        help="Run threads instead of processes (for debugging purposes only)")
-    parser.add_argument("--dumpEvidence", "-d",
-                        dest="dumpEvidence",
-                        nargs="?",
-                        default=None,
-                        const="variants",
-                        choices=["variants", "all"])
-    parser.add_argument("--evidenceDirectory",
-                        default="evidence_dump")
-
+    readSelection.add_argument(
+        "--referenceWindow", "-w",
+        action="store",
+        dest="referenceWindowAsString",
+        type=str,
+        help="The window of the reference to be processed, in the format" + \
+             " refGroup:refStart-refEnd (default: entire reference).    ")
     def parseReadStratum(s):
         rs = map(int, s.split("/"))
         assert len(rs) == 2
         assert rs[0] < rs[1]
         return rs
-
-    parser.add_argument(
+    readSelection.add_argument(
         "--readStratum",
         help="A string of the form 'n/N', where n, and N are integers, 0 <= n < N, designating" \
              " that the reads are to be deterministically split into N strata of roughly even"  \
@@ -200,70 +176,35 @@ def parseOptions(relax=False):
         default=None,
         type=parseReadStratum)
 
-    parser.add_argument("--minConfidence", "-q",
-                        action="store",
-                        dest="minConfidence",
-                        type=int,
-                        default=40,
-                        help="The minimum confidence for a variant call to be output to variants.gff")
-    parser.add_argument("--minCoverage", "-x",
-                        action="store",
-                        dest="minCoverage",
-                        default=5,
-                        type=int,
-                        help="The minimum site coverage that must be achieved for variant calls and " + \
-                             "consensus to be calculated for a site.")
-    parser.add_argument("--referenceChunkOverlap",
-                        action="store",
-                        dest="referenceChunkOverlap",
-                        type=int)
-    parser.add_argument("--disableHdf5ChunkCache",
-                        action="store_true",
-                        default=False,
-                        help="Disable the HDF5 chunk cache.  This option reduces memory consumption " + \
-                             "dramatically for processing cmp.h5 files containing a large number of " +
-                             "reference groups, with a modest negative effect on performance.")
-    parser.add_argument(
-        "--noEvidenceConsensusCall",
+
+    algorithm = parser.add_argument_group("Algorithm and parameter settings")
+    algorithm.add_argument(
+        "--algorithm",
         action="store",
-        choices=["nocall", "reference", "lowercasereference"],
-        default="lowercasereference",
-        help="The consensus base that will be output for sites with no effective coverage.")
-    parser.add_argument(
-        "--aligner", "-a",
+        dest="algorithm",
+        type=str,
+        default="plurality")
+    algorithm.add_argument(
+        "--parametersFile", "-P",
+        dest="parametersFile",
+        type=str,
+        default=None,
+        help="Parameter set filename (QuiverParameters.ini), or directory D " + \
+             "such that either D/*/GenomicConsensus/QuiverParameters.ini, "   + \
+             "or D/GenomicConsensus/QuiverParameters.ini, is found.  In the " + \
+             "former case, the lexically largest path is chosen.")
+    algorithm.add_argument(
+        "--parameterSet", "-p",
         action="store",
-        choices=["affine", "simple"],
-        default="affine",
-        help="The pairwise alignment algorithm that will be used to produce variant calls" \
-             " from the consensus (Quiver only).")
-
-    parser.add_argument(
-        "--refineDinucleotideRepeats",
-        dest="refineDinucleotideRepeats",
-        action="store_true",
-        help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
-             " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
-             " convergence (getting trapped in local optimum) (Quiver only)")
-    parser.add_argument(
-        "--noRefineDinucleotideRepeats",
-        dest="refineDinucleotideRepeats",
-        action="store_false",
-        help="Disable dinucleotide refinement")
-    parser.set_defaults(refineDinucleotideRepeats=True)
-
-    parser.add_argument(
-        "--fancyChunking",
-        default=True,
-        action="store_true",
-        help="Adaptive reference chunking designed to handle coverage cutouts better")
-
-    parser.add_argument(
-        "--simpleChunking",
-        dest="fancyChunking",
-        action="store_false",
-        help="Disable adaptive reference chunking")
+        dest="parameterSet",
+        type=str,
+        default=None,
+        help="Name of parameter set to select from the parameters file.")
 
 
+    debugging = parser.add_argument_group("Verbosity and debugging/profiling")
+    debugging.add_argument("--help", "-h",
+                           action="help")
     class PrintVersionAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             print "  GenomicConsensus version: %s" % __VERSION__
@@ -272,10 +213,99 @@ def parseOptions(relax=False):
             print "  h5py version: %s" % h5py.version.version
             print "  hdf5 version: %s" % h5py.version.hdf5_version
             sys.exit(0)
+    debugging.add_argument("--version",
+                           nargs=0,
+                           action=PrintVersionAction)
+    debugging.add_argument(
+        "--verbose", "-v",
+        dest="verbosity",
+        action="count",
+        help="Set the verbosity level.")
+    debugging.add_argument(
+        "--quiet",
+        dest="quiet",
+        action="store_true",
+        help="Turn off all logging, including warnings")
+    debugging.add_argument(
+        "--profile",
+        action="store_true",
+        dest="doProfiling",
+        default=False,
+        help="Enable Python-level profiling (using cProfile).")
+    debugging.add_argument(
+        "--dumpEvidence", "-d",
+        dest="dumpEvidence",
+        nargs="?",
+        default=None,
+        const="variants",
+        choices=["variants", "all"])
+    debugging.add_argument(
+        "--evidenceDirectory",
+        default="evidence_dump")
 
-    parser.add_argument("--version",
-                        nargs=0,
-                        action=PrintVersionAction)
+
+    advanced = parser.add_argument_group("Advanced configuration options")
+    advanced.add_argument(
+        "--queueSize", "-Q",
+        action="store",
+        dest="queueSize",
+        type=int,
+        default=200)
+    advanced.add_argument(
+        "--threaded", "-T",
+        action="store_true",
+        dest="threaded",
+        default=False,
+        help="Run threads instead of processes (for debugging purposes only)")
+    advanced.add_argument(
+        "--referenceChunkSize", "-C",
+        action="store",
+        dest="referenceChunkSize",
+        type=int,
+        default=500)
+    advanced.add_argument(
+        "--fancyChunking",
+        default=True,
+        action="store_true",
+        help="Adaptive reference chunking designed to handle coverage cutouts better")
+    advanced.add_argument(
+        "--simpleChunking",
+        dest="fancyChunking",
+        action="store_false",
+        help="Disable adaptive reference chunking")
+    advanced.add_argument(
+        "--referenceChunkOverlap",
+        action="store",
+        dest="referenceChunkOverlap",
+        type=int)
+    advanced.add_argument(
+        "--disableHdf5ChunkCache",
+        action="store_true",
+        default=False,
+        help="Disable the HDF5 chunk cache.  This option reduces memory consumption " + \
+             "dramatically for processing cmp.h5 files containing a large number of " +
+             "reference groups, with a modest negative effect on performance.")
+    advanced.add_argument(
+        "--aligner", "-a",
+        action="store",
+        choices=["affine", "simple"],
+        default="affine",
+        help="The pairwise alignment algorithm that will be used to produce variant calls" \
+             " from the consensus (Quiver only).")
+    advanced.add_argument(
+        "--refineDinucleotideRepeats",
+        dest="refineDinucleotideRepeats",
+        action="store_true",
+        help="Require quiver maximum likelihood search to try one less/more repeat copy in"  \
+             " dinucleotide repeats, which seem to be the most frequent cause of suboptimal" \
+             " convergence (getting trapped in local optimum) (Quiver only)")
+    advanced.add_argument(
+        "--noRefineDinucleotideRepeats",
+        dest="refineDinucleotideRepeats",
+        action="store_false",
+        help="Disable dinucleotide refinement")
+    advanced.set_defaults(refineDinucleotideRepeats=True)
+
 
     parser.parse_args(namespace=options)
 
