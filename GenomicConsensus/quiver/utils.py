@@ -262,11 +262,11 @@ def variantsFromAlignment(a, refWindow):
             pass
         elif code == "R":
             assert len(read)==len(ref)
-            variants.append(Substitution(refId, refPos, refPos+len(read), ref, read))
+            variants.append(Variant(refId, refPos, refPos+len(read), ref, read))
         elif code == "I":
-            variants.append(Insertion(refId, refPos, refPos, "", read))
+            variants.append(Variant(refId, refPos, refPos, "", read))
         elif code == "D":
-            variants.append(Deletion(refId, refPos, refPos + len(ref), ref, ""))
+            variants.append(Variant(refId, refPos, refPos + len(ref), ref, ""))
 
         refPos += refLen
 

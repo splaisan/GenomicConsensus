@@ -31,126 +31,75 @@
 # Author: David Alexander
 
 from __future__ import absolute_import
-
-from pbcore.io import Gff3Record, GffWriter
-from . import reference
 from .utils import CommonEqualityMixin
-import sys, time
 
-# Internally we use Python-style half-open intervals zero-based
-# [start, end) to delineate reference ranges.  An insertion has
-# start==end, a SNP has start+1==end, etc.
-#
-# GFF files assume 1-based indexing and open intervals [start, end).
-# In a GFF both insertions and SNPs have start==end, which doesn't
-# make too much sense to me, but so be it.
-
-__all__ = [ "Variant",
-            "Deletion",
-            "Insertion",
-            "Substitution" ]
-
-def _stringifyAttribute(attr):
-    if isinstance(attr, tuple):
-        return "%s/%s" % (attr[0], attr[1])
-    else:
-        return str(attr)
+__all__ = [ "Variant" ]
 
 class Variant(CommonEqualityMixin):
+    """
+    Variant objects represent homozygous/haploid OR heterozygous
+    variants corresponding to a fixed window of a reference genome
 
-    HAPLOID = "haploid"
-    HETEROZYGOUS = "heterozygous"
-    HOMOZYGOUS = "homozygous"
+    Internally we use Python-style half-open intervals zero-based
+    [start, end) to delineate reference ranges.  An insertion has
+     start==end, a SNP has start+1==end, etc.
 
-    def __init__(self,
-                 refId,
-                 refStart, refEnd,
-                 refSequence, readSequence,
-                 coverage=0,
-                 confidence=0,
-                 frequency=0,
-                 zygosity=HAPLOID):
-        """
-        `kwargs` encompasses the non-existential features of a
-        variant, and are dumped as-is to GFF/CSV output file.  The
-        variant caller must ensure that all variant calls have the
-        same set of `kwargs` keys.
-        """
-        self.refId = refId
-        self.refStart = refStart
-        self.refEnd = refEnd
-        self.refSequence = refSequence
-        self.readSequence = readSequence
-        self.coverage = coverage
+    GFF files use 1-based indexing and open intervals [start, end).
+    In a GFF both insertions and SNPs have start==end, which doesn't
+    make too much sense to me, but so be it.
+
+    VCF files use 1-based indexing as well, but do not record the
+    "end"
+    """
+    def __init__(self, refId, refStart, refEnd, refSeq, readSeq1,
+                 readSeq2=None, confidence=None, coverage=None,
+                 frequency1=None, frequency2=None):
+        self.refId      = refId
+        self.refStart   = refStart
+        self.refEnd     = refEnd
+        self.refSeq     = refSeq
+        self.readSeq1   = readSeq1
+        self.readSeq2   = readSeq2
         self.confidence = confidence
-        self.frequency = frequency
-        self.zygosity = zygosity
+        self.coverage   = coverage
+        self.frequency1 = frequency1
+        self.frequency2 = frequency2
+
+    @property
+    def isHeterozygous(self):
+        return (self.readSeq2 != None)
+
+    @property
+    def variantType(self):
+        lr = len(self.refSeq)
+        l1 = len(self.readSeq1)
+        l2 = len(self.readSeq2) if self.readSeq2 else None
+        if lr == 0:
+            return "Insertion"
+        elif l1==0 or l2==0:
+            return "Deletion"
+        elif (l1==lr) and (l2==None or l2==lr):
+            return "Substitution"
+        else:
+            return "Variant"
+
+    def __str__(self):
+        if self.isHeterozygous:
+            readAlleles = "%s/%s" % (self.readSeq1 or ".",
+                                     self.readSeq2 or ".")
+        else:
+            readAlleles = "%s" % (self.readSeq1 or ".")
+        return "%s@%s:%d-%d %s -> %s" % \
+            (self.variantType,
+             self.refId,
+             self.refStart,
+             self.refEnd,
+             self.refSeq,
+             readAlleles)
+
+    def __repr__(self):
+        return str(self)
 
     def __lt__(self, other):
-        return ((self.refId, self.refStart, self.sortingPrecedence) <
-                (other.refId, other.refStart, self.refEnd, other.sortingPrecedence))
-
-    def __repr__(self):
-        return "%d:%d-%d; %s -> %s" \
-            % (self.refId, self.refStart, self.refEnd,
-               self.refSequence or " ", self.readSequence or " ")
-
-    def toTxtRecord(self):
-        return repr(self)
-
-    def toGffRecord(self):
-        gffStart, gffEnd = self.gffCoords()
-        record = Gff3Record(reference.idToName(self.refId),
-                            gffStart,
-                            gffEnd,
-                            self.gffType)
-        if self.readSequence:
-            record.variantSeq = _stringifyAttribute(self.readSequence)
-        if self.refSequence:  record.reference = self.refSequence
-        if self.zygosity != Variant.HAPLOID:
-            record.zygosity = self.zygosity
-        record.coverage = self.coverage
-        record.confidence = self.confidence
-        if self.frequency:
-            record.frequency = _stringifyAttribute(self.frequency)
-        record.length = len(self)
-        return record
-
-class Insertion(Variant):
-    sortingPrecedence = 1
-    gffType = "insertion"
-
-    def __repr__(self):
-        return "Insertion   " + super(Insertion, self).__repr__()
-
-    def __len__(self):
-        return len(self.readSequence)
-
-    def gffCoords(self):
-        return self.refStart, self.refStart
-
-class Deletion(Variant):
-    sortingPrecedence = 2
-    gffType = "deletion"
-
-    def __repr__(self):
-        return "Deletion    " + super(Deletion, self).__repr__()
-
-    def __len__(self):
-        return len(self.refSequence)
-
-    def gffCoords(self):
-        return self.refStart + 1, self.refEnd
-
-class Substitution(Variant):
-    sortingPrecedence = 3
-    gffType = "substitution"
-
-    def __repr__(self):
-        return "Substitution " + super(Substitution, self).__repr__()
-
-    def __len__(self):
-        return len(self.refSequence)
-
-    def gffCoords(self):
-        return self.refStart + 1, self.refEnd
+        return ((self.refId, self.refStart, self.refEnd, self.readSeq1) <
+                (other.refId, other.refStart, other.refEnd, other.readSeq1))

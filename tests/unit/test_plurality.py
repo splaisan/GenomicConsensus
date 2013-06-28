@@ -44,7 +44,9 @@ def test_computeHaploidVariants():
                                  "GATGACA",
                                  [3]*7,
                                  [35]*7)
-    assert_equal([ Substitution(1, 3, 4, "T", "G", 4, 35, 3) ], variants1)
+    assert_equal([ Variant(1, 3, 4, "T", "G",
+                           coverage=4, confidence=35, frequency1=3) ],
+                 variants1)
 
     variants2 = _computeVariants(config,
                                  (1, 0, 7),
@@ -53,16 +55,20 @@ def test_computeHaploidVariants():
                                  ["G", "A", "", "T", "A", "C", "A"],
                                  [3]*7,
                                  [35]*7)
-    assert_equal([Deletion(1, 2, 3, "T", "", 4, 35, 3)], variants2)
+    assert_equal([ Variant(1, 2, 3, "T", "",
+                           coverage=4, confidence=35, frequency1=3)],
+                 variants2)
 
-    variants2 = _computeVariants(config,
+    variants3 = _computeVariants(config,
                                  (1, 0, 7),
                                  "GATTACA",
                                  [4]*7,
                                  ["G", "A", "TT", "T", "A", "C", "A"],
                                  [3]*7,
                                  [35]*7)
-    assert_equal([Insertion(1, 2, 2, "", "T", 4, 35, 3)], variants2)
+    assert_equal([ Variant(1, 2, 2, "", "T",
+                           coverage=4, confidence=35, frequency1=3)],
+                 variants3)
 
 
 # def test_computeVariantsDiploid():

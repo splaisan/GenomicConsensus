@@ -176,9 +176,43 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     return (css, variants)
 
 
+def varsFromRefAndRead(refId, refPos, refBase, readSeq, **kwargs):
+    """
+    Compute the haploid/heterozygous Variant[s] corresponding to a
+    readSeq aligned against refSeq.
+
+    Two variant scenario:
+      REF:   G
+      READ: AC
+        => insertion(A), substitution(G->C)
+
+    Required: refBase != readSeq
+    Returned: List of Variant objects (length one or two)
+    """
+    assert refBase != readSeq
+    vars = []
+    readBefore, readAt = readSeq[:-1], readSeq[-1:]
+    if readBefore:
+        # Insertion
+        vars.append(Variant(refId, refPos, refPos, "", readBefore, **kwargs))
+    if readAt != refBase:
+        vars.append(Variant(refId, refPos, refPos+1, refBase, readAt, **kwargs))
+    return vars
+
+
+def varsFromRefAndReads(refId, refPos, refBase,
+                        readSeq1, readSeq2, **kwargs):
+    """
+    Heterozygous extension of the above
+    """
+    assert (refBase != readSeq1) or (refBase != readSeq2)
+    return None
+
+
+
 def _computeVariants(config,
                      refWindow,
-                    refSequenceInWindow,
+                     refSequenceInWindow,
                      coverageArray,
                      consensusArray,
                      consensusFrequencyArray,
@@ -240,16 +274,9 @@ def _computeVariants(config,
                (cssBases != "N")              and \
                (cssBases == "" or cssBases.isupper()):
 
-                if cssBases == "":
-                    vars.append(Deletion(refId, refPos, refPos+1,
-                                         refBase, cssBases, cov, conf, cssFreq))
-                else:
-                    if len(cssBases) > 1:
-                        vars.append(Insertion(refId, refPos, refPos,
-                                              "", cssBases[:-1], cov, conf, cssFreq))
-                    if cssBases[-1] != refBase:
-                        vars.append(Substitution(refId, refPos, refPos+1,
-                                                 refBase, cssBases[-1], cov, conf, cssFreq))
+                vars = vars + varsFromRefAndRead(refId, refPos, refBase, cssBases,
+                                                 confidence=conf, coverage=cov,
+                                                 frequency1=cssFreq)
     return sorted(vars)
 
 def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):

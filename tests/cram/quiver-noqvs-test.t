@@ -13,15 +13,15 @@ I'm not all that surprised.
 
   $ cat v.gff
   ##gff-version 3
-  ##pacbio-variant-version 1.4
+  ##pacbio-variant-version 2.1
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
   ##sequence-region 5primeEnd 1 156
   ##sequence-region 3primeEnd 1 386
-  3primeEnd\t.\tdeletion\t296\t296\t.\t.\t.\treference=G;coverage=92;confidence=4;length=1 (esc)
-  3primeEnd\t.\tdeletion\t369\t369\t.\t.\t.\treference=G;coverage=83;confidence=4;length=1 (esc)
+  3primeEnd\t.\tdeletion\t296\t296\t.\t.\t.\treference=G;variantSeq=.;coverage=92;confidence=4 (esc)
+  3primeEnd\t.\tdeletion\t369\t369\t.\t.\t.\treference=G;variantSeq=.;coverage=83;confidence=4 (esc)
 
 
   $ cat css.fa

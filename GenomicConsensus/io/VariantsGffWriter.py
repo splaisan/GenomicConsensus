@@ -31,8 +31,41 @@
 # Author: David Alexander
 
 import time
-from pbcore.io import GffWriter
-from GenomicConsensus import __VERSION__
+from pbcore.io import GffWriter, Gff3Record
+from GenomicConsensus import __VERSION__, reference
+
+
+def gffVariantSeq(var):
+    if var.isHeterozygous:
+        return "%s/%s" % (var.readSeq1 or ".",
+                          var.readSeq2 or ".")
+    else:
+        return var.readSeq1 or "."
+
+def gffVariantFrequency(var):
+    if var.frequency1==None:
+        return None
+    elif var.isHeterozygous:
+        return "%d/%d" % (var.frequency1, var.frequency2)
+    else:
+        return str(var.frequency1)
+
+def toGffRecord(var):
+    varType  = var.variantType
+    gffType  = varType.lower()
+    gffStart = (var.refStart + 1) if (var.refSeq != "") else var.refStart
+    gffEnd   = var.refEnd         if (var.refSeq != "") else var.refStart
+    gffFreq = gffVariantFrequency(var)
+
+    record = Gff3Record(reference.idToName(var.refId), gffStart, gffEnd, gffType)
+    record.reference  = var.refSeq
+    record.variantSeq = gffVariantSeq(var)
+    if gffFreq:
+        record.frequency  = gffFreq
+    record.coverage   = var.coverage
+    record.confidence = var.confidence
+
+    return record
 
 class VariantsGffWriter(object):
 
@@ -41,7 +74,7 @@ class VariantsGffWriter(object):
 
     def __init__(self, f, shellCommand, referenceEntries):
         self._gffWriter = GffWriter(f)
-        self._gffWriter.writeHeader("##pacbio-variant-version 1.4")
+        self._gffWriter.writeHeader("##pacbio-variant-version 2.1")
         self._gffWriter.writeHeader("##date %s" % time.ctime())
         self._gffWriter.writeHeader("##feature-ontology %s" % self.ONTOLOGY_URL)
         self._gffWriter.writeHeader("##source GenomicConsensus %s" % __VERSION__)
@@ -54,7 +87,7 @@ class VariantsGffWriter(object):
 
     def writeVariants(self, variants):
         for var in variants:
-            self._gffWriter.writeRecord(var.toGffRecord())
+            self._gffWriter.writeRecord(toGffRecord(var))
 
     def close(self):
         self._gffWriter.close()
