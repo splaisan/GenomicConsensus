@@ -95,11 +95,6 @@ The attributes in the 9th (final) column are as follows:
 |Key           |Description                 |Example          |
 |              |                            |value            |
 +--------------+----------------------------+-----------------+
-|``length``    |the length of the variant   |``1``            |
-|              |                            |                 |
-|              |                            |                 |
-|              |                            |                 |
-+--------------+----------------------------+-----------------+
 |``coverage``  |the read coverage of the    |``42``           |
 |              |variant site (not the       |                 |
 |              |variant itself)             |                 |
@@ -109,26 +104,24 @@ The attributes in the 9th (final) column are as follows:
 |              |rounded to the nearest      |                 |
 |              |integer and truncated at 93 |                 |
 +--------------+----------------------------+-----------------+
-|``reference`` |the reference base or bases |``T``            |
-|              |for the variant site        |                 |
+|``reference`` |the reference base or bases |``T``, ``.``     |
+|              |for the variant site.  May  |                 |
+|              |be ``.`` to represent a     |                 |
+|              |zero-length substring (for  |                 |
+|              |insertion events)           |                 |
 +--------------+----------------------------+-----------------+
 |``variantSeq``|the read base or bases      |``T``            |
-|              |corresponding to the variant| (haploid);      |
-|              |                            |``T/C``          |
-|              |                            | (heterozygous)  |
-+--------------+----------------------------+-----------------+
-|``zygosity``  |One of ``heterozygous``, or | ``homozygous``  |
-|              |``homozygous``, to denote   |                 |
-|              |the zygosity of the variant.|                 |
-|              | This attribute is not used |                 |
-|              |for haploid analyses.       |                 |
-|              |                            |                 |
+|              |corresponding to the        | (haploid);      |
+|              |variant. ``.`` encodes a    |``T/C``, ``T/.`` |
+|              |zer-length string, as for a | (heterozygous)  |
+|              |deletion.                   |                 |
 +--------------+----------------------------+-----------------+
 |``frequency`` |the read coverage of the    |``13``           |
 |              |variant itself; for         | (haploid)       |
 |              |heterozygous variants, the  |                 |
 |              |frequency of both observed  |``15/12``        |
-|              |alleles                     | (heterozygous)  |
+|              |alleles.  This is an        | (heterozygous)  |
+|              |optional field.             |                 |
 +--------------+----------------------------+-----------------+
 
 
@@ -137,26 +130,24 @@ The attributes may be present in any order.
 The four types of variant we support are as follows. *(Recall that the
 field separator is a tab, not a space.)*
 
-1. Insertion.  Example::
+1. Insertion.  Examples::
 
-    ref00001 . insertion 8 8 . . . length=1;variantSeq=G;confidence=22;coverage=18
+    ref00001 . insertion 8 8 . . . reference=.;variantSeq=G;confidence=22;coverage=18;frequency=10
+    ref00001 . insertion 19 19 . . . reference=.;variantSeq=G/.;confidence=22;coverage=18;frequency=7/5
 
   For insertions, start==end, and the insertion event is understood as
-  taking place *following* the reference position `start`.  `length`
-  corresponds to the length of the insertion.  The `reference` attribute
-  is omitted for insertions.
+  taking place *following* the reference position `start`.
 
-2. Deletion.  Example::
+2. Deletion.  Examples::
 
-    ref00001 . deletion 348 349 . . . length=1;reference=G;confidence=39;coverage=25
+    ref00001 . deletion 348 349 . . . reference=G;variantSeq=.;confidence=39;coverage=25;frequency=20
+    ref00001 . deletion 441 443 . . . reference=GG;variantSeq=GG/.;confidence=39;coverage=25;frequency=8/8
 
-  For deletions, the length is the length of reference sequence
-  deleted.  The `variantSeq` attribute is omitted for deletions.
+3. Substitution.  Examples::
 
+    ref000001 . substitution 100 102 . . . reference=GGG;variantSeq=CCC;confidence=50;coverage=20;frequency=16
+    ref000001 . substitution 200 201 . . . reference=G;variantSeq=G/C;confidence=50;coverage=20;frequency=10/6
 
-3. Substitution.  Example::
-
-    ref000001 . substitution 100 102 . . . length=3;reference=GGG;variantSeq=CCC;confidence=50;coverage=20
 
 
 Compression
