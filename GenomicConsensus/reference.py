@@ -81,7 +81,7 @@ def sequenceInWindow(window):
 filename = None
 
 def isLoaded():
-    return referenceFileName != None
+    return filename != None
 
 def loadFromFile(filename_, cmpH5):
     """
