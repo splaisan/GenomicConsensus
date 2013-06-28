@@ -78,17 +78,19 @@ def sequenceInWindow(window):
     refId, refStart, refEnd = window
     return byId[refId].sequence[refStart:refEnd].tostring()
 
-def isLoaded():
-    return bool(byMD5)
+filename = None
 
-def loadFromFile(filename, cmpH5):
+def isLoaded():
+    return referenceFileName != None
+
+def loadFromFile(filename_, cmpH5):
     """
     Reads reference from FASTA file, loading
     lookup tables that can be used any time later.
     """
     # Load contigs
     assert not isLoaded()
-    f = FastaReader(filename)
+    f = FastaReader(filename_)
     numFastaRecords = 0
     fastaChecksums = set()
     for fastaRecord in f:
@@ -106,6 +108,9 @@ def loadFromFile(filename, cmpH5):
             byId[refId]          = contig
             byName[refName]      = contig
             byMD5[contig.md5sum] = contig
+
+    global filename
+    filename = filename_
     logging.info("Loaded %d of %d reference groups from %s " %
                  (len(byId), numFastaRecords, filename))
 
