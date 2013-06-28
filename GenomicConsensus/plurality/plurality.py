@@ -95,10 +95,11 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     #
     consensusSequence_   = []
     consensusFrequency_  = []
+    consensusConfidence_ = []
     effectiveCoverage_   = []
     alternateAllele_     = []        # DIPLOID ONLY
     alternateFrequency_  = []        # "
-    heterozygosityConfidence_ = None # "
+    heterozygousConfidence_ = []     # "
 
     noEvidenceConsensusFactory = \
         noEvidenceConsensusFactoryByName[pluralityConfig.noEvidenceConsensus]
@@ -139,12 +140,17 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
                 siteAlternateAllele = ""
             alternateAllele_.append(siteAlternateAllele)
             alternateFrequency_.append(siteAlternateFrequency)
+        else:
+            siteAlternateAllele    = "N"
+            siteAlternateFrequency = 0
 
-    consensusConfidence_ = computePluralityConfidence(consensusFrequency_,
-                                                      effectiveCoverage_)
-    if pluralityConfig.diploid:
-        heterozygosityConfidence_ = computeHeteryzogisityConfidence(alternateFrequency_,
-                                                                    effectiveCoverage_)
+        siteConsensusConfidence, siteHeterozygousConfidence = \
+            posteriorConfidences(siteEffectiveCoverage,
+                                 siteConsensusFrequency,
+                                 siteAlternateFrequency)
+        consensusConfidence_.append(siteConsensusConfidence)
+        if pluralityConfig.diploid:
+            heterozygousConfidence_.append(siteHeterozygousConfidence)
 
     #
     # Derive variants from reference-coordinates consensus
@@ -158,7 +164,7 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
                                 consensusConfidence_,
                                 alternateAllele_,
                                 alternateFrequency_,
-                                heterozygosityConfidence_)
+                                heterozygousConfidence_)
     #
     # Now we need to put everything in consensus coordinates
     #
@@ -171,14 +177,14 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
 
 def _computeVariants(config,
                      refWindow,
-                     refSequenceInWindow,
+                    refSequenceInWindow,
                      coverageArray,
                      consensusArray,
                      consensusFrequencyArray,
                      consensusConfidenceArray,
                      alternateAlleleArray=None,
                      alternateAlleleFrequency=None,
-                     heterozygosityConfidence=None):
+                     heterozygousConfidence=None):
 
     refId, refStart, refEnd = refWindow
     windowSize = refEnd - refStart
@@ -199,51 +205,50 @@ def _computeVariants(config,
         if config.diploid:
             altBases = alternateAlleleArray[j]
             altFreq  = alternateAlleleFrequency[j]
-            hetConf  = heterozygosityConfidence[j]
+            hetConf  = heterozygousConfidence[j]
         else:
             altBases = "N"
             altFreq  = 0
 
         if cov < config.minCoverage: continue
 
-        #
-        # Haploid variant[s]?
-        #
-        if (conf >= config.minConfidence) and \
-           (refBase  != cssBases)         and \
-           (refBase  != "N")              and \
-           (cssBases != "N")              and \
-           (cssBases == "" or cssBases.isupper()):
+        if (config.diploid and hetConf > conf):
+            #
+            # Diploid variant[s]?
+            #
+            if (hetConf >= config.minConfidence) and (refBase != "N"):
+                print "DIPLOID SITE @ %d: %d%s, %d%s [%d]" % \
+                   (refPos, cssFreq, cssBases, altFreq, altBases, cov)
+                alleles = cssBases, altBases
 
-            if cssBases == "":
-                vars.append(Deletion(refId, refPos, refPos+1,
-                                     refBase, cssBases, cov, conf, cssFreq))
-            else:
-                if len(cssBases) > 1:
-                    vars.append(Insertion(refId, refPos, refPos,
-                                          "", cssBases[:-1], cov, conf, cssFreq))
-                if cssBases[-1] != refBase:
-                    vars.append(Substitution(refId, refPos, refPos+1,
-                                             refBase, cssBases[-1], cov, conf, cssFreq))
-        #
-        # Diploid variant[s]?
-        #
-        if ((config.diploid)                  and \
-            (hetConf >= config.minConfidence) and \
-            (refBase != "N")):
-            print "DIPLOID SITE @ %d: %d%s, %d%s [%d]" % \
-                (refPos, cssFreq, cssBases, altFreq, altBases, cov)
-            alleles = cssBases, altBases
+                # STARTING SMALL... SUBSTITUTIONS
+                assert len(cssBases) == len(altBases) == 1
+                variantSeq   = (cssBases, altBases)
+                variantFreqs = (cssFreq, altFreq)
+                vars.append(Substitution(refId, refPos, refPos+1,
+                                         refBase, variantSeq, cov,
+                                         hetConf, variantFreqs,
+                                         zygosity=Variant.HETEROZYGOUS))
+        else:
+            #
+            # Haploid variant[s]?
+            #
+            if (conf >= config.minConfidence) and \
+               (refBase  != cssBases)         and \
+               (refBase  != "N")              and \
+               (cssBases != "N")              and \
+               (cssBases == "" or cssBases.isupper()):
 
-            # STARTING SMALL... SUBSTITUTIONS
-            assert len(cssBases) == len(altBases) == 1
-            variantSeq   = (cssBases, altBases)
-            variantFreqs = (cssFreq, altFreq)
-            vars.append(Substitution(refId, refPos, refPos+1,
-                                     refBase, variantSeq, cov,
-                                     hetConf, variantFreqs,
-                                     zygosity=Variant.HETEROZYGOUS))
-
+                if cssBases == "":
+                    vars.append(Deletion(refId, refPos, refPos+1,
+                                         refBase, cssBases, cov, conf, cssFreq))
+                else:
+                    if len(cssBases) > 1:
+                        vars.append(Insertion(refId, refPos, refPos,
+                                              "", cssBases[:-1], cov, conf, cssFreq))
+                    if cssBases[-1] != refBase:
+                        vars.append(Substitution(refId, refPos, refPos+1,
+                                                 refBase, cssBases[-1], cov, conf, cssFreq))
     return sorted(vars)
 
 def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
@@ -281,37 +286,39 @@ def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
         baseCallsMatrix[i, s:e] = accum
     return baseCallsMatrix
 
+#
+# ------ HACKISH POSTERIOR PROBABILITY CALCULATION ----------
+#
 
-def computePluralityConfidence(consensusFrequency, effectiveCoverage):
+EPS = 0.15
+LOGEPS = np.log(EPS)
+LOG_O_M_EPS = np.log(1-EPS)
+LOG_O_M_EPS_2 = np.log((1-EPS)/2)
+
+def posteriorConfidences(depth, cssFreq, altFreq, cap=40):
     """
-    Come up with a new simpler scheme.  Should only need frequency and
-    coverage.
+    Return crude approximations to the posterior probabilities of the
+    genotypes s_1 and s_1/s_2, where s_1 and s_2 are the observed
+    consensus and alternate allele.  The assumption here is that the
+    probability of the genotype being anything other that s_1, s_2, or
+    s_1/s_2 is vanishingly small.  Not really a very good assumption,
+    but plurality is not our real algorithm anyway.
     """
-    assert len(consensusFrequency) == len(effectiveCoverage)
-    confidence = np.empty_like(consensusFrequency)
-
-    for idx in xrange(len(consensusFrequency)):
-        # Generate a phred-transformed p-value.  p-value is Prob[X > k-1]
-        # where X ~ Binom(n, p) where n is total coverage, p is
-        # the gross error rate (~0.15), k is the number of reads in the
-        # plurality.  Scores capped at 93.
-        k = consensusFrequency[idx]
-        n = effectiveCoverage[idx]
-        p = 0.15
-        confidence[idx] = min(40, BinomialSurvival(k - 1, n, 0.15, True))
-
-    return confidence
-
-
-def computeHeteryzogisityConfidence(alternateAlleleFrequency, effectiveCoverage):
-    confidence = np.empty_like(effectiveCoverage)
-    for pos in xrange(len(effectiveCoverage)):
-        if (effectiveCoverage >= 10 and
-            alternateAlleleFrequency[pos] > 0.2*effectiveCoverage[pos]):
-            confidence[pos] = 40
-        else:
-            confidence[pos] = 0
-    return confidence
+    cssFreq = cssFreq+1
+    altFreq = altFreq+1
+    depth = depth + 2
+    cssLL_ = cssFreq*LOG_O_M_EPS + (depth-cssFreq)*LOGEPS
+    altLL_ = altFreq*LOG_O_M_EPS + (depth-altFreq)*LOGEPS
+    hetLL_ = (cssFreq+altFreq)*LOG_O_M_EPS_2 + (depth-cssFreq-altFreq)*LOGEPS
+    cssL_ = np.exp(cssLL_)
+    altL_ = np.exp(altLL_)
+    hetL_ = np.exp(hetLL_)
+    total =  cssL_ + hetL_ + altL_;
+    cssProb = cssL_/total
+    hetProb = hetL_/total
+    cssConf = -10*np.log10(1.-cssProb) if (cssProb < 1) else cap
+    hetConf = -10*np.log10(1.-hetProb) if (hetProb < 1) else cap
+    return int(min(cap, cssConf)), int(min(cap, hetConf))
 
 #
 # --------------  Plurality Worker class --------------------
