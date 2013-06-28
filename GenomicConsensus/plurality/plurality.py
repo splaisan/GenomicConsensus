@@ -241,7 +241,8 @@ def _computeVariants(config,
             variantFreqs = (cssFreq, altFreq)
             vars.append(Substitution(refId, refPos, refPos+1,
                                      refBase, variantSeq, cov,
-                                     hetConf, variantFreqs))
+                                     hetConf, variantFreqs,
+                                     zygosity=Variant.HETEROZYGOUS))
 
     return sorted(vars)
 
@@ -306,7 +307,7 @@ def computeHeteryzogisityConfidence(alternateAlleleFrequency, effectiveCoverage)
     confidence = np.empty_like(effectiveCoverage)
     for pos in xrange(len(effectiveCoverage)):
         if (effectiveCoverage >= 10 and
-            alternateAlleleFrequency[pos] > 0.3*effectiveCoverage[pos]):
+            alternateAlleleFrequency[pos] > 0.2*effectiveCoverage[pos]):
             confidence[pos] = 40
         else:
             confidence[pos] = 0

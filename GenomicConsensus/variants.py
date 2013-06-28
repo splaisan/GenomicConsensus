@@ -45,7 +45,8 @@ import sys, time
 # In a GFF both insertions and SNPs have start==end, which doesn't
 # make too much sense to me, but so be it.
 
-__all__ = [ "Deletion",
+__all__ = [ "Variant",
+            "Deletion",
             "Insertion",
             "Substitution" ]
 
