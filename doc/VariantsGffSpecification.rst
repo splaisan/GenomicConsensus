@@ -114,7 +114,7 @@ The attributes in the 9th (final) column are as follows:
 +--------------+----------------------------+-----------------+
 |``variantSeq``|the read base or bases      |``T``            |
 |              |corresponding to the variant| (haploid);      |
-|              |                            |``T,C``          |
+|              |                            |``T/C``          |
 |              |                            | (heterozygous)  |
 +--------------+----------------------------+-----------------+
 |``zygosity``  |One of ``heterozygous``, or | ``homozygous``  |
@@ -127,7 +127,7 @@ The attributes in the 9th (final) column are as follows:
 |``frequency`` |the read coverage of the    |``13``           |
 |              |variant itself; for         | (haploid)       |
 |              |heterozygous variants, the  |                 |
-|              |frequency of both observed  |``15,12``        |
+|              |frequency of both observed  |``15/12``        |
 |              |alleles                     | (heterozygous)  |
 +--------------+----------------------------+-----------------+
 

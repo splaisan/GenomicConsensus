@@ -51,7 +51,7 @@ __all__ = [ "Deletion",
 
 def _stringifyAttribute(attr):
     if isinstance(attr, tuple):
-        return "%s,%s" % (attr[0], attr[1])
+        return "%s/%s" % (attr[0], attr[1])
     else:
         return str(attr)
 
