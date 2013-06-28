@@ -49,6 +49,12 @@ __all__ = [ "Deletion",
             "Insertion",
             "Substitution" ]
 
+def _stringifyAttribute(attr):
+    if isinstance(attr, tuple):
+        return "%s,%s" % (attr[0], attr[1])
+    else:
+        return str(attr)
+
 class Variant(CommonEqualityMixin):
 
     HAPLOID = "haploid"
@@ -97,13 +103,15 @@ class Variant(CommonEqualityMixin):
                             gffStart,
                             gffEnd,
                             self.gffType)
-        if self.readSequence: record.variantSeq = self.readSequence
-        if self.refSequence:  record.reference  = self.refSequence
+        if self.readSequence:
+            record.variantSeq = _stringifyAttribute(self.readSequence)
+        if self.refSequence:  record.reference = self.refSequence
         if self.zygosity != Variant.HAPLOID:
             record.zygosity = self.zygosity
         record.coverage = self.coverage
         record.confidence = self.confidence
-        if self.frequency: record.frequency = self.frequency
+        if self.frequency:
+            record.frequency = _stringifyAttribute(self.frequency)
         record.length = len(self)
         return record
 

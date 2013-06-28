@@ -195,14 +195,14 @@ def _computeVariants(config,
         cov  = coverageArray[j]
         cssBases = consensusArray[j]
         conf = consensusConfidenceArray[j]
-        freq = consensusFrequencyArray[j]
+        cssFreq = consensusFrequencyArray[j]
         if config.diploid:
-            alt = alternateAlleleArray[j]
-            altFreq = alternateAlleleFrequency[j]
-            hetConf = heterozygosityConfidence[j]
+            altBases = alternateAlleleArray[j]
+            altFreq  = alternateAlleleFrequency[j]
+            hetConf  = heterozygosityConfidence[j]
         else:
-            alt = "N"
-            altFreq = 0
+            altBases = "N"
+            altFreq  = 0
 
         if cov < config.minCoverage: continue
 
@@ -217,21 +217,31 @@ def _computeVariants(config,
 
             if cssBases == "":
                 vars.append(Deletion(refId, refPos, refPos+1,
-                                     refBase, cssBases, cov, conf, freq))
+                                     refBase, cssBases, cov, conf, cssFreq))
             else:
                 if len(cssBases) > 1:
                     vars.append(Insertion(refId, refPos, refPos,
-                                          "", cssBases[:-1], cov, conf, freq))
+                                          "", cssBases[:-1], cov, conf, cssFreq))
                 if cssBases[-1] != refBase:
                     vars.append(Substitution(refId, refPos, refPos+1,
-                                             refBase, cssBases[-1], cov, conf, freq))
+                                             refBase, cssBases[-1], cov, conf, cssFreq))
         #
         # Diploid variant[s]?
         #
-        if ((config.diploid)           and \
-            (hetConf >= minConfidence) and \
+        if ((config.diploid)                  and \
+            (hetConf >= config.minConfidence) and \
             (refBase != "N")):
-            print "DIPLOID SITE!:", refPos
+            print "DIPLOID SITE @ %d: %d%s, %d%s [%d]" % \
+                (refPos, cssFreq, cssBases, altFreq, altBases, cov)
+            alleles = cssBases, altBases
+
+            # STARTING SMALL... SUBSTITUTIONS
+            assert len(cssBases) == len(altBases) == 1
+            variantSeq   = (cssBases, altBases)
+            variantFreqs = (cssFreq, altFreq)
+            vars.append(Substitution(refId, refPos, refPos+1,
+                                     refBase, variantSeq, cov,
+                                     hetConf, variantFreqs))
 
     return sorted(vars)
 
