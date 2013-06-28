@@ -310,7 +310,6 @@ def parseOptions(relax=False):
         help="Disable dinucleotide refinement")
     advanced.set_defaults(refineDinucleotideRepeats=True)
 
-
     parser.parse_args(namespace=options)
 
     options.gffOutputFilename   = None
