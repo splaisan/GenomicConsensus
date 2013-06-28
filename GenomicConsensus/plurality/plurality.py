@@ -147,7 +147,8 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
         siteConsensusConfidence, siteHeterozygousConfidence = \
             posteriorConfidences(siteEffectiveCoverage,
                                  siteConsensusFrequency,
-                                 siteAlternateFrequency)
+                                 siteAlternateFrequency,
+                                 diploid=pluralityConfig.diploid)
         consensusConfidence_.append(siteConsensusConfidence)
         if pluralityConfig.diploid:
             heterozygousConfidence_.append(siteHeterozygousConfidence)
@@ -295,7 +296,7 @@ LOGEPS = np.log(EPS)
 LOG_O_M_EPS = np.log(1-EPS)
 LOG_O_M_EPS_2 = np.log((1-EPS)/2)
 
-def posteriorConfidences(depth, cssFreq, altFreq, cap=40):
+def posteriorConfidences(depth, cssFreq, altFreq, diploid=False, cap=40):
     """
     Return crude approximations to the posterior probabilities of the
     genotypes s_1 and s_1/s_2, where s_1 and s_2 are the observed
@@ -309,15 +310,19 @@ def posteriorConfidences(depth, cssFreq, altFreq, cap=40):
     depth = depth + 2
     cssLL_ = cssFreq*LOG_O_M_EPS + (depth-cssFreq)*LOGEPS
     altLL_ = altFreq*LOG_O_M_EPS + (depth-altFreq)*LOGEPS
-    hetLL_ = (cssFreq+altFreq)*LOG_O_M_EPS_2 + (depth-cssFreq-altFreq)*LOGEPS
     cssL_ = np.exp(cssLL_)
     altL_ = np.exp(altLL_)
-    hetL_ = np.exp(hetLL_)
-    total =  cssL_ + hetL_ + altL_;
+    if diploid:
+        hetLL_ = (cssFreq+altFreq)*LOG_O_M_EPS_2 + (depth-cssFreq-altFreq)*LOGEPS
+        hetL_ = np.exp(hetLL_)
+        total =  cssL_ + altL_ + hetL_
+        hetProb = hetL_/total
+        hetConf = -10*np.log10(1.-hetProb) if (hetProb < 1) else cap
+    else:
+        total =  cssL_ + altL_
+        hetConf = 0
     cssProb = cssL_/total
-    hetProb = hetL_/total
     cssConf = -10*np.log10(1.-cssProb) if (cssProb < 1) else cap
-    hetConf = -10*np.log10(1.-hetProb) if (hetProb < 1) else cap
     return int(min(cap, cssConf)), int(min(cap, hetConf))
 
 #
