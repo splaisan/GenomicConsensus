@@ -1,5 +1,5 @@
 
-``variants.gff`` File Format (Version 1.4)
+``variants.gff`` File Format (Version 2.1)
 ============================================
 
 As of this version, ``variants.gff`` is our primary variant call file
@@ -25,7 +25,7 @@ which looks like the following:
 ::
 
     ##gff-version 3
-    ##pacbio-variant-version 1.4
+    ##pacbio-variant-version 2.1
     ##date Tue Feb 28 17:44:18 2012
     ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
     ##source GenomicConsensus v0.1.0
@@ -113,9 +113,9 @@ The attributes in the 9th (final) column are as follows:
 |              |for the variant site        |                 |
 +--------------+----------------------------+-----------------+
 |``variantSeq``|the read base or bases      |``T``            |
-|              |corresponding to the variant|(haploid);       |
-|              |                            |``T,C``          |
-|              |                            |(diploid)        |
+|              |corresponding to the variant| (haploid);      |
+|              |                            |``T/C``          |
+|              |                            | (heterozygous)  |
 +--------------+----------------------------+-----------------+
 |``zygosity``  |One of ``heterozygous``, or | ``homozygous``  |
 |              |``homozygous``, to denote   |                 |
@@ -125,7 +125,10 @@ The attributes in the 9th (final) column are as follows:
 |              |                            |                 |
 +--------------+----------------------------+-----------------+
 |``frequency`` |the read coverage of the    |``13``           |
-|              |variant itself              |                 |
+|              |variant itself; for         | (haploid)       |
+|              |heterozygous variants, the  |                 |
+|              |frequency of both observed  |``15/12``        |
+|              |alleles                     | (heterozygous)  |
 +--------------+----------------------------+-----------------+
 
 
