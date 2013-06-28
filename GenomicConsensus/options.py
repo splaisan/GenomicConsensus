@@ -246,6 +246,10 @@ def parseOptions(relax=False):
 
     advanced = parser.add_argument_group("Advanced configuration options")
     advanced.add_argument(
+        "--diploid",
+        action="store_true",
+        help="Enable detection of heterozygous variants (experimental)")
+    advanced.add_argument(
         "--queueSize", "-Q",
         action="store",
         dest="queueSize",

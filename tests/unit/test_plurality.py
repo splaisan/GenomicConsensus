@@ -21,13 +21,11 @@ def test_plurality1():
 
 
 def test_plurality2():
+    config = PluralityConfig(minConfidence=0, minCoverage=0)
     css, variants = pluralityConsensusAndVariants(StaggeredReads.referenceWindow,
                                                   StaggeredReads.reference,
                                                   StaggeredReads.hits,
-                                                  PluralityConfig(minConfidence=0,
-                                                                  minCoverage=0))
-
-
+                                                  config)
     assert_equal(StaggeredReads.expectedPluralityConsensus,
                  css.sequence)
 
@@ -35,14 +33,50 @@ def test_plurality2():
                  variants)
 
 
-def test_computeVariants():
-    variants1 = _computeVariants((1, 0, 7), "GATTACA", "GATGACA", [35]*7, [4]*7, [3]*7)
+def test_computeHaploidVariants():
+    config = PluralityConfig(minConfidence=0,
+                             minCoverage=0)
+
+    variants1 = _computeVariants(config,
+                                 (1, 0, 7),
+                                 "GATTACA",
+                                 [4]*7,
+                                 "GATGACA",
+                                 [3]*7,
+                                 [35]*7)
     assert_equal([ Substitution(1, 3, 4, "T", "G", 4, 35, 3) ], variants1)
-    variants2 = _computeVariants((1, 0, 7), "GATTACA",
+
+    variants2 = _computeVariants(config,
+                                 (1, 0, 7),
+                                 "GATTACA",
+                                 [4]*7,
                                  ["G", "A", "", "T", "A", "C", "A"],
-                                 [35]*7, [4]*7, [3]*7)
+                                 [3]*7,
+                                 [35]*7)
     assert_equal([Deletion(1, 2, 3, "T", "", 4, 35, 3)], variants2)
-    variants2 = _computeVariants((1, 0, 7), "GATTACA",
+
+    variants2 = _computeVariants(config,
+                                 (1, 0, 7),
+                                 "GATTACA",
+                                 [4]*7,
                                  ["G", "A", "TT", "T", "A", "C", "A"],
-                                 [35]*7, [4]*7, [3]*7)
+                                 [3]*7,
+                                 [35]*7)
     assert_equal([Insertion(1, 2, 2, "", "T", 4, 35, 3)], variants2)
+
+
+# def test_computeVariantsDiploid():
+#     config = PluralityConfig(minConfidence=0,
+#                              minCoverage=0,
+#                              diploid=True)
+#     variants1 = _computeVariants(config,
+#                                  (1, 0, 7),
+#                                  "GATTACA",
+#                                  [20]*7,
+#                                  "GATTACA",
+#                                  [10]*7,
+#                                  [35]*7,
+#                                  "GATCACA",
+#                                  [10]*7,
+#                                  [35]*7)
+#     assert_equal([ Substitution(1, 3, 4, "T", "G", 4, 35, 3) ], variants1)
