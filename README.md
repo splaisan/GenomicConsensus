@@ -16,3 +16,6 @@ LOOKING FOR QUIVER DOCUMENTATION?
 
 Read about it here:
   https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
+
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/378316e9951435792c453df2fc10857a "githalytics.com")](http://githalytics.com/PacificBiosciences/GenomicConsensus)
