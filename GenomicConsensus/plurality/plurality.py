@@ -199,14 +199,22 @@ def varsFromRefAndRead(refId, refPos, refBase, readSeq, **kwargs):
         vars.append(Variant(refId, refPos, refPos+1, refBase, readAt, **kwargs))
     return vars
 
-
 def varsFromRefAndReads(refId, refPos, refBase,
                         readSeq1, readSeq2, **kwargs):
     """
     Heterozygous extension of the above
     """
     assert (refBase != readSeq1) or (refBase != readSeq2)
-    return None
+    vars = []
+    readBefore1, readAt1 = readSeq1[:-1], readSeq1[-1:]
+    readBefore2, readAt2 = readSeq2[:-1], readSeq2[-1:]
+    if readBefore1 or readBefore2:
+        vars.append(Variant(refId, refPos, refPos, "",
+                            readBefore1, readBefore2, **kwargs))
+    if readAt1 != refBase or readAt2 != refBase:
+        vars.append(Variant(refId, refPos, refPos+1, refBase,
+                            readAt1, readAt2, **kwargs))
+    return vars
 
 
 
@@ -252,18 +260,12 @@ def _computeVariants(config,
             # Diploid variant[s]?
             #
             if (hetConf >= config.minConfidence) and (refBase != "N"):
-                print "DIPLOID SITE @ %d: %d%s, %d%s [%d]" % \
-                   (refPos, cssFreq, cssBases, altFreq, altBases, cov)
-                alleles = cssBases, altBases
+                vs = varsFromRefAndReads(refId, refPos, refBase,
+                                         cssBases, altBases,
+                                         confidence=hetConf, coverage=cov,
+                                         frequency1=cssFreq, frequency2=altFreq)
+                vars = vars + vs
 
-                # STARTING SMALL... SUBSTITUTIONS
-                assert len(cssBases) == len(altBases) == 1
-                variantSeq   = (cssBases, altBases)
-                variantFreqs = (cssFreq, altFreq)
-                vars.append(Substitution(refId, refPos, refPos+1,
-                                         refBase, variantSeq, cov,
-                                         hetConf, variantFreqs,
-                                         zygosity=Variant.HETEROZYGOUS))
         else:
             #
             # Haploid variant[s]?
@@ -274,9 +276,11 @@ def _computeVariants(config,
                (cssBases != "N")              and \
                (cssBases == "" or cssBases.isupper()):
 
-                vars = vars + varsFromRefAndRead(refId, refPos, refBase, cssBases,
-                                                 confidence=conf, coverage=cov,
-                                                 frequency1=cssFreq)
+                vs = varsFromRefAndRead(refId, refPos, refBase, cssBases,
+                                        confidence=conf, coverage=cov,
+                                        frequency1=cssFreq)
+                vars = vars + vs
+
     return sorted(vars)
 
 def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
