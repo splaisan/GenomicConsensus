@@ -6,15 +6,15 @@
 Inspect the variant calls.
 
   $ grep -v "#" variants.gff | sed 's/\t/ /g'
-  M.ruber . substitution 357364 357364 . . . variantSeq=T;reference=C;coverage=100;confidence=47;length=1
-  M.ruber . insertion 640716 640716 . . . variantSeq=C;coverage=100;confidence=49;length=1
-  M.ruber . insertion 1320669 1320669 . . . variantSeq=C;coverage=100;confidence=49;length=1
-  M.ruber . deletion 1878514 1878953 . . . reference=AGGGCGTACTTCTTTTCGGGTGCAGATGCGTAGGCATCGTAGTTGAACAGGGTTTTGACCGCCATTGAGCACTCCTTTTACGGTTCCACAATGAGTTTGCTGATCATGTTGGCGTGGCCGATGCCGCAGTATTCGTTGCAGATGATGGGATACTCACCGGGTTTGCTGAAGGTGTAGCTGACCTTGGCAATTTCCCCCGGTATCACCTGTACGTTGATGTTGGTGTTGTGTACGTGGAAGCTGTGCTGCACATCGGGTGAGGTGATATAGAAGGTTACCTTCCTGCCCACCTTGAACCGCATCTCCGCTGGCAGGTAGCCAAAGGCAAAGGCCTGCACATAGGCCACGTACTCGTTGCCGACCTGCTCAACCCGTGGGTTGGCAAAGTCTCCCTCGGTGCGCACCTTGGTGGCGTCGATGCGGCCTGCCCCCACCGGGTT;coverage=100;confidence=50;length=440
-  M.ruber . insertion 1987969 1987969 . . . variantSeq=G;coverage=100;confidence=49;length=1
-  M.ruber . insertion 2010700 2010700 . . . variantSeq=T;coverage=100;confidence=48;length=1
-  M.ruber . insertion 2070035 2070035 . . . variantSeq=A;coverage=100;confidence=49;length=1
-  M.ruber . insertion 2827713 2827713 . . . variantSeq=T;coverage=100;confidence=49;length=1
-  M.ruber . deletion 2841287 2841301 . . . reference=AAGCACGCCGAGGGA;coverage=100;confidence=49;length=15
+  M.ruber . substitution 357364 357364 . . . reference=C;variantSeq=T;coverage=100;confidence=47
+  M.ruber . insertion 640716 640716 . . . reference=;variantSeq=C;coverage=100;confidence=49
+  M.ruber . insertion 1320669 1320669 . . . reference=;variantSeq=C;coverage=100;confidence=49
+  M.ruber . deletion 1878514 1878953 . . . reference=AGGGCGTACTTCTTTTCGGGTGCAGATGCGTAGGCATCGTAGTTGAACAGGGTTTTGACCGCCATTGAGCACTCCTTTTACGGTTCCACAATGAGTTTGCTGATCATGTTGGCGTGGCCGATGCCGCAGTATTCGTTGCAGATGATGGGATACTCACCGGGTTTGCTGAAGGTGTAGCTGACCTTGGCAATTTCCCCCGGTATCACCTGTACGTTGATGTTGGTGTTGTGTACGTGGAAGCTGTGCTGCACATCGGGTGAGGTGATATAGAAGGTTACCTTCCTGCCCACCTTGAACCGCATCTCCGCTGGCAGGTAGCCAAAGGCAAAGGCCTGCACATAGGCCACGTACTCGTTGCCGACCTGCTCAACCCGTGGGTTGGCAAAGTCTCCCTCGGTGCGCACCTTGGTGGCGTCGATGCGGCCTGCCCCCACCGGGTT;variantSeq=.;coverage=100;confidence=50
+  M.ruber . insertion 1987969 1987969 . . . reference=;variantSeq=G;coverage=100;confidence=49
+  M.ruber . insertion 2010700 2010700 . . . reference=;variantSeq=T;coverage=100;confidence=48
+  M.ruber . insertion 2070035 2070035 . . . reference=;variantSeq=A;coverage=100;confidence=49
+  M.ruber . insertion 2827713 2827713 . . . reference=;variantSeq=T;coverage=100;confidence=49
+  M.ruber . deletion 2841287 2841301 . . . reference=AAGCACGCCGAGGGA;variantSeq=.;coverage=100;confidence=49
 
 
 The variant calls have all been Sanger validated!

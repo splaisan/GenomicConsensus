@@ -10,15 +10,15 @@ since I built the new reference.
 
   $ sed 's/\t/ /g' variants.gff
   ##gff-version 3
-  ##pacbio-variant-version 1.4
+  ##pacbio-variant-version 2.1
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
   ##sequence-region ecoliK12_pbi_March2013 1 4642522
-  ecoliK12_pbi_March2013 . deletion 85 85 . . . reference=G;coverage=53;confidence=48;length=1
-  ecoliK12_pbi_March2013 . deletion 219 219 . . . reference=A;coverage=58;confidence=47;length=1
-  ecoliK12_pbi_March2013 . insertion 1536 1536 . . . variantSeq=C;coverage=91;confidence=50;length=1
+  ecoliK12_pbi_March2013 . deletion 85 85 . . . reference=G;variantSeq=.;coverage=53;confidence=48
+  ecoliK12_pbi_March2013 . deletion 219 219 . . . reference=A;variantSeq=.;coverage=58;confidence=47
+  ecoliK12_pbi_March2013 . insertion 1536 1536 . . . reference=;variantSeq=C;coverage=91;confidence=50
 
 MuMMer analysis.  No structural diffs
 

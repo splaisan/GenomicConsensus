@@ -15,15 +15,15 @@ variants so much as errors in the assembly.  Variants assessed using
 MuMMer at the end are compared to the Sanger reference.
 
   $ sed 's/\t/ /g' variants.gff | grep -v '#'
-  CH17-157L1 . deletion 141 142 . . . reference=AC;coverage=100;confidence=47;length=2
-  CH17-157L1 . deletion 797 797 . . . reference=G;coverage=100;confidence=48;length=1
-  CH17-157L1 . deletion 805 805 . . . reference=T;coverage=100;confidence=47;length=1
-  CH17-157L1 . deletion 26174 26175 . . . reference=AC;coverage=100;confidence=48;length=2
-  CH17-157L1 . insertion 55888 55888 . . . variantSeq=A;coverage=100;confidence=48;length=1
-  CH17-157L1 . deletion 93356 93357 . . . reference=CG;coverage=100;confidence=48;length=2
-  CH17-157L1 . insertion 230679 230679 . . . variantSeq=A;coverage=100;confidence=49;length=1
-  CH17-157L1 . insertion 230681 230681 . . . variantSeq=CA;coverage=100;confidence=48;length=2
-  CH17-157L1 . insertion 230684 230684 . . . variantSeq=C;coverage=100;confidence=48;length=1
+  CH17-157L1 . deletion 141 142 . . . reference=AC;variantSeq=.;coverage=100;confidence=47
+  CH17-157L1 . deletion 797 797 . . . reference=G;variantSeq=.;coverage=100;confidence=48
+  CH17-157L1 . deletion 805 805 . . . reference=T;variantSeq=.;coverage=100;confidence=47
+  CH17-157L1 . deletion 26174 26175 . . . reference=AC;variantSeq=.;coverage=100;confidence=48
+  CH17-157L1 . insertion 55888 55888 . . . reference=;variantSeq=A;coverage=100;confidence=48
+  CH17-157L1 . deletion 93356 93357 . . . reference=CG;variantSeq=.;coverage=100;confidence=48
+  CH17-157L1 . insertion 230679 230679 . . . reference=;variantSeq=A;coverage=100;confidence=49
+  CH17-157L1 . insertion 230681 230681 . . . reference=;variantSeq=CA;coverage=100;confidence=48
+  CH17-157L1 . insertion 230684 230684 . . . reference=;variantSeq=C;coverage=100;confidence=48
 
 
   $ fastacomposition css.fasta

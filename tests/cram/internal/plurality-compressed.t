@@ -14,7 +14,7 @@ First, the variants.gff:
   $ gunzip variants.gff.gz
   $ cat variants.gff
   ##gff-version 3
-  ##pacbio-variant-version 1.4
+  ##pacbio-variant-version 2.1
   ##date * (glob)
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
