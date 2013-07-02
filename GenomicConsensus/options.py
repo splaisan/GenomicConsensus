@@ -198,7 +198,7 @@ def parseOptions(relax=False):
         action="store",
         dest="parameterSet",
         type=str,
-        default=None,
+        default="best",
         help="Name of parameter set to select from the parameters file.")
 
 
@@ -281,7 +281,8 @@ def parseOptions(relax=False):
         "--referenceChunkOverlap",
         action="store",
         dest="referenceChunkOverlap",
-        type=int)
+        type=int,
+        default=5)
     advanced.add_argument(
         "--disableHdf5ChunkCache",
         action="store_true",
