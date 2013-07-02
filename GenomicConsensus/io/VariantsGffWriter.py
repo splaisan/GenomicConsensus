@@ -58,7 +58,7 @@ def toGffRecord(var):
     gffFreq = gffVariantFrequency(var)
 
     record = Gff3Record(reference.idToName(var.refId), gffStart, gffEnd, gffType)
-    record.reference  = var.refSeq
+    record.reference  = var.refSeq or "."
     record.variantSeq = gffVariantSeq(var)
     if gffFreq:
         record.frequency  = gffFreq
