@@ -57,7 +57,9 @@ def main():
             if (region.seqid == variantGffRecord.seqid and
                 region.start <= variantGffRecord.start <= region.end):
                 counterName = counterNames[variantGffRecord.type]
-                summary[counterName] += variantGffRecord.length
+                variantLength = max(len(variantGffRecord.reference),
+                                    len(variantGffRecord.variantSeq))
+                summary[counterName] += variantLength
             # TODO: base consensusQV on effective coverage
             summary["cQv"] = (20, 20, 20)
 
