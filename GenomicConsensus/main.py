@@ -38,8 +38,7 @@ import os, pstats, random, shutil, tempfile, time, threading, Queue
 from pbcore.io import CmpH5Reader
 
 from GenomicConsensus import reference
-from GenomicConsensus.options import (importAdditionalDefaultOptions,
-                                      options,
+from GenomicConsensus.options import (options,
                                       parseOptions,
                                       consensusCoreVersion)
 from GenomicConsensus.utils import (rowNumberIsInReadStratum,
@@ -238,8 +237,6 @@ class ToolRunner(object):
 
         parseOptions()
         self._algorithm = self._algorithmByName(options.algorithm)
-        importAdditionalDefaultOptions(self._algorithm.additionalDefaultOptions)
-
         self._setupLogging()
         random.seed(42)
 

@@ -209,15 +209,11 @@ class QuiverWorkerThread(QuiverWorker, WorkerThread): pass
 #
 __all__ = [ "name",
             "availability",
-            "additionalDefaultOptions",
             "configure",
             "slaveFactories" ]
 
 name = "Quiver"
 availability = (True, "OK")
-additionalDefaultOptions = { "referenceChunkOverlap"      : 5,
-                             "parameterSet"               : "best" }
-
 
 def configure(options, cmpH5):
     if cmpH5.readType != "standard":

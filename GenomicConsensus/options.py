@@ -334,12 +334,3 @@ def parseOptions(relax=False):
     for path in options.outputFilenames:
         if path != None:
             checkOutputFile(path)
-
-def importAdditionalDefaultOptions(additionalDefaults):
-    # After parsing the arguments, we need to patch the options to
-    # include algorithm-specific defaults, if they have not been
-    # overriden on the command-line.
-    optionsDictView = vars(options)
-    for k, v in additionalDefaults.iteritems():
-        if k not in optionsDictView or optionsDictView[k] is None:
-            optionsDictView[k] = v

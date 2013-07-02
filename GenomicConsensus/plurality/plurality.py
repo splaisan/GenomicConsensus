@@ -404,22 +404,17 @@ class PluralityWorkerThread(PluralityWorker, WorkerThread): pass
 #    variables/methods:
 #    - name                            = str
 #    - availability                    = (bool, str)
-#    - additionalDefaultOptions        = dict (string->value)
 #    - configure                      -> options -> cmph5 -> algorithm specific config object;
 #                                        (can raise IncompatibleDataException)
 #    - slaveFactories                 -> bool -> (class, class)
 
 __all__ = [ "name",
             "availability",
-            "additionalDefaultOptions",
             "configure",
             "slaveFactories" ]
 
 name = "Plurality"
 availability = (True, "OK")
-
-additionalDefaultOptions = { "referenceChunkOverlap"      : 0 }
-
 
 def slaveFactories(threaded):
     if threaded:
