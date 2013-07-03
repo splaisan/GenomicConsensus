@@ -18,7 +18,7 @@ since I built the new reference.
   ##sequence-region ecoliK12_pbi_March2013 1 4642522
   ecoliK12_pbi_March2013 . deletion 85 85 . . . reference=G;variantSeq=.;coverage=53;confidence=48
   ecoliK12_pbi_March2013 . deletion 219 219 . . . reference=A;variantSeq=.;coverage=58;confidence=47
-  ecoliK12_pbi_March2013 . insertion 1536 1536 . . . reference=;variantSeq=C;coverage=91;confidence=50
+  ecoliK12_pbi_March2013 . insertion 1536 1536 . . . reference=.;variantSeq=C;coverage=91;confidence=50
 
 MuMMer analysis.  No structural diffs
 
