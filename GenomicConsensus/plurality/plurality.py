@@ -382,7 +382,8 @@ class PluralityWorker(object):
                                    depthLimit=options.coverage,
                                    minMapQV=options.minMapQV,
                                    strategy="longest",
-                                   stratum=options.readStratum)
+                                   stratum=options.readStratum,
+                                   barcode=options.barcode)
         alnHits = self._inCmpH5[rowNumbers]
         return (referenceWindow,
                 pluralityConsensusAndVariants(referenceWindow, refSeqInWindow,

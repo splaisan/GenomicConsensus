@@ -128,7 +128,8 @@ def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
 
 
 def readsInWindow(cmpH5, window, depthLimit=None,
-                  minMapQV=0, strategy="fileorder", stratum=None):
+                  minMapQV=0, strategy="fileorder",
+                  stratum=None, barcode=None):
     """
     Return up to `depthLimit` reads (as row numbers integers) where
     the mapped reference intersects the window.  If depthLimit is None,
@@ -138,7 +139,6 @@ def readsInWindow(cmpH5, window, depthLimit=None,
       - "longest" --- get the reads with the longest length in the window
       - "spanning" --- get only the reads spanning the window
       - "fileorder" --- get the reads in file order
-
     """
     assert strategy in {"longest", "spanning", "fileorder"}
 
@@ -149,6 +149,9 @@ def readsInWindow(cmpH5, window, depthLimit=None,
     winId, winStart, winEnd = window
     rowNumbers = cmpH5.readsInRange(winId, winStart, winEnd, justIndices=True)
     rowNumbers = rowNumbers[cmpH5.MapQV[rowNumbers] >= minMapQV]
+
+    if barcode != None:
+        rowNumbers = rowNumbers[cmpH5.barcodes[rowNumbers] == barcode]
 
     if strategy == "fileorder":
         return depthCap(rowNumbers)

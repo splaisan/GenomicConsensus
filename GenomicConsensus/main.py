@@ -40,6 +40,7 @@ from pbcore.io import CmpH5Reader
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options,
                                       parseOptions,
+                                      resolveOptions,
                                       consensusCoreVersion)
 from GenomicConsensus.utils import (rowNumberIsInReadStratum,
                                     IncompatibleDataException,
@@ -263,6 +264,7 @@ class ToolRunner(object):
         with CmpH5Reader(options.inputFilename) as peekCmpH5:
             logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
             logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
+            resolveOptions(peekCmpH5)
             self._loadReference(peekCmpH5)
             self._checkFileCompatibility(peekCmpH5)
             self._configureAlgorithm(options, peekCmpH5)

@@ -69,7 +69,11 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     if options.fancyChunking:
         # 1) identify the intervals with adequate coverage for quiver
         #    consensus; restrict to intervals of length > 10
-        allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
+        allRows = readsInWindow(cmpH5, refWindow,
+                                minMapQV=quiverConfig.minMapQV,
+                                strategy="longest",
+                                stratum=options.readStratum,
+                                barcode=options.barcode)
         starts = cmpH5.tStart[allRows]
         ends   = cmpH5.tEnd[allRows]
         intervals = kSpannedIntervals(refWindow, quiverConfig.minPoaCoverage,
@@ -97,7 +101,9 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         rows = readsInWindow(cmpH5, subWin,
                              depthLimit=depthLimit,
                              minMapQV=quiverConfig.minMapQV,
-                             strategy="longest")
+                             strategy="longest",
+                             stratum=options.readStratum,
+                             barcode=options.barcode)
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
         clippedAlns = filterAlns(subWin, clippedAlns_, quiverConfig)

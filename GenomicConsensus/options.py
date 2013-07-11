@@ -161,6 +161,11 @@ def parseOptions(relax=False):
         type=str,
         help="The window of the reference to be processed, in the format" + \
              " refGroup:refStart-refEnd (default: entire reference).    ")
+    readSelection.add_argument(
+        "--barcode",
+        type=str,
+        dest="_barcode",
+        help="Only process reads with the given barcode name.")
     def parseReadStratum(s):
         rs = map(int, s.split("/"))
         assert len(rs) == 2
@@ -335,3 +340,21 @@ def parseOptions(relax=False):
     for path in options.outputFilenames:
         if path != None:
             checkOutputFile(path)
+
+def resolveOptions(cmpH5):
+    """
+    Some of the options are provided as strings by the user, but need
+    to be translated into internal identifiers.  These options are
+    encoded as options._optionName; here we lookup the ID and store it
+    as options.optionName.
+
+    This is essentially just an order-of-initialization issue.
+    """
+    if options._barcode != None:
+        if not cmpH5.isBarcoded:
+            raise Exception("cmp.h5 file is not barcoded!")
+        if options._barcode not in cmpH5.barcode:
+            raise Exception("Barcode with given name not present in cmp.h5 file!")
+        options.barcode = cmpH5.barcode[options._barcode]
+    else:
+        options.barcode = None
