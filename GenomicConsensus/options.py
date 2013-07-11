@@ -284,12 +284,12 @@ def parseOptions(relax=False):
         type=int,
         default=5)
     advanced.add_argument(
-        "--disableHdf5ChunkCache",
-        action="store_true",
-        default=False,
-        help="Disable the HDF5 chunk cache.  This option reduces memory consumption " + \
-             "dramatically for processing cmp.h5 files containing a large number of " +
-             "reference groups, with a modest negative effect on performance.")
+        "--autoDisableHdf5ChunkCache",
+        action="store",
+        type=int,
+        default=500,
+        help="Disable the HDF5 chunk cache when the number of datasets in the cmp.h5 " + \
+             "exceeds the given threshold")
     advanced.add_argument(
         "--aligner", "-a",
         action="store",

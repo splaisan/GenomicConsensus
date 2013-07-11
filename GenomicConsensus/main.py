@@ -43,6 +43,7 @@ from GenomicConsensus.options import (options,
                                       consensusCoreVersion)
 from GenomicConsensus.utils import (rowNumberIsInReadStratum,
                                     IncompatibleDataException,
+                                    datasetCountExceedsThreshold,
                                     die)
 
 from GenomicConsensus.quiver import quiver
@@ -160,6 +161,10 @@ class ToolRunner(object):
         if cmpH5.isEmpty:
             die("Input CmpH5 file must be nonempty.")
 
+    def _shouldDisableChunkCache(self, cmpH5):
+        threshold = options.autoDisableHdf5ChunkCache
+        return datasetCountExceedsThreshold(cmpH5.file, threshold)
+
     def _configureAlgorithm(self, options, cmpH5):
         assert self._algorithm != None
         try:
@@ -261,6 +266,9 @@ class ToolRunner(object):
             self._loadReference(peekCmpH5)
             self._checkFileCompatibility(peekCmpH5)
             self._configureAlgorithm(options, peekCmpH5)
+            options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekCmpH5)
+            if options.disableHdf5ChunkCache:
+                logging.info("Will disable HDF5 chunk cache (large number of datasets)")
         logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
 
         if options.dumpEvidence:

@@ -293,3 +293,25 @@ def loadCmpH5(filename, disableChunkCache=False):
                             fapl=propfaid)
         file = h5py.File(fid)
     return CmpH5Reader(file)
+
+
+def datasetCountExceedsThreshold(h5file, threshold):
+    """
+    Does the file contain more than `threshold` datasets?  This
+    impacts whether or not we should disable the chunk cache.
+    """
+    class DsetCountClosure(object):
+        def __init__(self, cap):
+            self.dsets = 0
+            self.cap = cap
+
+        def num_datasets_exceeds_cap(self, name, obj):
+            if isinstance(obj, h5py.Dataset):
+                self.dsets += 1
+                if self.dsets > self.cap:
+                    return True
+    counter = DsetCountClosure(threshold)
+    if h5file.visititems(counter.num_datasets_exceeds_cap):
+        return True
+    else:
+        return False
