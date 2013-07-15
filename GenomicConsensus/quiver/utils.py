@@ -44,10 +44,10 @@ def uniqueSingleBaseMutations(templateSequence, positions=None):
     templateSequence that result in unique mutated sequences.
     """
     allBases = "ACGT"
-    prevTplBase = None
     positions = positions or xrange(0, len(templateSequence))
     for tplStart in positions:
-        tplBase = templateSequence[tplStart]
+        tplBase     = templateSequence[tplStart]
+        prevTplBase = templateSequence[tplStart-1] if (tplStart > 0) else None
         # snvs
         for subsBase in allBases:
             if subsBase != tplBase:
@@ -60,7 +60,6 @@ def uniqueSingleBaseMutations(templateSequence, positions=None):
         # Deletion--only allowed if refBase does not match previous tpl base
         if tplBase != prevTplBase:
             yield cc.Mutation(cc.DELETION, tplStart, "-")
-        prevTplBase = tplBase
 
 def allSingleBaseMutations(templateSequence, positions=None):
     """
