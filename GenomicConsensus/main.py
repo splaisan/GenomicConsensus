@@ -49,7 +49,6 @@ from GenomicConsensus.utils import (rowNumberIsInReadStratum,
 
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
-#from GenomicConsensus.rare import rare
 
 class ToolRunner(object):
     """
@@ -86,8 +85,6 @@ class ToolRunner(object):
     def _algorithmByName(self, name):
         if name=="plurality":
             algo = plurality
-        elif name=="rare":
-            algo = rare
         elif name=="quiver":
             algo = quiver
         else:
