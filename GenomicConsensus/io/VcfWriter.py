@@ -110,7 +110,7 @@ class VcfWriter(WriterBase):
         for sampleName in self.sampleNames:
             variantForSample = variantsAtPosition.get(sampleName)
             id_ = "."
-            refAllele, altAlleles =
+            #refAllele, altAlleles =
 
             self.file.write("%s\t%d\t"
                             % (refName, refStart+1))
