@@ -84,6 +84,7 @@ class Variant(CommonEqualityMixin):
             return "Variant"
 
     def __str__(self):
+        refSeq_ = self.refSeq or "."
         if self.isHeterozygous:
             readAlleles = "%s/%s" % (self.readSeq1 or ".",
                                      self.readSeq2 or ".")
@@ -94,7 +95,7 @@ class Variant(CommonEqualityMixin):
              self.refId,
              self.refStart,
              self.refEnd,
-             self.refSeq,
+             refSeq_,
              readAlleles)
 
     def __repr__(self):
