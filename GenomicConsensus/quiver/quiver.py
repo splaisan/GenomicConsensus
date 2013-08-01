@@ -46,6 +46,7 @@ from GenomicConsensus.consensus import *
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
 from GenomicConsensus.quiver.evidence import dumpEvidence
+from GenomicConsensus.quiver import diploid
 
 def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                   depthLimit, quiverConfig):
@@ -117,9 +118,18 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                          quiverConfig)
 
             siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
-            variants_ = variantsFromConsensus(refWindow, refSequence,
-                                              css.sequence, css.confidence, siteCoverage,
-                                              options.aligner)
+
+            if options.diploid:
+                variants_ = diploid.variantsFromConsensus(subWin, windowRefSeq,
+                                                          css.sequence, css.confidence, siteCoverage,
+                                                          options.aligner,
+                                                          css.mms)
+            else:
+                variants_ = variantsFromConsensus(subWin, windowRefSeq,
+                                                  css.sequence, css.confidence, siteCoverage,
+                                                  options.aligner,
+                                                  mms=None)
+
             variants += filterVariants(options.minCoverage,
                                        options.minConfidence,
                                        variants_)

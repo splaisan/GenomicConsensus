@@ -343,7 +343,8 @@ def scoreMatrix(mms):
 
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
-                          cssQvInWindow=None, siteCoverage=None, aligner="affine"):
+                          cssQvInWindow=None, siteCoverage=None, aligner="affine",
+                          mms=None):
     """
     Compare the consensus and the reference in this window, returning
     a list of variants.
@@ -351,16 +352,15 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
     refId, refStart, refEnd = refWindow
 
     if aligner == "affine":
-        align = cc.AlignWithAffineGapPenalty
+        align = cc.AlignAffine
     else:
         align = cc.Align
 
     ga = align(refSequenceInWindow, cssSequenceInWindow)
-    variants = variantsFromAlignment(ga, refWindow)
-
     cssPosition = cc.TargetToQueryPositions(ga)
 
-    for v in variants:
+    vars = variantsFromAlignment(ga, refWindow)
+    for v in vars:
         # HACK ALERT: we are not really handling the confidence or
         # coverage for variants at last position of the window
         # correctly here.
@@ -370,7 +370,8 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
         if siteCoverage  != None: v.coverage   = siteCoverage[refPos_]
         if cssQvInWindow != None: v.confidence = cssQvInWindow[cssPos_]
 
-    return variants
+    return vars
+
 
 def subWindow(refWindow, subinterval):
     winId, winStart, winEnd = refWindow
