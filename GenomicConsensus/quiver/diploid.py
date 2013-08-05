@@ -130,16 +130,17 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
 
         # Create diploidCss by applying mutations, meanwhile updating the
         # confidence vector accordingly.
-        diploidCss = cssSequenceInWindow
-        diploidQv  = list(cssQvInWindow) if cssQvInWindow is not None else None
-        runningLengthDiff = 0
+        diploidCss = cc.ApplyMutations([pair[0] for pair in iupacMutations],
+                                       cssSequenceInWindow)
 
+        diploidQv  = list(cssQvInWindow) if cssQvInWindow is not None else None
+
+        runningLengthDiff = 0
         for (mut, conf) in iupacMutations:
             start = mut.Start() + runningLengthDiff
             end   = mut.End() + runningLengthDiff
-            diploidCss = cc.ApplyMutation(mut, diploidCss)
             diploidQv[start:end] = [conf]
-            runningLengthDiff += mut.LengthDiff()
+        assert len(diploidCss) == len(diploidQv)
 
         cssSequenceInWindow = diploidCss
         cssQvInWindow = diploidQv
