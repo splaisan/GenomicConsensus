@@ -188,7 +188,7 @@ def parseOptions(relax=False):
         action="store",
         dest="algorithm",
         type=str,
-        default="plurality")
+        default="quiver")
     algorithm.add_argument(
         "--parametersFile", "-P",
         dest="parametersFile",
