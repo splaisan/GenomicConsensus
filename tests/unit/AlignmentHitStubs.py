@@ -258,9 +258,9 @@ class StaggeredReads(object):
     reference                  = "GATTACAGATTACATTTTTT"
     expectedPluralityConsensus = "GATTAGAGAATACANNNNNN"
     expectedPluralityVariants = \
-        [ Variant(1, 5, 6,  "C", "G", coverage=4, confidence=22, frequency1=3),
-          Variant(1, 8, 8,  "",  "A", coverage=4, confidence=22, frequency1=3),
-          Variant(1, 9, 10, "T", "",  coverage=3, confidence=15, frequency1=2) ]
+        [ Variant(1, 5, 6,  "C", "G", coverage=4, confidence=38, frequency1=3),
+          Variant(1, 8, 8,  "",  "A", coverage=4, confidence=38, frequency1=3),
+          Variant(1, 9, 10, "T", "",  coverage=3, confidence=25, frequency1=2) ]
 
     hit1 = AlignmentHitStub(7, FORWARD,
                             "G-ATTA",

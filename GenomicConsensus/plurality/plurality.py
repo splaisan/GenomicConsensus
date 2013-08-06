@@ -44,8 +44,6 @@ from ..consensus import *
 from ..variants import *
 
 
-from ConsensusCore import BinomialSurvival
-
 #
 # --------------- Configuration ----------------------
 #
@@ -322,7 +320,7 @@ def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
 # ------ HACKISH POSTERIOR PROBABILITY CALCULATION ----------
 #
 
-EPS = 0.15
+EPS = 0.05
 LOGEPS = np.log(EPS)
 LOG_O_M_EPS = np.log(1-EPS)
 LOG_O_M_EPS_2 = np.log((1-EPS)/2)
@@ -373,6 +371,8 @@ class PluralityWorker(object):
         referenceWindow = workChunk.window
         noCallFn = noEvidenceConsensusFactoryByName[options.noEvidenceConsensusCall]
         refSeqInWindow = reference.sequenceInWindow(referenceWindow)
+        logging.info("Plurality operating on %s" %
+                     reference.windowToString(referenceWindow))
 
         if not workChunk.hasCoverage:
             noCallCss = noCallFn(referenceWindow, refSeqInWindow)
