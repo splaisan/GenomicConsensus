@@ -35,7 +35,7 @@ from collections import Counter
 
 from GenomicConsensus.variants import *
 from GenomicConsensus.utils import *
-from GenomicConsensus.consensus import QuiverConsensus
+from GenomicConsensus.consensus import QuiverConsensus, noEvidenceConsensusFactoryByName
 import ConsensusCore as cc
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
@@ -439,16 +439,19 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Iterate until covergence
     _, quiverConverged = refineConsensus(mms, quiverConfig)
-    if quiverConfig.refineDinucleotideRepeats:
-        refineDinucleotideRepeats(mms)
-    quiverCss = mms.Template()
-
-    if quiverConfig.computeConfidence:
-        confidence = consensusConfidence(mms)
+    if quiverConverged:
+        if quiverConfig.refineDinucleotideRepeats:
+            refineDinucleotideRepeats(mms)
+        quiverCss = mms.Template()
+        if quiverConfig.computeConfidence:
+            confidence = consensusConfidence(mms)
+        else:
+            confidence = np.zeros(shape=len(quiverCss), dtype=int)
+        return QuiverConsensus(refWindow,
+                               quiverCss,
+                               confidence,
+                               mms)
     else:
-        confidence = np.zeros(shape=len(quiverCss), dtype=int)
-
-    return QuiverConsensus(refWindow,
-                           quiverCss,
-                           confidence,
-                           mms)
+        logging.info("%s: Quiver did not converge to MLE" % (refWindow,))
+        noCallFn = noEvidenceConsensusFactoryByName[quiverConfig.noEvidenceConsensus]
+        return noCallFn(refWindow, refSequence)
