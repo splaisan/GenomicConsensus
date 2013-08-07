@@ -215,6 +215,12 @@ def varsFromRefAndReads(refId, refPos, refBase,
     return vars
 
 
+def _isMixedLengthVariant(v):
+    return (v.isHeterozygous and
+            len(v.readSeq1) != len(v.readSeq2))
+
+def _isSameLengthVariant(v):
+    return not _isMixedLengthVariant(v)
 
 def _computeVariants(config,
                      refWindow,
@@ -279,6 +285,8 @@ def _computeVariants(config,
                                         frequency1=cssFreq)
                 vars = vars + vs
 
+    if config.diploid:
+        vars = filter(_isSameLengthVariant, vars)
     return sorted(vars)
 
 def tabulateBaseCalls(refWindow, alns, realignHomopolymers=False):
