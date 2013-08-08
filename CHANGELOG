@@ -7,6 +7,8 @@ Version 0.7.0 (released with SMRTanalysis 2.1)
   * Fix bug in dinucleotide repeat refinement
   * Modification to variants.gff schema to support diploid variant reporting
   * Improved support for P4-C2 chemistry
+  * Fix for memory leak affecting jobs with many reference contigs
+    (large assemblies, for example)
 
 Version 0.6.0 (released with SMRTanalysis 2.0)
   * Improved Quiver accuracy, reducing errors in dinucleotide repeat regions
