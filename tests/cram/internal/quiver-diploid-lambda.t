@@ -8,7 +8,7 @@ each position 250 + 500k, and the SNP is a substitution "ACGT" ->
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/lambdaDiploid/lambda.fasta
   $ export EXPECTED_VARIANTS=/mnt/secondary/Share/Quiver/TestData/lambdaDiploid/v-expected.gff
 
-  $ quiver --diploid $INPUT -r $REFERENCE \
+  $ quiver -p unknown.NoQVsModel --diploid $INPUT -r $REFERENCE \
   > -o variants.gff -o css.fasta
 
 Take a look at the variants
