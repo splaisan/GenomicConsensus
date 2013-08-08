@@ -225,10 +225,21 @@ def _buildParameterSet(parameterSetName, nameValuePairs):
         die("Malformed parameter set file")
 
     qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
+
+    #
+    # Dirty hack for --diploid support
+    #
+    if parameterSetName == "unknown.NoQVsModel":
+        bandingOptions     = cc.BandingOptions(4, 20)
+        fastScoreThreshold = -50
+    else:
+        bandingOptions     = cc.BandingOptions(4, 5)
+        fastScoreThreshold = -12.5
+
     quiverConfig = cc.QuiverConfig(qvModelParams,
                                    cc.ALL_MOVES,
-                                   cc.BandingOptions(4, 5),
-                                   -12.5)
+                                   bandingOptions,
+                                   fastScoreThreshold)
     return ParameterSet(parameterSetName, model, chem, quiverConfig)
 
 def _loadParameterSets(iniFilename):
