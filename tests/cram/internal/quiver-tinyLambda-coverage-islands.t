@@ -10,11 +10,17 @@ determined adaptively based on where the coverage actually is.
   >        $INPUT -r $REFERENCE                                 \
   >        -o variants.gff -o css.fa -o css.fq
 
+
+These variant calls actually look reasonable given the reads, but the
+confidences are too high.  Fix this.
+
   $ grep -v '#' variants.gff
-  [1]
+  lambda_NEB3011\t.\tinsertion\t24781\t24781\t.\t.\t.\treference=.;variantSeq=T;coverage=6;confidence=57 (esc)
+  lambda_NEB3011\t.\tdeletion\t24878\t24878\t.\t.\t.\treference=A;variantSeq=.;coverage=16;confidence=43 (esc)
+  lambda_NEB3011\t.\tinsertion\t30882\t30882\t.\t.\t.\treference=.;variantSeq=C;coverage=5;confidence=44 (esc)
 
   $ fastacomposition css.fa
-  css.fa A 287 C 267 G 309 N 47361 T 283
+  css.fa A 282 C 266 G 305 N 47361 T 282
 
   $ nucmer -mum $REFERENCE css.fa 2>/dev/null
 
@@ -24,135 +30,135 @@ determined adaptively based on where the coverage actually is.
   ============================================================
   -- Alignments between lambda_NEB3011 and lambda_NEB3011|quiver
   
-  -- BEGIN alignment [ +1 6531 - 6718 | +1 6531 - 6721 ]
+  -- BEGIN alignment [ +1 6531 - 6718 | +1 6531 - 6718 ]
   
   
   6531       ctgccgtgcttaagggcaaatacaccatgaccggtgaagccttcgatcc
   6531       ctgccgtgcttaagggcaaatacaccatgaccggtgaagccttcgatcc
                                                               
   
-  6580       ggttgaggtg.gatatgggccgcagtgaggagaataacatcacgcagtc
-  6580       ggttgaggtgggatatgggccgcagtgaggagaataacatcacgcagtc
-                       ^                                      
+  6580       ggttgaggtggatatgggccgcagtgaggagaataacatcacgcagtcc
+  6580       ggttgaggtggatatgggccgcagtgaggagaataacatcacgcagtcc
+                                                              
   
-  6628       cggcggcacggagtggagcaagcgtgacaagtccacgtatgaccc.gac
-  6629       cggcggcacggagtggagcaagcgtgacaagtccacgtatgacccggac
-                                                          ^   
+  6629       ggcggcacggagtggagcaagcgtgacaagtccacgtatgacccgaccg
+  6629       ggcggcacggagtggagcaagcgtgacaagtccacgtatgacccgaccg
+                                                              
   
-  6676       cgacgatatcgaagcctacgcgctga.acgccagcggtgtggtg
-  6678       cgacgatatcgaagcctacgcgctgaaacgccagcggtgtggtg
-                                       ^                 
+  6678       acgatatcgaagcctacgcgctgaacgccagcggtgtggtg
+  6678       acgatatcgaagcctacgcgctgaacgccagcggtgtggtg
+                                                      
   
   
-  --   END alignment [ +1 6531 - 6718 | +1 6531 - 6721 ]
-  -- BEGIN alignment [ +1 7266 - 7562 | +1 7269 - 7566 ]
+  --   END alignment [ +1 6531 - 6718 | +1 6531 - 6718 ]
+  -- BEGIN alignment [ +1 7266 - 7562 | +1 7266 - 7561 ]
   
   
   7266       cctgacggggacgaaagaagaactggcgctccgtgtggcagagctgaaa
-  7269       cctgacggggacgaaagaagaactggcgctccgtgtggcagagctgaaa
+  7266       cctgacggggacgaaagaagaactggcgctccgtgtggcagagctgaaa
                                                               
   
   7315       gaggagcttgatgacacggatgaaactgccggtcaggacacccctctca
-  7318       gaggagcttgatgacacggatgaaactgccggtcaggacacccctctca
+  7315       gaggagcttgatgacacggatgaaactgccggtcaggacacccctctca
                                                               
   
-  7364       gccgggaaaatgtgctgaccggacatgaaa.atgaggtgggatcagcgc
-  7367       gccgggaaaatgtgctgaccggacatgaaaaatgaggtgggatcagcgc
-                                           ^                  
+  7364       gccgggaaaatgtgctgaccggacatgaaaatgaggtgggatcagcgca
+  7364       gccgggaaaatgtgctgaccggacatgaaaatga.gtgggatcagcgca
+                                               ^              
   
-  7412       agccggataccgtgattctggatacgtctgaactggtcacggtcgtggc
-  7416       agccggataccgtgattctggatacgtctgaactggtcacggtcgtggc
+  7413       gccggataccgtgattctggatacgtctgaactggtcacggtcgtggca
+  7412       gccggataccgtgattctggatacgtctgaactggtcacggtcgtggca
                                                               
   
-  7461       actggtgaagctgcatactgatgcacttcacgccacgcgggatgaacct
-  7465       actggtgaagctgcatactgatgcacttcacgccacgcgggatgaacct
+  7462       ctggtgaagctgcatactgatgcacttcacgccacgcgggatgaacctg
+  7461       ctggtgaagctgcatactgatgcacttcacgccacgcgggatgaacctg
                                                               
   
-  7510       gtggcatttgtgctgccgggaacggcgtttcgtgtctctgccggtgtgg
-  7514       gtggcatttgtgctgccgggaacggcgtttcgtgtctctgccggtgtgg
+  7511       tggcatttgtgctgccgggaacggcgtttcgtgtctctgccggtgtggc
+  7510       tggcatttgtgctgccgggaacggcgtttcgtgtctctgccggtgtggc
                                                               
   
-  7559       cagc
-  7563       cagc
-                 
+  7560       agc
+  7559       agc
+                
   
   
-  --   END alignment [ +1 7266 - 7562 | +1 7269 - 7566 ]
-  -- BEGIN alignment [ +1 24760 - 25167 | +1 24764 - 25173 ]
+  --   END alignment [ +1 7266 - 7562 | +1 7266 - 7561 ]
+  -- BEGIN alignment [ +1 24760 - 25167 | +1 24759 - 25166 ]
   
   
   24760      tgaaatgatgaagagctctgtgtt.tgtcttcctgcctccagttcgccg
-  24764      tgaaatgatgaagagctctgtgttttgtcttcctgcctccagttcgccg
+  24759      tgaaatgatgaagagctctgtgttttgtcttcctgcctccagttcgccg
                                      ^                        
   
-  24808      ggcattcaacataaaaactgatagcacccggagttccggaaacg..aaa
-  24813      ggcattcaacataaaaactgatagcacccggagttccggaaacggaaaa
-                                                         ^^   
-  
-  24855      tttgcatatacccattgctcacgaaaaaaaatgtccttgtcgatatagg
-  24862      tttgcatatacccattgctcacgaaaaaa.atgtccttgtcgatatagg
-                                          ^                   
-  
-  24904      gatgaatcgcttggtgtacctcatctactgcgaaaacttgacctttctc
-  24910      gatgaatcgcttggtgtacctcatctactgcgaaaacttgacctttctc
+  24808      ggcattcaacataaaaactgatagcacccggagttccggaaacgaaatt
+  24808      ggcattcaacataaaaactgatagcacccggagttccggaaacgaaatt
                                                               
   
-  24953      tcccatattgcagtcgcggcacgatggaactaaattaataggcatcacc
-  24959      tcccatattgcagtcgcggcacgatggaactaaattaataggcatcacc
+  24857      tgcatatacccattgctcacgaaaaaaaatgtccttgtcgatataggga
+  24857      tgcatatacccattgctcacgaaaaaa.atgtccttgtcgatataggga
+                                        ^                     
+  
+  24906      tgaatcgcttggtgtacctcatctactgcgaaaacttgacctttctctc
+  24905      tgaatcgcttggtgtacctcatctactgcgaaaacttgacctttctctc
                                                               
   
-  25002      gaaaattcaggataatgtgcaataggaagaaaatgatctatattttttg
-  25008      gaaaattcaggataatgtgcaataggaagaaaatgatctatattttttg
+  24955      ccatattgcagtcgcggcacgatggaactaaattaataggcatcaccga
+  24954      ccatattgcagtcgcggcacgatggaactaaattaataggcatcaccga
                                                               
   
-  25051      tctgtcctatatcaccacaaaatggacatttttcacctgatgaaacaag
-  25057      tctgtcctatatcaccacaaaatggacatttttcacctgatgaaacaag
+  25004      aaattcaggataatgtgcaataggaagaaaatgatctatattttttgtc
+  25003      aaattcaggataatgtgcaataggaagaaaatgatctatattttttgtc
                                                               
   
-  25100      catgtcatcgtaatatgttctagcgggtttgtttttatctcggagatta
-  25106      catgtcatcgtaatatgttctagcgggtttgtttttatctcggagatta
+  25053      tgtcctatatcaccacaaaatggacatttttcacctgatgaaacaagca
+  25052      tgtcctatatcaccacaaaatggacatttttcacctgatgaaacaagca
                                                               
   
-  25149      ttttcataaagcttttcta
-  25155      ttttcataaagcttttcta
-                                
+  25102      tgtcatcgtaatatgttctagcgggtttgtttttatctcggagattatt
+  25101      tgtcatcgtaatatgttctagcgggtttgtttttatctcggagattatt
+                                                              
   
-  
-  --   END alignment [ +1 24760 - 25167 | +1 24764 - 25173 ]
-  -- BEGIN alignment [ +1 30837 - 30950 | +1 30842 - 30954 ]
-  
-  
-  30837      ttttatccggaaactgctgtctggctttttttgatttcagaattagc.c
-  30842      ttttatccggaaactgctgtctggcttttt.tgatttcagaattagccc
-                                           ^                ^ 
-  
-  30885      tgacgggcaatgctgcgaagggcgttttcctgctgaggtgtcattgaac
-  30890      tgacgcg.gatgctggcaagggcgttttcctgctgaggtgtcattgaac
-                  ^ ^^      ^^                                
-  
-  30934      aagtcccatgtcggcaa
-  30938      aagtcccatgtcggcaa
+  25151      ttcataaagcttttcta
+  25150      ttcataaagcttttcta
                               
   
   
-  --   END alignment [ +1 30837 - 30950 | +1 30842 - 30954 ]
-  -- BEGIN alignment [ +1 43907 - 44037 | +1 43911 - 44042 ]
+  --   END alignment [ +1 24760 - 25167 | +1 24759 - 25166 ]
+  -- BEGIN alignment [ +1 30837 - 30950 | +1 30835 - 30945 ]
   
   
-  43907      aaatttcattcgccaaaaagcccgatgatgagcgactcaccacgggcca
-  43911      aaatttcattcgccaaaaagcccgatgatgagcgactcaccacgggcca
+  30837      ttttatccggaaactgctgtctggctttttttgatttcagaattag.cc
+  30835      ttttatccggaaactgctgtctggcttttt.tgatttcagaa.tagccc
+                                           ^           ^   ^  
+  
+  30885      tgacgggcaatgctgcgaagggcgttttcctgctgaggtgtcattgaac
+  30882      tgacgcg.gatgctgcgaagggcgttttcctgctgagg.gtcattgaac
+                  ^ ^^                             ^          
+  
+  30934      aagtcccatgtcggcaa
+  30929      aagtcccatgtcggcaa
+                              
+  
+  
+  --   END alignment [ +1 30837 - 30950 | +1 30835 - 30945 ]
+  -- BEGIN alignment [ +1 43908 - 44037 | +1 43903 - 44031 ]
+  
+  
+  43908      aatttcattcgccaaaaagcccgatgatgagcgactcaccacgggccac
+  43903      aatttcattcgccaaaaagc.cgatgatgagcgactcaccacgggccac
+                                 ^                            
+  
+  43957      ggcttctgactctctttccggtactgatgtgatggctgctatggggatg
+  43951      ggcttctgactctctttccggtactgatgtgatggctgctatggggatg
                                                               
   
-  43956      cggcttctgactctctttccggtactgatgtgatggctgctatggggat
-  43960      cggcttctgactctctttccggtactgatgtgatggctgctatggggat
-                                                              
-  
-  44005      ggcgca.atcacaagccggattcggtatggctgc
-  44009      ggcgcaaatcacaagccggattcggtatggctgc
-                   ^                           
+  44006      gcgcaatcacaagccggattcggtatggctgc
+  44000      gcgcaatcacaagccggattcggtatggctgc
+                                             
   
   
-  --   END alignment [ +1 43907 - 44037 | +1 43911 - 44042 ]
+  --   END alignment [ +1 43908 - 44037 | +1 43903 - 44031 ]
   
   ============================================================
 
