@@ -161,7 +161,7 @@ class ToolRunner(object):
 
     def _shouldDisableChunkCache(self, cmpH5):
         threshold = options.autoDisableHdf5ChunkCache
-        return datasetCountExceedsThreshold(cmpH5.file, threshold)
+        return datasetCountExceedsThreshold(cmpH5, threshold)
 
     def _configureAlgorithm(self, options, cmpH5):
         assert self._algorithm != None
