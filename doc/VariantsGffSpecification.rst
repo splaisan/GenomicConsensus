@@ -45,7 +45,7 @@ the reference groups (i.e. reference contigs) that will be refered to
 in the file.  The names are the same as the full FASTA header.
 
 ``source-alignment-file`` and ``source-reference-file`` record
-canonical paths to the primary input files.
+absolute paths to the primary input files.
 
 
 Feature lines
