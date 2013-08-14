@@ -61,9 +61,9 @@ def consensusCoreVersion():
     except:
         return None
 
-def parseOptions(relax=False):
-    """Parse the options and perform some due diligence on them, allowing for
-    unit tests to relax things a bit.
+def parseOptions():
+    """
+    Parse the options and perform some due diligence on them
     """
     desc = "Compute genomic consensus and call variants relative to the reference."
     parser = argparse.ArgumentParser(description=desc, add_help=False)
@@ -90,12 +90,12 @@ def parseOptions(relax=False):
         action="store",
         dest="referenceFilename",
         type=str,
-        required=not relax,
+        required=True,
         help="The filename of the reference FASTA file")
     basics.add_argument(
         "-o", "--outputFilename",
         dest="outputFilenames",
-        required=not relax,
+        required=True,
         type=str,
         action="append",
         default=[],
@@ -329,9 +329,6 @@ def parseOptions(relax=False):
         elif fmt == "FASTA": options.fastaOutputFilename = outputFilename
         elif fmt == "FASTQ": options.fastqOutputFilename = outputFilename
         elif fmt == "CSV":   options.csvOutputFilename   = outputFilename
-
-    # chill-out, stop worrying so much
-    if relax: return
 
     for path in (options.inputFilename, options.referenceFilename):
         if path != None:
