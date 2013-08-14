@@ -15,6 +15,8 @@ since I built the new reference.
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
+  ##source-alignment-file * (glob)
+  ##source-reference-file * (glob)
   ##sequence-region ecoliK12_pbi_March2013 1 4642522
   ecoliK12_pbi_March2013 . deletion 85 85 . . . reference=G;variantSeq=.;coverage=53;confidence=48
   ecoliK12_pbi_March2013 . deletion 219 219 . . . reference=A;variantSeq=.;coverage=58;confidence=47

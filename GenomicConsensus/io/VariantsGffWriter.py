@@ -72,14 +72,15 @@ class VariantsGffWriter(object):
     ONTOLOGY_URL = \
         "http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12"
 
-    def __init__(self, f, shellCommand, referenceEntries):
+    def __init__(self, f, optionsDict, referenceEntries):
         self._gffWriter = GffWriter(f)
         self._gffWriter.writeHeader("##pacbio-variant-version 2.1")
         self._gffWriter.writeHeader("##date %s" % time.ctime())
         self._gffWriter.writeHeader("##feature-ontology %s" % self.ONTOLOGY_URL)
         self._gffWriter.writeHeader("##source GenomicConsensus %s" % __VERSION__)
-        self._gffWriter.writeHeader("##source-commandline %s" % shellCommand)
-
+        self._gffWriter.writeHeader("##source-commandline %s" % optionsDict["shellCommand"])
+        self._gffWriter.writeHeader("##source-alignment-file %s" % optionsDict["inputFilename"])
+        self._gffWriter.writeHeader("##source-reference-file %s" % optionsDict["referenceFilename"])
         # Reference groups.
         for entry in referenceEntries:
             self._gffWriter.writeHeader("##sequence-region %s 1 %d" \

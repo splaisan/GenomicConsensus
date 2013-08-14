@@ -90,7 +90,7 @@ class ResultCollector(object):
             self.fastqWriter = FastqWriter(options.fastqOutputFilename)
         if options.gffOutputFilename:
             self.gffWriter = VariantsGffWriter(options.gffOutputFilename,
-                                               " ".join(sys.argv),
+                                               vars(options),
                                                reference.byId.values())
 
     def onResult(self, result):

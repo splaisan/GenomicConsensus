@@ -68,6 +68,9 @@ def parseOptions():
     desc = "Compute genomic consensus and call variants relative to the reference."
     parser = argparse.ArgumentParser(description=desc, add_help=False)
 
+    def canonicalizedFilePath(path):
+        return os.path.abspath(os.path.expanduser(path))
+
     def checkInputFile(path):
         if not os.path.isfile(path):
             parser.error("Input file %s not found." % (path,))
@@ -83,13 +86,13 @@ def parseOptions():
     basics = parser.add_argument_group("Basic required options")
     basics.add_argument(
         "inputFilename",
-        type=str,
+        type=canonicalizedFilePath,
         help="The input cmp.h5 file")
     basics.add_argument(
         "--referenceFilename", "--reference", "-r",
         action="store",
         dest="referenceFilename",
-        type=str,
+        type=canonicalizedFilePath,
         required=True,
         help="The filename of the reference FASTA file")
     basics.add_argument(
@@ -323,6 +326,7 @@ def parseOptions():
     options.fastqOutputFilename = None
     options.csvOutputFilename   = None
 
+
     for outputFilename in options.outputFilenames:
         fmt = fileFormat(outputFilename)
         if   fmt == "GFF":   options.gffOutputFilename   = outputFilename
@@ -337,6 +341,9 @@ def parseOptions():
     for path in options.outputFilenames:
         if path != None:
             checkOutputFile(path)
+
+    options.shellCommand = " ".join(sys.argv)
+
 
 def resolveOptions(cmpH5):
     """

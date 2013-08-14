@@ -18,6 +18,8 @@ I'm not all that surprised.
   ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
   ##source GenomicConsensus * (glob)
   ##source-commandline * (glob)
+  ##source-alignment-file * (glob)
+  ##source-reference-file * (glob)
   ##sequence-region 5primeEnd 1 156
   ##sequence-region 3primeEnd 1 386
   3primeEnd\t.\tdeletion\t296\t296\t.\t.\t.\treference=G;variantSeq=.;coverage=92;confidence=4 (esc)

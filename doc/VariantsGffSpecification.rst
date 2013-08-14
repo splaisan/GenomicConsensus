@@ -29,7 +29,9 @@ which looks like the following:
     ##date Tue Feb 28 17:44:18 2012
     ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
     ##source GenomicConsensus v0.1.0
-    ##source-commandline callVariants.py --algorithm=plurality aligned_reads.cmp.h5 -o variants.gff
+    ##source-commandline callVariants.py --algorithm=plurality aligned_reads.cmp.h5 -r spinach.fasta -o variants.gff
+    ##source-alignment-file /home/popeye/data/aligned_reads.cmp.h5
+    ##source-reference-file /home/popeye/data/spinach.fasta
     ##sequence-region EGFR_Exon_23 1 189
     ##sequence-header EGFR_Exon_24 1 200
 
@@ -42,6 +44,8 @@ file contents should adhere to.
 the reference groups (i.e. reference contigs) that will be refered to
 in the file.  The names are the same as the full FASTA header.
 
+``source-alignment-file`` and ``source-reference-file`` record
+canonical paths to the primary input files.
 
 
 Feature lines
