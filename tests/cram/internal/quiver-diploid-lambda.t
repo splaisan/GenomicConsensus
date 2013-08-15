@@ -13,7 +13,7 @@ each position 250 + 500k, and the SNP is a substitution "ACGT" ->
 
 Take a look at the variants
 
-  $ head -10 variants.gff | grep -v "#" | untabify
+  $ grep -v "#" variants.gff | head -3 | untabify
   lambda_NEB3011 . substitution 250 250 . . . reference=A;variantSeq=A/C;coverage=100;confidence=40
   lambda_NEB3011 . substitution 750 750 . . . reference=T;variantSeq=A/T;coverage=100;confidence=40
   lambda_NEB3011 . substitution 1250 1250 . . . reference=G;variantSeq=G/T;coverage=100;confidence=40

@@ -3,6 +3,7 @@
   $ plurality -j${JOBS-8} --noEvidenceConsensusCall=nocall $INPUT -r $REFERENCE \
   > -o variants.gff -o css.fasta.gz -o css.fq.gz
   $ grep -v "##" variants.gff
+  [1]
 
   $ gunzip css.fasta.gz
   $ fastadiff -c FALSE css.fasta $REFERENCE

@@ -23,12 +23,13 @@ variants doesn't change the cconsensus calls.
 
   $ diff css.fasta css-haploid.fa
 
-Take a look at the variants
+Take a look at the variants...
 
-  $ head -10 variants.gff | grep -v "#" | untabify
+  $ grep -v "#" variants.gff | head -3 | untabify
   lambda_NEB3011 . substitution 250 250 . . . reference=A;variantSeq=C/A;frequency=45/43;coverage=100;confidence=40
   lambda_NEB3011 . substitution 750 750 . . . reference=T;variantSeq=T/A;frequency=60/27;coverage=100;confidence=40
   lambda_NEB3011 . substitution 1250 1250 . . . reference=G;variantSeq=G/T;frequency=56/21;coverage=100;confidence=40
+
 
 Use gffsubtract.pl to compare variants to expected.  Note that the
 gffsubtract tool just looks at the coordinates, not the actual content
