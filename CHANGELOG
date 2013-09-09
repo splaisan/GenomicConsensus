@@ -2,13 +2,13 @@ Version 0.7.0 (released with SMRTanalysis 2.1)
   * Support for diploid variant calling in plurality and quiver algorithms
   * Auto-windowing to skip coverage deserts, drastically improving user experience
     for amplicon workflows.
-  * Fix for memory leak when running assemblies with many contigs
   * Command line support for operating on a chosen barcode
   * Fix bug in dinucleotide repeat refinement
   * Modification to variants.gff schema to support diploid variant reporting
-  * Improved support for P4-C2 chemistry
   * Fix for memory leak affecting jobs with many reference contigs
     (large assemblies, for example)
+  * Improved support for P5-C3 chemistry
+  * Improved support for P4-C2 chemistry (was included in 2.0.1 release)
 
 Version 0.6.0 (released with SMRTanalysis 2.0)
   * Improved Quiver accuracy, reducing errors in dinucleotide repeat regions
