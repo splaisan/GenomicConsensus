@@ -64,9 +64,6 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     logging.info("Quiver operating on %s" %
                  reference.windowToString(refWindow))
 
-    noEvidenceConsensusFactory = \
-        noEvidenceConsensusFactoryByName[quiverConfig.noEvidenceConsensus]
-
     if options.fancyChunking:
         # 1) identify the intervals with adequate coverage for quiver
         #    consensus; restrict to intervals of length > 10
@@ -143,8 +140,8 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                              subWin, windowRefSeq,
                              clippedAlns, css)
         else:
-            css = noEvidenceConsensusFactory(subWin, intRefSeq)
-
+            css = QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
+                                                  subWin, intRefSeq)
         subConsensi.append(css)
 
     # 4) glue the subwindow consensus objects together to form the
@@ -166,11 +163,11 @@ class QuiverWorker(object):
         refId, refStart, refEnd = referenceWindow
 
         refSeqInWindow = reference.sequenceInWindow(referenceWindow)
-        noCallFn = noEvidenceConsensusFactoryByName[self.quiverConfig.noEvidenceConsensus]
 
         # Quick cutout for no-coverage case
         if not workChunk.hasCoverage:
-            noCallCss = noCallFn(referenceWindow, refSeqInWindow)
+            noCallCss = QuiverConsensus.noCallConsensus(self.quiverConfig.noEvidenceConsensus,
+                                                        referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
         # General case

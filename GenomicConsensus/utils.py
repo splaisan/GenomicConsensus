@@ -110,23 +110,6 @@ def rowNumberIsInReadStratum(readStratum, rowNumber):
     n, N = readStratum
     return (rowNumber % N) == n
 
-def noEvidenceConsensusCall(referenceSequence, noEvidenceConsensusCallMode):
-    # referenceSequence is str, return value is str
-    # return value type is the same type as input
-    assert isinstance(referenceSequence, str)
-
-    if noEvidenceConsensusCallMode == "reference":
-        result = referenceSequence
-    elif noEvidenceConsensusCallMode == "lowercasereference":
-        result =  referenceSequence.lower()
-    elif noEvidenceConsensusCallMode == "nocall":
-        result = "N" * len(referenceSequence)
-    else:
-        raise Exception, "Invalid `noEvidenceConsensusCallMode`"
-
-    return result
-
-
 def readsInWindow(cmpH5, window, depthLimit=None,
                   minMapQV=0, strategy="fileorder",
                   stratum=None, barcode=None):

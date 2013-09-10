@@ -35,7 +35,7 @@ from collections import Counter
 
 from GenomicConsensus.variants import *
 from GenomicConsensus.utils import *
-from GenomicConsensus.consensus import QuiverConsensus, noEvidenceConsensusFactoryByName
+from GenomicConsensus.consensus import QuiverConsensus
 import ConsensusCore as cc
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
@@ -453,5 +453,5 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
                                mms)
     else:
         logging.info("%s: Quiver did not converge to MLE" % (refWindow,))
-        noCallFn = noEvidenceConsensusFactoryByName[quiverConfig.noEvidenceConsensus]
-        return noCallFn(refWindow, refSequence)
+        return QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
+                                               refWindow, refSequence)

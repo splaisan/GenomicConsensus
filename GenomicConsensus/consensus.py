@@ -36,11 +36,7 @@ __all__ = [ "Consensus",
             "QuiverConsensus",
             "totalLength",
             "areContiguous",
-            "join",
-            "noCallAsConsensus",
-            "referenceAsConsensus",
-            "lowercaseReferenceAsConsensus",
-            "noEvidenceConsensusFactoryByName" ]
+            "join" ]
 
 class Consensus(object):
     """
@@ -57,13 +53,45 @@ class Consensus(object):
     def __cmp__(self, other):
         return cmp(self.refWindow, other.refWindow)
 
+    #
+    # Functions for calling the consensus for regions of inadequate
+    # coverage
+    #
+
+    @classmethod
+    def nAsConsensus(cls, refWin, referenceSequence):
+        length = len(referenceSequence)
+        seq = np.empty(length, dtype="S1")
+        seq.fill("N")
+        conf = np.zeros(length, dtype=np.uint)
+        return cls(refWin, seq.tostring(), conf)
+
+    @classmethod
+    def referenceAsConsensus(cls, refWin, referenceSequence):
+        conf = np.zeros(len(referenceSequence), dtype=np.uint)
+        return cls(refWin, referenceSequence, conf)
+
+    @classmethod
+    def lowercaseReferenceAsConsensus(cls, refWin, referenceSequence):
+        conf = np.zeros(len(referenceSequence), dtype=np.uint)
+        return cls(refWin, referenceSequence.lower(), conf)
+
+    @classmethod
+    def noCallConsensus(cls, noCallStyle, refWin, refSequence):
+        d = { "nocall"             : cls.nAsConsensus,
+              "reference"          : cls.referenceAsConsensus,
+              "lowercasereference" : cls.lowercaseReferenceAsConsensus}
+        factory = d[noCallStyle]
+        return factory(refWin, refSequence)
+
+
 class QuiverConsensus(Consensus):
     """
     A QuiverConsensus object carries an additional field, `mms`, which
     is the ConsensusCore MultiReadMutationScorer object, which can be
     used to perform some post-hoc analyses (diploid, sample mixture, etc)
     """
-    def __init__(self, refWindow, sequence, confidence, mms):
+    def __init__(self, refWindow, sequence, confidence, mms=None):
         super(QuiverConsensus, self).__init__(refWindow, sequence, confidence)
         self.mms = mms
 
@@ -113,31 +141,6 @@ def join(consensi):
     return Consensus(joinedRefWindow,
                      joinedSeq,
                      joinedConfidence)
-
-#
-# Functions for calling the consensus for regions of inadequate
-# coverage
-#
-
-def noCallAsConsensus(refWin, referenceSequence):
-    length = len(referenceSequence)
-    seq = np.empty(length, dtype="S1")
-    seq.fill("N")
-    conf = np.zeros(length, dtype=np.uint)
-    return Consensus(refWin, seq.tostring(), conf)
-
-def referenceAsConsensus(refWin, referenceSequence):
-    conf = np.zeros(len(referenceSequence), dtype=np.uint)
-    return Consensus(refWin, referenceSequence, conf)
-
-def lowercaseReferenceAsConsensus(refWin, referenceSequence):
-    conf = np.zeros(len(referenceSequence), dtype=np.uint)
-    return Consensus(refWin, referenceSequence.lower(), conf)
-
-noEvidenceConsensusFactoryByName = \
-    { "nocall"             : noCallAsConsensus,
-      "reference"          : referenceAsConsensus,
-      "lowercasereference" : lowercaseReferenceAsConsensus}
 
 
 #

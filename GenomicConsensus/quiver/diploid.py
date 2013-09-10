@@ -103,7 +103,6 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
 
     Uses the mms to identify heterozygous variants.
     """
-    assert mms.Template() == cssSequenceInWindow
     assert (cssQvInWindow is None) == (siteCoverage is None)  # Both or none
 
     refId, refStart, refEnd = refWindow
@@ -117,6 +116,7 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
         # 3. align diploid consensus to reference
         # 4. extract and decorate variants
         #
+        assert mms.Template() == cssSequenceInWindow
         iupacMutations = []  # List of (Mutation, confidence)
         for pos in xrange(0, mms.TemplateLength()):
             ds = cc.IsSiteHeterozygous(scoresForPosition(mms, pos), 40)

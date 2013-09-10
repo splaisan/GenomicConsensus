@@ -99,9 +99,8 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
     alternateFrequency_  = []        # "
     heterozygousConfidence_ = []     # "
 
-    noEvidenceConsensusFactory = \
-        noEvidenceConsensusFactoryByName[pluralityConfig.noEvidenceConsensus]
-    noEvidenceConsensus = noEvidenceConsensusFactory(refWindow, referenceSequenceInWindow)
+    noCallCss = Consensus.noCallConsensus(pluralityConfig.noEvidenceConsensus,
+                                          refWindow, referenceSequenceInWindow)
 
     baseCallsMatrix = tabulateBaseCalls(refWindow, alns)
 
@@ -113,7 +112,7 @@ def pluralityConsensusAndVariants(refWindow, referenceSequenceInWindow, alns,
         if ((siteEffectiveCoverage == 0) or
             (siteEffectiveCoverage < pluralityConfig.minCoverage)):
             siteConsensusFrequency = siteEffectiveCoverage
-            siteConsensusSequence  = noEvidenceConsensus.sequence[j]
+            siteConsensusSequence  = noCallCss.sequence[j]
             top2                   = None
         else:
             # Not for production code:
@@ -377,13 +376,13 @@ class PluralityWorker(object):
 
     def onChunk(self, workChunk):
         referenceWindow = workChunk.window
-        noCallFn = noEvidenceConsensusFactoryByName[options.noEvidenceConsensusCall]
         refSeqInWindow = reference.sequenceInWindow(referenceWindow)
         logging.info("Plurality operating on %s" %
                      reference.windowToString(referenceWindow))
 
         if not workChunk.hasCoverage:
-            noCallCss = noCallFn(referenceWindow, refSeqInWindow)
+            noCallCss = Consensus.noCallConsensus(options.noEvidenceConsensusCall,
+                                                  referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
         rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
