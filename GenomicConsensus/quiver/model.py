@@ -227,9 +227,11 @@ def _buildParameterSet(parameterSetName, nameValuePairs):
     qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
 
     #
-    # Dirty hack for --diploid support
+    # Dirty hack for --diploid support and new scaling that I am using.
+    # TODO: add banding options into quiver parameters file.
     #
-    if parameterSetName == "unknown.NoQVsModel":
+    if (parameterSetName == "unknown.NoQVsModel" or
+        parameterSetName == "P5-C3.AllQVsMergingByChannelModel"):
         bandingOptions     = cc.BandingOptions(4, 20)
         fastScoreThreshold = -50
     else:
