@@ -27,9 +27,9 @@ way to do this in Python.
 
 False negatives:
 
-  $ gffsubtract.pl $EXPECTED_VARIANTS variants.gff | untabify
+  $ gffsubtract.pl $EXPECTED_VARIANTS variants.gff | grep -v '#' | untabify
 
 
 False positives:
 
-  $ gffsubtract.pl variants.gff $EXPECTED_VARIANTS | untabify
+  $ gffsubtract.pl variants.gff $EXPECTED_VARIANTS | grep -v '#' | untabify

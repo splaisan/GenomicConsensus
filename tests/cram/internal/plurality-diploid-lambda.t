@@ -40,11 +40,11 @@ way to do this in Python.
 
 False negatives:
 
-  $ gffsubtract.pl $EXPECTED_VARIANTS variants.gff | untabify
+  $ gffsubtract.pl $EXPECTED_VARIANTS variants.gff | grep -v '#' | untabify
   lambda_NEB3011 . substitution 1750 1750 . . . reference=A;variantSeq=A/C;
   lambda_NEB3011 . substitution 22750 22750 . . . reference=T;variantSeq=T/A;
 
 
 False positives:
 
-  $ gffsubtract.pl variants.gff $EXPECTED_VARIANTS | untabify
+  $ gffsubtract.pl variants.gff $EXPECTED_VARIANTS | grep -v '#' | untabify
