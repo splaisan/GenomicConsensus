@@ -17,6 +17,8 @@ setup(
     license=open('LICENSES').read(),
     scripts = ['bin/variantCaller.py',
                'bin/summarizeConsensus.py',
+               'bin/gffToVcf.py',
+               'bin/gffToBed.py',
                'bin/plurality',
                'bin/quiver'],
     packages = find_packages(),
