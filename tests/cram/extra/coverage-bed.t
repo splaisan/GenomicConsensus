@@ -3,9 +3,6 @@ Test conversion of alignment summary GFF to coverage BED.
   $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/fluidigm_amplicons/alignment_summary.gff
 
-  $ echo $INPUT
-  /Users/dalexander/Dropbox/Sources/git/GenomicConsensus/tests/cram/extra/../../data/fluidigm_amplicons/alignment_summary.gff
-
   $ gffToBed.py --name=coverage \
   >             --description="PacBio coverage" \
   > coverage $INPUT > coverage.bed
