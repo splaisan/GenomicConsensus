@@ -136,8 +136,8 @@ def refineConsensus(mms, quiverConfig):
                                              quiverConfig.mutationNeighborhood)
 
         favorableMutationsAndScores = \
-            [(m, mms.Score(m)) for m in
-             filter(mms.FastIsFavorable, mutationsToTry)]
+            [(m, mms.Score(m)) for m in mutationsToTry
+             if mms.FastIsFavorable(m) ]
 
         if favorableMutationsAndScores:
             bestMutationsAndScores = bestSubset(favorableMutationsAndScores,
