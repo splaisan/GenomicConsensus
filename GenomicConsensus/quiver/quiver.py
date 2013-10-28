@@ -129,11 +129,16 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                                   options.aligner,
                                                   mms=None)
 
-            variants += filterVariants(options.minCoverage,
-                                       options.minConfidence,
-                                       variants_)
+            filteredVars =  filterVariants(options.minCoverage,
+                                           options.minConfidence,
+                                           variants_)
+            # Annotate?
+            if options.annotateGFF:
+                annotateVariants(filteredVars, clippedAlns)
 
-            # Check for dump
+            variants += filteredVars
+
+            # Dump?
             shouldDumpEvidence = \
                 ((options.dumpEvidence == "all") or
                  (options.dumpEvidence == "variants") and (len(variants) > 0))

@@ -53,17 +53,18 @@ class Variant(CommonEqualityMixin):
     """
     def __init__(self, refId, refStart, refEnd, refSeq, readSeq1,
                  readSeq2=None, confidence=None, coverage=None,
-                 frequency1=None, frequency2=None):
-        self.refId      = refId
-        self.refStart   = refStart
-        self.refEnd     = refEnd
-        self.refSeq     = refSeq
-        self.readSeq1   = readSeq1
-        self.readSeq2   = readSeq2
-        self.confidence = confidence
-        self.coverage   = coverage
-        self.frequency1 = frequency1
-        self.frequency2 = frequency2
+                 frequency1=None, frequency2=None, annotations=None):
+        self.refId       = refId
+        self.refStart    = refStart
+        self.refEnd      = refEnd
+        self.refSeq      = refSeq
+        self.readSeq1    = readSeq1
+        self.readSeq2    = readSeq2
+        self.confidence  = confidence
+        self.coverage    = coverage
+        self.frequency1  = frequency1
+        self.frequency2  = frequency2
+        self.annotations = annotations
 
     @property
     def isHeterozygous(self):
@@ -104,3 +105,8 @@ class Variant(CommonEqualityMixin):
     def __lt__(self, other):
         return ((self.refId, self.refStart, self.refEnd, self.readSeq1) <
                 (other.refId, other.refStart, other.refEnd, other.readSeq1))
+
+    def annotate(self, key, value):
+        if self.annotations == None:
+            self.annotations = []
+        self.annotations.append((key, value))

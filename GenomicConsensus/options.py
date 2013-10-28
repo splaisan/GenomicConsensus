@@ -250,7 +250,10 @@ def parseOptions():
     debugging.add_argument(
         "--evidenceDirectory",
         default="evidence_dump")
-
+    debugging.add_argument(
+        "--annotateGFF",
+        action="store_true",
+        help="Augment GFF variant records with additional information")
 
     advanced = parser.add_argument_group("Advanced configuration options")
     advanced.add_argument(

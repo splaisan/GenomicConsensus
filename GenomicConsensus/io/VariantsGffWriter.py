@@ -64,7 +64,9 @@ def toGffRecord(var):
         record.frequency  = gffFreq
     record.coverage   = var.coverage
     record.confidence = var.confidence
-
+    if var.annotations:
+        for (k, v) in var.annotations:
+            record.put(k, v)
     return record
 
 class VariantsGffWriter(object):
