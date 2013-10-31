@@ -113,28 +113,31 @@ def loadFromFile(filename_, cmpH5):
 
     # Load contigs
     assert not isLoaded()
-    f = FastaTable(filename_)
+    try:
+        f = FastaTable(filename_)
+    except IOError as e:
+        die(e)
 
     cmpContigNames = set(cmpH5.referenceInfoTable.FullName)
 
     for fastaRecord in f:
         refName = fastaRecord.name
-        cmpH5RefEntry = cmpH5.referenceInfo(refName)
-        refId         = cmpH5RefEntry.ID
-        sequence      = UppercasingMmappedFastaSequence(fastaRecord.sequence)
-        length        = len(fastaRecord.sequence)
-        contig = ReferenceContig(refId, refName, sequence, length)
-        byId[refId]          = contig
-        byName[refName]      = contig
-    fastaContigNames = set(byName.keys())
+        if refName in cmpContigNames:
+            cmpH5RefEntry = cmpH5.referenceInfo(refName)
+            refId         = cmpH5RefEntry.ID
+            sequence      = UppercasingMmappedFastaSequence(fastaRecord.sequence)
+            length        = len(fastaRecord.sequence)
+            contig = ReferenceContig(refId, refName, sequence, length)
+            byId[refId]          = contig
+            byName[refName]      = contig
+    loadedFastaContigNames = set(byName.keys())
     logging.info("Loaded %d of %d reference groups from %s " %
-                 (len(byId), len(fastaContigNames), filename_))
+                 (len(byId), len(loadedFastaContigNames), filename_))
 
-
-    if set.isdisjoint(cmpContigNames, fastaContigNames):
+    if len(byId) == 0:
         die("No reference groups in the FASTA file were aligned against.  " \
             "Did you select the wrong reference FASTA file?")
-    elif (cmpContigNames - fastaContigNames):
+    elif (cmpContigNames - loadedFastaContigNames):
         logging.warn(
             "Some reference contigs aligned against are not found in " \
             "the reference FASTA.  Will process only those contigs "   \
