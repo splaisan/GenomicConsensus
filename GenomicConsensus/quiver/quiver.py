@@ -60,7 +60,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     inadequate coverage.
     """
     winId, winStart, winEnd = refWindow
-    refSequence = referenceContig[winStart:winEnd].tostring()
+    refSequence = referenceContig[winStart:winEnd]
     logging.info("Quiver operating on %s" %
                  reference.windowToString(refWindow))
 
@@ -92,10 +92,10 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
     for interval in allIntervals:
         intStart, intEnd = interval
-        intRefSeq = referenceContig[intStart:intEnd].tostring()
+        intRefSeq = referenceContig[intStart:intEnd]
         subWin = subWindow(refWindow, interval)
 
-        windowRefSeq = referenceContig[intStart:intEnd].tostring()
+        windowRefSeq = referenceContig[intStart:intEnd]
         rows = readsInWindow(cmpH5, subWin,
                              depthLimit=depthLimit,
                              minMapQV=quiverConfig.minMapQV,
@@ -187,7 +187,7 @@ class QuiverWorker(object):
         # bounds.  This seems to be more reliable thank cutting the
         # consensus bluntly
         refContig = reference.byId[refId].sequence
-        refSequenceInEnlargedWindow = refContig[eStart:eEnd].tostring()
+        refSequenceInEnlargedWindow = refContig[eStart:eEnd]
 
         #
         # Get the consensus for the enlarged window.

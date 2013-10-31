@@ -34,26 +34,35 @@ from __future__ import absolute_import
 
 import math, logging, re, numpy as np
 from collections import OrderedDict
-from pbcore.io import FastaReader, FastaRecord
+from pbcore.io import FastaTable
 
 from ConsensusCore import CoveredIntervals
-from .utils import holes
+from .utils import holes, die
 from .Chunk import WorkChunk
+
+
+class UppercasingMmappedFastaSequence(object):
+
+    def __init__(self, mmappedFastaSequence):
+        self.other = mmappedFastaSequence
+
+    def __getitem__(self, spec):
+        snip = self.other.__getitem__(spec)
+        return snip.upper()
 
 class ReferenceContig(object):
     """
     A contig from a reference (i.e. FASTA) file.
     """
-    def __init__(self, id, name, md5sum, sequence, length):
-        self.id       = id          # CmpH5-local id
-        self.name     = name        # Fasta header
-        self.md5sum   = md5sum
-        self.sequence = sequence
-        self.length   = length
+    def __init__(self, id, name, sequence, length):
+        self.id        = id          # CmpH5-local id
+        self.name      = name        # Fasta header
+        self.sequence  = UppercasingMmappedFastaSequence(sequence)
+        self.length    = length
+
 
 byName   = OrderedDict()   # Fasta header (string e.g. "chr1") -> FastaRecord
 byId     = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecord
-byMD5    = OrderedDict()   # MD5 sum (e.g. "a13...")           -> FastaRecord
 
 def idToName(_id):
     return byId[_id].name
@@ -76,7 +85,7 @@ def anyKeyToId(stringKey):
 
 def sequenceInWindow(window):
     refId, refStart, refEnd = window
-    return byId[refId].sequence[refStart:refEnd].tostring()
+    return byId[refId].sequence[refStart:refEnd]
 
 filename = None
 
@@ -88,38 +97,51 @@ def loadFromFile(filename_, cmpH5):
     Reads reference from FASTA file, loading
     lookup tables that can be used any time later.
     """
+    # Contigs in FASTA may disagree with those in cmp.h5 ref info
+    # table, for instance if the FASTA has been edited.  Here's how we
+    # handle things:
+    #
+    # |fastaContigs \   cmpContigs| > 0 : OK, extra FASTA contigs just ignored
+    # |cmpContigs   \ fastaContigs| > 0 : Not necessarily OK---a warning should be
+    #                                     issued.  We then proceed to operate on
+    #                                     the contigs that are in both.
+    # |cmpContigs ^ fastaContigs| == 0  : Nothing to work with.  This is an error.
+    #
+    # While we formerly used MD5s to vouch for the identity of a
+    # contig, we not use the name.  This is an inferior approach but
+    # is necessary, in using the FastaTable.
+
     # Load contigs
     assert not isLoaded()
-    f = FastaReader(filename_)
-    numFastaRecords = 0
-    fastaChecksums = set()
+    f = FastaTable(filename_)
+
+    cmpContigNames = set(cmpH5.referenceInfoTable.FullName)
+
     for fastaRecord in f:
-        numFastaRecords += 1
-        md5sum = fastaRecord.md5
-        fastaChecksums.add(md5sum)
-        normalizedContigSequence = fastaRecord.sequence.upper()
-        if md5sum in cmpH5.referenceInfoTable.MD5:
-            cmpH5RefEntry = cmpH5.referenceInfo(md5sum)
-            refId         = cmpH5RefEntry.ID
-            refName       = fastaRecord.name
-            contig = ReferenceContig(refId, refName, md5sum,
-                                     np.array(normalizedContigSequence, dtype="c"),
-                                     len(normalizedContigSequence))
-            byId[refId]          = contig
-            byName[refName]      = contig
-            byMD5[contig.md5sum] = contig
+        refName = fastaRecord.name
+        cmpH5RefEntry = cmpH5.referenceInfo(refName)
+        refId         = cmpH5RefEntry.ID
+        sequence      = UppercasingMmappedFastaSequence(fastaRecord.sequence)
+        length        = len(fastaRecord.sequence)
+        contig = ReferenceContig(refId, refName, sequence, length)
+        byId[refId]          = contig
+        byName[refName]      = contig
+    fastaContigNames = set(byName.keys())
+    logging.info("Loaded %d of %d reference groups from %s " %
+                 (len(byId), len(fastaContigNames), filename_))
+
+
+    if set.isdisjoint(cmpContigNames, fastaContigNames):
+        die("No reference groups in the FASTA file were aligned against.  " \
+            "Did you select the wrong reference FASTA file?")
+    elif (cmpContigNames - fastaContigNames):
+        logging.warn(
+            "Some reference contigs aligned against are not found in " \
+            "the reference FASTA.  Will process only those contigs "   \
+            "supported by the reference FASTA.")
 
     global filename
     filename = filename_
-    logging.info("Loaded %d of %d reference groups from %s " %
-                 (len(byId), numFastaRecords, filename))
-
-    # If the cmpH5 has alignments to contigs that weren't contained in
-    # the fasta file, report an error.
-    cmpH5Checksums = set(cmpH5.referenceInfoTable.MD5)
-    if not cmpH5Checksums.issubset(fastaChecksums):
-        logging.error("CmpH5 aligned to a contig not represented in FASTA file")
-        return 1
     assert isLoaded()
 
 def stringToWindow(s):
