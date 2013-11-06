@@ -235,6 +235,12 @@ def parseOptions():
         action="store_true",
         help="Turn off all logging, including warnings")
     debugging.add_argument(
+        "--debug",
+        action="store_true",
+        dest="doDebugging",
+        default=False,
+        help="Enable Python-level debugging (using pdb).")
+    debugging.add_argument(
         "--profile",
         action="store_true",
         dest="doProfiling",

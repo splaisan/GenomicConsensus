@@ -286,6 +286,11 @@ class ToolRunner(object):
                                 locals=locals(),
                                 filename=os.path.join(options.temporaryDirectory,
                                                       "profile-main.out"))
+
+            elif options.doDebugging:
+                try:    import ipdb as pdb
+                except: import pdb
+                return pdb.runeval("self._mainLoop()", globals(), locals())
             else:
                 self._mainLoop()
         except:
