@@ -34,7 +34,7 @@
 from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
-import os, pstats, random, shutil, tempfile, time, threading, Queue
+import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 from pbcore.io import CmpH5Reader
 
 from GenomicConsensus import reference
@@ -213,13 +213,14 @@ class ToolRunner(object):
     def aborting(self):
         return self._aborting
 
-    def abortWork(self):
+    def abortWork(self, why):
         """
         Performs a shutdown of all the slave processes.  Called by the
         monitoring thread when a child process exits with a non-zero,
         or when a keyboard interrupt (Ctrl-C) is given. Not called
         during normal shutdown.
         """
+        logging.error(why)
         self._aborting = True
         self._resultsQueue.close()
         self._workQueue.close()
@@ -294,7 +295,8 @@ class ToolRunner(object):
             else:
                 self._mainLoop()
         except:
-            self.abortWork()
+            why = traceback.format_exc()
+            self.abortWork(why)
 
         monitoringThread.join()
 
@@ -325,8 +327,7 @@ def monitorSlaves(driver):
         nonzero_exits = [p.exitcode for p in driver.slaves if p.exitcode]
         if nonzero_exits:
             exitcode = nonzero_exits[0]
-            logging.error("Child process exited with exitcode=%d.  Aborting." % exitcode)
-            driver.abortWork()
+            driver.abortWork("Child process exited with exitcode=%d.  Aborting." % exitcode)
             return exitcode
         elif all_exited:
             return 0
