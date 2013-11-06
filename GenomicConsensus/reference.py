@@ -37,7 +37,7 @@ from collections import OrderedDict
 from pbcore.io import FastaTable
 
 from ConsensusCore import CoveredIntervals
-from .utils import holes, die
+from .utils import holes, nub, die
 from .Chunk import WorkChunk
 
 
@@ -169,80 +169,81 @@ def windowToString(referenceWindow):
                          refStart,
                          refEnd)
 
-def enumerateChunks(refId, referenceStride, referenceWindow=None):
+def enumerateSpans(refId, referenceWindows=()):
     """
-    Enumerate all work chunks (restricted to the window, if provided).
+    Enumerate the contiguous spans along this reference contig that
+    are to be analyzed.
     """
     assert isLoaded()
-    assert (referenceWindow is None) or (refId == referenceWindow[0])
     referenceEntry = byId[refId]
-    if referenceWindow:
-        _, start, end = referenceWindow
-    else:
-        start, end = (0, referenceEntry.length)
+    referenceEntrySpan = (refId, 0, referenceEntry.length)
 
-    for chunkBegin in xrange(start, end, referenceStride):
-        win = (refId,
-               chunkBegin,
-               min(chunkBegin + referenceStride, end))
-        yield WorkChunk(win, True)
+    for refWin in (referenceWindows or [referenceEntrySpan]):
+        refWinId, start, end = refWin
+        if refWinId == refId:
+            yield (refId, start, end)
 
-def kCoveredIntervals(k, tStart, tEnd, winStart, winEnd):
-    return CoveredIntervals(k, tStart, tEnd, int(winStart), int(winEnd-winStart))
+def enumerateChunks(refId, referenceStride, referenceWindows=()):
+    """
+    Enumerate all work chunks on this reference contig (restricted to
+    the windows, if provided).
+    """
+    for span in enumerateSpans(refId, referenceWindows):
+        _, start, end = span
+        for chunkBegin in xrange(start, end, referenceStride):
+            win = (refId,
+                   chunkBegin,
+                   min(chunkBegin + referenceStride, end))
+            yield WorkChunk(win, True)
 
 def fancyEnumerateChunks(cmpH5, refId, referenceStride,
-                         minCoverage, minMapQV, referenceWindow=None):
+                         minCoverage, minMapQV, referenceWindows=()):
     """
     Enumerate chunks, creating chunks with hasCoverage=False for
     coverage cutouts.
     """
-    referenceEntry = byId[refId]
-    if referenceWindow:
-        _, winStart, winEnd = referenceWindow
-    else:
-        winStart, winEnd = (0, referenceEntry.length)
     startRow = cmpH5.referenceInfo(refId).StartRow
     endRow   = cmpH5.referenceInfo(refId).EndRow
     goodMapQVs = (cmpH5.MapQV[startRow:endRow] >= minMapQV)
-    coveredIntervals = kCoveredIntervals(minCoverage,
-                                         cmpH5.tStart[startRow:endRow][goodMapQVs],
-                                         cmpH5.tEnd[startRow:endRow][goodMapQVs],
-                                         winStart, winEnd)
-    unCoveredIntervals = holes((refId, winStart, winEnd), coveredIntervals)
-    for (s, e) in sorted(list(coveredIntervals) + unCoveredIntervals):
-        win = (refId, s, e)
-        if (s, e) in coveredIntervals:
-            for chunk in enumerateChunks(refId, referenceStride, (refId, s, e)):
-                yield chunk
-        else:
-            yield WorkChunk(win, False)
+    tStart = cmpH5.tStart[startRow:endRow][goodMapQVs]
+    tEnd   = cmpH5.tEnd  [startRow:endRow][goodMapQVs]
 
-def numReferenceBases(refId, referenceWindow=None):
+    for span in enumerateSpans(refId, referenceWindows):
+        _, spanStart, spanEnd = span
+        coveredIntervals = kCoveredIntervals(minCoverage, tStart, tEnd, spanStart, spanEnd)
+        unCoveredIntervals = holes(span, coveredIntervals)
+
+        for (s, e) in sorted(list(coveredIntervals) + unCoveredIntervals):
+            win = (refId, s, e)
+            if (s, e) in coveredIntervals:
+                for chunk in enumerateChunks(refId, referenceStride, [(refId, s, e)]):
+                    yield chunk
+            else:
+                yield WorkChunk(win, False)
+
+
+def numReferenceBases(refId, referenceWindows=()):
     """
     Termination is determined to be when the result collector has
     built consensus corresponding to the exact number of reference
     bases in the window under consideration.
     """
-    assert isLoaded()
-    assert (referenceWindow is None) or (refId == referenceWindow[0])
-    referenceEntry = byId[refId]
-    if referenceWindow:
-        _, start, end = referenceWindow
-        end = min(end, referenceEntry.length)
-    else:
-        start, end = 0, referenceEntry.length
-    return (end - start)
+    return sum((end - start)
+               for (_, start, end) in enumerateSpans(refId, referenceWindows))
 
-def enumerateIds(referenceWindow=None):
+
+def enumerateIds(referenceWindows=()):
     """
-    Enumerate all refIds (subject to the referenceWindow restriction, if provided).
+    Enumerate all refIds (subject to the referenceWindows restriction,
+    if provided).
     """
     assert isLoaded()
-    if referenceWindow is None:
-        for refId in byId: yield refId
+    if referenceWindows == ():
+        for refId in byId:
+            yield refId
     else:
-        refId, refStart, refEnd = referenceWindow
-        yield refId
+        for refId in nub(refId for (refId, _, _) in referenceWindows):
+            yield refId
 
 def enlargedReferenceWindow(refWin, overlap):
     assert isLoaded()
@@ -251,3 +252,6 @@ def enlargedReferenceWindow(refWin, overlap):
     return (refId,
             max(0, refStart - overlap),
             min(refEnd + overlap, contigLength))
+
+def kCoveredIntervals(k, tStart, tEnd, winStart, winEnd):
+    return CoveredIntervals(k, tStart, tEnd, int(winStart), int(winEnd-winStart))

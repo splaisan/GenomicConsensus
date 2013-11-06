@@ -39,12 +39,6 @@ def die(msg):
     print msg
     sys.exit(-1)
 
-# Some lisp functions we want
-fst   = lambda t: t[0]
-snd   = lambda t: t[1]
-third = lambda t: t[2]
-
-
 class CommonEqualityMixin(object):
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
@@ -295,3 +289,25 @@ def datasetCountExceedsThreshold(cmpH5, threshold):
         if total > threshold:
             return True
     return False
+
+
+def windowsIntersect(w1, w2):
+    i1, s1, e1 = w1
+    i2, s2, e2 = w2
+    return (i1 == i2) and ((s2 < e1) or (s1 < e2))
+
+#
+# Some lisp functions we want
+#
+fst   = lambda t: t[0]
+snd   = lambda t: t[1]
+third = lambda t: t[2]
+
+def nub(it):
+    """
+    Unique entries in an iterable, preserving order
+    """
+    seen = set()
+    for x in it:
+        if x not in seen: yield(x)
+        seen.add(x)

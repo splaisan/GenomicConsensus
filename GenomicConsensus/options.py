@@ -155,15 +155,17 @@ def parseOptions():
         help="The minimum MapQV for reads that will be used for analysis.")
     # Since the reference isn't loaded at options processing time, we
     # can't grok the referenceWindow specified until later.  We store
-    # it as a string (referenceWindowAsString) and it will later be
+    # it as a string (referenceWindowsAsString) and it will later be
     # interpreted and stored as a proper window tuple (referenceWindow)
     readSelection.add_argument(
-        "--referenceWindow", "-w",
+        "--referenceWindows", "-w",
         action="store",
-        dest="referenceWindowAsString",
+        dest="referenceWindowsAsString",
         type=str,
-        help="The window of the reference to be processed, in the format" + \
-             " refGroup:refStart-refEnd (default: entire reference).    ")
+        help="The window (or multiple comma-delimited windows) of the reference to " + \
+             "be processed, in the format refGroup:refStart-refEnd "                 + \
+             "(default: entire reference).",
+        default=None)
     readSelection.add_argument(
         "--barcode",
         type=str,

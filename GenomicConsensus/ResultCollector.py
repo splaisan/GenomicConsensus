@@ -35,7 +35,7 @@ from multiprocessing import Process
 from threading import Thread
 from collections import OrderedDict, defaultdict
 from .options import options
-from GenomicConsensus import reference, consensus
+from GenomicConsensus import reference, consensus, utils
 from .io.VariantsGffWriter import VariantsGffWriter
 from pbcore.io import FastaWriter, FastqWriter
 
@@ -103,7 +103,7 @@ class ResultCollector(object):
         logging.info("Analysis completed.")
         if self.fastaWriter: self.fastaWriter.close()
         if self.fastqWriter: self.fastqWriter.close()
-        if self.gffWriter: self.gffWriter.close()
+        if self.gffWriter:   self.gffWriter.close()
         logging.info("Output files completed.")
 
     def _recordNewResults(self, window, css, variants):
@@ -114,26 +114,48 @@ class ResultCollector(object):
 
     def _flushContigIfCompleted(self, window):
         refId, _, _ = window
+        refEntry = reference.byId[refId]
+        refName = refEntry.name
         basesProcessed = self.referenceBasesProcessedById[refId]
-        requiredBases = reference.numReferenceBases(refId, options.referenceWindow)
+        requiredBases = reference.numReferenceBases(refId, options.referenceWindows)
         if basesProcessed == requiredBases:
             # This contig is done, so we can dump to file and delete
             # the data structures.
-            css = consensus.join(self.consensusChunksByRefId[refId])
-            cssName = consensus.consensusContigName(reference.idToName(refId),
-                                                    options.algorithm)
-            if self.fastaWriter:
-                self.fastaWriter.writeRecord(cssName,
-                                             css.sequence)
-            if self.fastqWriter:
-                self.fastqWriter.writeRecord(cssName,
-                                             css.sequence,
-                                             css.confidence)
-            del self.consensusChunksByRefId[refId]
-
             if self.gffWriter:
                 self.gffWriter.writeVariants(sorted(self.variantsByRefId[refId]))
             del self.variantsByRefId[refId]
+
+            #
+            # If the user asked to analyze a window or a set of
+            # windows, we output a FAST[AQ] contig per analyzed
+            # window.  Otherwise we output a fasta contig per
+            # reference contig.
+            #
+            # We try to be intelligent about naming the output
+            # contigs, to include window information where applicable.
+            #
+            for span in reference.enumerateSpans(refId, options.referenceWindows):
+                _, s, e = span
+                if (s == 0) and (e == refEntry.length):
+                    spanName = refName
+                else:
+                    spanName = refName + ":%d-%d" % (s, e)
+                cssName = consensus.consensusContigName(spanName,
+                                                        options.algorithm)
+                # Gather just the chunks pertaining to this span
+                chunksThisSpan = [ chunk for chunk in self.consensusChunksByRefId[refId]
+                                   if utils.windowsIntersect(chunk.refWindow, span) ]
+                css = consensus.join(chunksThisSpan)
+
+                if self.fastaWriter:
+                    self.fastaWriter.writeRecord(cssName,
+                                                 css.sequence)
+                if self.fastqWriter:
+                    self.fastqWriter.writeRecord(cssName,
+                                                 css.sequence,
+                                                 css.confidence)
+
+            del self.consensusChunksByRefId[refId]
 
 class ResultCollectorProcess(ResultCollector, Process):
     def __init__(self, *args):

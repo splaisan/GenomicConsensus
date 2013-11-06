@@ -150,8 +150,11 @@ class ToolRunner(object):
         if err:
             die("Error loading reference")
         # Grok the referenceWindow spec, if any.
-        options.referenceWindow = \
-            reference.stringToWindow(options.referenceWindowAsString)
+        if options.referenceWindowsAsString is None:
+            options.referenceWindows = ()
+        else:
+            options.referenceWindows = map(reference.stringToWindow,
+                                           options.referenceWindowsAsString.split(","))
 
     def _checkFileCompatibility(self, cmpH5):
         if not cmpH5.isSorted:
@@ -174,7 +177,7 @@ class ToolRunner(object):
         # Split up reference genome into chunks and farm out the
         # a chunk as a unit of work.
         logging.debug("Starting main loop.")
-        ids = reference.enumerateIds(options.referenceWindow)
+        ids = reference.enumerateIds(options.referenceWindows)
         for _id in ids:
             if options.fancyChunking:
                 chunks = reference.fancyEnumerateChunks(self._inCmpH5,
@@ -182,11 +185,11 @@ class ToolRunner(object):
                                                         options.referenceChunkSize,
                                                         options.minCoverage,
                                                         options.minMapQV,
-                                                        options.referenceWindow)
+                                                        options.referenceWindows)
             else:
                 chunks = reference.enumerateChunks(_id,
                                                    options.referenceChunkSize,
-                                                   options.referenceWindow)
+                                                   options.referenceWindows)
             for chunk in chunks:
                 if self._aborting: return
                 self._workQueue.put(chunk)
