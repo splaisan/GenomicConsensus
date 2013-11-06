@@ -294,7 +294,7 @@ def datasetCountExceedsThreshold(cmpH5, threshold):
 def windowsIntersect(w1, w2):
     i1, s1, e1 = w1
     i2, s2, e2 = w2
-    return (i1 == i2) and ((s2 < e1) or (s1 < e2))
+    return (i1 == i2) and (e1 > s2) and (e2 > s1)
 
 #
 # Some lisp functions we want
