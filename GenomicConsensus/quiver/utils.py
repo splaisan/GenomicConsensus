@@ -419,7 +419,13 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
                      for a in alns
                      if a.spansReferenceRange(refStart, refEnd) ]
     assert len(fwdSequences) >= quiverConfig.minPoaCoverage
-    p = cc.PoaConsensus.FindConsensus(fwdSequences[:quiverConfig.maxPoaCoverage])
+
+    try:
+        p = cc.PoaConsensus.FindConsensus(fwdSequences[:quiverConfig.maxPoaCoverage])
+    except:
+        logging.info("%s: POA could not be generated" % (refWindow,))
+        return QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
+                                               refWindow, refSequence)
     ga = cc.Align(refSequence, p.Sequence())
     numPoaVariants = ga.Errors()
     poaCss = p.Sequence()
