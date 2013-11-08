@@ -372,14 +372,6 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
 
     return vars
 
-
-def subWindow(refWindow, subinterval):
-    winId, winStart, winEnd = refWindow
-    intS, intE = subinterval
-    assert intS >= winStart
-    assert intE <= winEnd
-    return winId, intS, intE
-
 def filterAlns(refWindow, alns, quiverConfig):
     """
     Given alns (already clipped to the window bounds), filter out any

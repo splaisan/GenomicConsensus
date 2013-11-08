@@ -32,7 +32,7 @@
 
 from __future__ import absolute_import
 
-import math, logging, re, numpy as np
+import logging, re
 from collections import OrderedDict
 from pbcore.io import FastaTable
 

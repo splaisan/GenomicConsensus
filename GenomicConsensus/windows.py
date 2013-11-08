@@ -160,3 +160,10 @@ def windowsIntersect(w1, w2):
     i1, s1, e1 = w1
     i2, s2, e2 = w2
     return (i1 == i2) and (e1 > s2) and (e2 > s1)
+
+def subWindow(refWindow, subinterval):
+    winId, winStart, winEnd = refWindow
+    intS, intE = subinterval
+    assert intS >= winStart
+    assert intE <= winEnd
+    return winId, intS, intE

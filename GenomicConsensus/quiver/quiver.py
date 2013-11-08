@@ -30,26 +30,23 @@
 
 # Author: David Alexander
 
-from __future__ import absolute_import
+import logging
+from pbcore.io import rangeQueries
+import ConsensusCore as cc
 
-
-import h5py, logging, os
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
-from pbcore.io import rangeQueries, FastaWriter
 
-import ConsensusCore as cc
-
-from GenomicConsensus.consensus import *
-from GenomicConsensus.windows import kSpannedIntervals, holes
+from GenomicConsensus.consensus import Consensus, QuiverConsensus, join
+from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
-
-from GenomicConsensus.quiver.utils import *
-from GenomicConsensus.quiver.model import *
 from GenomicConsensus.quiver.evidence import dumpEvidence
 from GenomicConsensus.quiver import diploid
+
+import GenomicConsensus.quiver.model as M
+import GenomicConsensus.quiver.utils as U
 
 def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                   depthLimit, quiverConfig):
@@ -63,18 +60,17 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     inadequate coverage.
     """
     winId, winStart, winEnd = refWindow
-    refSequence = referenceContig[winStart:winEnd]
     logging.info("Quiver operating on %s" %
                  reference.windowToString(refWindow))
 
     if options.fancyChunking:
         # 1) identify the intervals with adequate coverage for quiver
         #    consensus; restrict to intervals of length > 10
-        allRows = readsInWindow(cmpH5, refWindow,
-                                minMapQV=quiverConfig.minMapQV,
-                                strategy="longest",
-                                stratum=options.readStratum,
-                                barcode=options.barcode)
+        allRows = U.readsInWindow(cmpH5, refWindow,
+                                  minMapQV=quiverConfig.minMapQV,
+                                  strategy="longest",
+                                  stratum=options.readStratum,
+                                  barcode=options.barcode)
         starts = cmpH5.tStart[allRows]
         ends   = cmpH5.tEnd[allRows]
         intervals = kSpannedIntervals(refWindow, quiverConfig.minPoaCoverage,
@@ -99,25 +95,25 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         subWin = subWindow(refWindow, interval)
 
         windowRefSeq = referenceContig[intStart:intEnd]
-        rows = readsInWindow(cmpH5, subWin,
-                             depthLimit=depthLimit,
-                             minMapQV=quiverConfig.minMapQV,
-                             strategy="longest",
-                             stratum=options.readStratum,
-                             barcode=options.barcode)
+        rows = U.readsInWindow(cmpH5, subWin,
+                               depthLimit=depthLimit,
+                               minMapQV=quiverConfig.minMapQV,
+                               strategy="longest",
+                               stratum=options.readStratum,
+                               barcode=options.barcode)
         logging.debug("Row numbers being used: %s" %
                       " ".join(map(str, rows)))
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
-        clippedAlns = filterAlns(subWin, clippedAlns_, quiverConfig)
+        clippedAlns = U.filterAlns(subWin, clippedAlns_, quiverConfig)
 
         if len([ a for a in clippedAlns
                  if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
 
-            css = consensusForAlignments(subWin,
-                                         intRefSeq,
-                                         clippedAlns,
-                                         quiverConfig)
+            css = U.consensusForAlignments(subWin,
+                                           intRefSeq,
+                                           clippedAlns,
+                                           quiverConfig)
 
             siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
 
@@ -127,10 +123,10 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                                           options.aligner,
                                                           css.mms)
             else:
-                variants_ = variantsFromConsensus(subWin, windowRefSeq,
-                                                  css.sequence, css.confidence, siteCoverage,
-                                                  options.aligner,
-                                                  mms=None)
+                variants_ = U.variantsFromConsensus(subWin, windowRefSeq,
+                                                    css.sequence, css.confidence, siteCoverage,
+                                                    options.aligner,
+                                                    mms=None)
 
             filteredVars =  filterVariants(options.minCoverage,
                                            options.minConfidence,
@@ -240,31 +236,31 @@ availability = (True, "OK")
 
 def configure(options, cmpH5):
     if cmpH5.readType != "standard":
-        raise IncompatibleDataException(
+        raise U.IncompatibleDataException(
             "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
 
     if options.parameterSet == "best":
         if options.diploid:
             logging.info("Diploid analysis--resorting to unknown.NoQVsModel until other " +
                          "parameter sets can be recalibrated.")
-            params = loadParameterSet("unknown.NoQVsModel", options.parametersFile)
+            params = M.loadParameterSet("unknown.NoQVsModel", options.parametersFile)
         else:
-            params = loadParameterSet(cmpH5, options.parametersFile)
-            if not allQVsLoaded(cmpH5):
+            params = M.loadParameterSet(cmpH5, options.parametersFile)
+            if not M.allQVsLoaded(cmpH5):
                 logging.warn(
                     "This .cmp.h5 file lacks some of the QV data tracks that are required " +
                     "for optimal performance of the Quiver algorithm.  For optimal results" +
                     " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
                     "from an instrument using software version 1.3.1 or later.")
     else:
-        params = loadParameterSet(options.parameterSet, options.parametersFile)
+        params = M.loadParameterSet(options.parameterSet, options.parametersFile)
         if not params.model.isCompatibleWithCmpH5(cmpH5):
-            raise IncompatibleDataException(
+            raise U.IncompatibleDataException(
                 "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
                 "due to missing data tracks.")
 
     logging.info("Using Quiver parameter set %s" % params.name)
-    return QuiverConfig(minMapQV=options.minMapQV,
+    return M.QuiverConfig(minMapQV=options.minMapQV,
                         noEvidenceConsensus=options.noEvidenceConsensusCall,
                         refineDinucleotideRepeats=options.refineDinucleotideRepeats,
                         parameters=params)
