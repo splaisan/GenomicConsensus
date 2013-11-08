@@ -32,7 +32,7 @@
 
 from __future__ import absolute_import
 import h5py, math, numpy as np, os.path, sys
-from pbcore.io.rangeQueries import projectIntoRange
+
 from pbcore.io import CmpH5Reader
 
 def die(msg):
@@ -63,13 +63,6 @@ def error_probability_to_qv(error_probability, cap=93):
         return cap
     else:
         return min(cap, int(round(-10*math.log10(error_probability))))
-
-def probability_to_qv(probability, cap=93):
-    """
-    Convert an event probability (not an error probability) to a
-    phred-scaled QV.
-    """
-    return error_probability_to_qv(1.0-probability, cap)
 
 
 _complement = { "A" : "T",
@@ -148,120 +141,6 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         return depthCap(rowNumbers[ordering])
 
 
-def kSpannedIntervals(refWindow, k, start, end, minLength=0):
-    """
-    Find intervals in the window that are k-spanned by the reads.
-
-    Given:
-     `refWindow`: the window under consideration
-     `k`: the number of reads that must span intervals to be returned
-     `start`, `end`: numpy arrays of start and end coordinates for reads,
-       where the extent of each read is [start, end).  Must be ordered
-       so that `start` is sorted in ascending order.
-
-    Find a maximal set of maximal disjoint intervals within
-    refWindow such that each interval is spanned by at least k reads.
-    Intervals are returned in sorted order, as a list of (start, end)
-    tuples.
-
-    Note that this is a greedy search procedure and may not always
-    return the optimal solution, in some sense.  However it will
-    always return the optimal solutions in the most common cases.
-    """
-    assert k >= 1
-    winId, winStart_, winEnd_ = refWindow
-
-    # Truncate to bounds implied by refWindow
-    start = np.maximum(winStart_, start)
-    end   = np.minimum(winEnd_,   end)
-
-    # Translate the start, end to coordinate system where
-    # refWindow.start is 0.
-    start = start - winStart_
-    end   = end - winStart_
-    winStart = 0
-    winEnd   = winEnd_ - winStart_
-
-    positions = np.arange(winEnd - winStart, dtype=int)
-    coverage = projectIntoRange(start, end,
-                                winStart, winEnd)
-    x = -1
-    y = 0
-    intervalsFound = []
-
-    while y < winEnd:
-        # Step 1: let x be the first pos >= y that is k-covered
-        eligible = np.flatnonzero((positions >= y) & (coverage >= k))
-        if len(eligible) > 0:
-            x = eligible[0]
-        else:
-            break
-
-        # Step 2: extend the window [x, y) until [x, y) is no longer
-        # k-spanned.  Do this by setting y to the k-th largest `end`
-        # among reads covering x
-        eligible = end[(start <= x)]
-        eligible.sort()
-        if len(eligible) >= k:
-            y = eligible[-k]
-        else:
-            break
-
-        intervalsFound.append((x, y))
-
-    # Translate intervals back
-    return [ (s + winStart_,
-              e + winStart_)
-             for (s, e) in intervalsFound
-             if e - s >= minLength ]
-
-
-def abut(intervals):
-    """
-    Abut adjacent intervals.  Useful for debugging...
-    """
-    output = []
-    lastS = None
-    lastE = None
-    for (s, e) in intervals:
-        if s == lastE:
-            lastS, lastE = lastS, e
-        else:
-            if lastS is not None:
-                output.append((lastS, lastE))
-            lastS, lastE = s, e
-    output.append((lastS, lastE))
-    return output
-
-
-def holes(refWindow, intervals):
-    """
-    Given a window and a set of disjoint subintervals, return the
-    "holes", which are the intervals of the refWindow not covered by
-    the given subintervals.
-    """
-    winId, winStart, winEnd = refWindow
-    output = []
-    intervals = sorted(intervals)
-    lastE = winStart
-    for (s, e) in intervals:
-        if s > lastE:
-            output.append((lastE, s))
-        lastE = e
-    if lastE < winEnd:
-        output.append((lastE, winEnd))
-    return output
-
-def filterVariants(minCoverage, minConfidence, variants):
-    return [ v for v in variants
-             if ((v.coverage >= minCoverage) and
-                 (v.confidence >= minConfidence)) ]
-
-def annotateVariants(variants, alns):
-    # Operates in place
-    for v in variants:
-        v.annotate("rows", ",".join(str(a.rowNumber) for a in alns))
-
 def loadCmpH5(filename, disableChunkCache=False):
     """
     Get a CmpH5Reader object, disabling the chunk cache if requested.
@@ -289,12 +168,6 @@ def datasetCountExceedsThreshold(cmpH5, threshold):
         if total > threshold:
             return True
     return False
-
-
-def windowsIntersect(w1, w2):
-    i1, s1, e1 = w1
-    i2, s2, e2 = w2
-    return (i1 == i2) and (e1 > s2) and (e2 > s1)
 
 #
 # Some lisp functions we want

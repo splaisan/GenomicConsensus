@@ -38,11 +38,14 @@ from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
-from pbcore.io import (rangeQueries,
-                       FastaWriter)
+from pbcore.io import rangeQueries, FastaWriter
 
 import ConsensusCore as cc
+
 from GenomicConsensus.consensus import *
+from GenomicConsensus.windows import kSpannedIntervals, holes
+from GenomicConsensus.variants import filterVariants, annotateVariants
+
 from GenomicConsensus.quiver.utils import *
 from GenomicConsensus.quiver.model import *
 from GenomicConsensus.quiver.evidence import dumpEvidence

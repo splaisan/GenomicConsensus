@@ -2,7 +2,7 @@
 import numpy as np
 from nose.tools import assert_equals
 
-from GenomicConsensus.utils import kSpannedIntervals, abut, holes
+from GenomicConsensus.windows import kSpannedIntervals, abut, holes
 
 
 def test_intervals_1():

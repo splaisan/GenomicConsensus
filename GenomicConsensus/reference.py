@@ -36,13 +36,18 @@ import math, logging, re, numpy as np
 from collections import OrderedDict
 from pbcore.io import FastaTable
 
-from ConsensusCore import CoveredIntervals
-from .utils import holes, nub, die
-from .Chunk import WorkChunk
+from .windows import holes, kCoveredIntervals
+from .utils import die, nub
 
+class WorkChunk(object):
+    """
+    A chunk of the reference
+    """
+    def __init__(self, window, hasCoverage):
+        self.window      = window
+        self.hasCoverage = hasCoverage
 
 class UppercasingMmappedFastaSequence(object):
-
     def __init__(self, mmappedFastaSequence):
         self.other = mmappedFastaSequence
 
@@ -59,7 +64,6 @@ class ReferenceContig(object):
         self.name      = name        # Fasta header
         self.sequence  = UppercasingMmappedFastaSequence(sequence)
         self.length    = length
-
 
 byName   = OrderedDict()   # Fasta header (string e.g. "chr1") -> FastaRecord
 byId     = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecord
@@ -252,6 +256,3 @@ def enlargedReferenceWindow(refWin, overlap):
     return (refId,
             max(0, refStart - overlap),
             min(refEnd + overlap, contigLength))
-
-def kCoveredIntervals(k, tStart, tEnd, winStart, winEnd):
-    return CoveredIntervals(k, tStart, tEnd, int(winStart), int(winEnd-winStart))

@@ -35,7 +35,7 @@ from multiprocessing import Process
 from threading import Thread
 from collections import OrderedDict, defaultdict
 from .options import options
-from GenomicConsensus import reference, consensus, utils
+from GenomicConsensus import reference, consensus, utils, windows
 from .io.VariantsGffWriter import VariantsGffWriter
 from pbcore.io import FastaWriter, FastqWriter
 
@@ -144,7 +144,7 @@ class ResultCollector(object):
                                                         options.algorithm)
                 # Gather just the chunks pertaining to this span
                 chunksThisSpan = [ chunk for chunk in self.consensusChunksByRefId[refId]
-                                   if utils.windowsIntersect(chunk.refWindow, span) ]
+                                   if windows.windowsIntersect(chunk.refWindow, span) ]
                 css = consensus.join(chunksThisSpan)
 
                 if self.fastaWriter:

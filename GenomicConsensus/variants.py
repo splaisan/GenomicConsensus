@@ -110,3 +110,14 @@ class Variant(CommonEqualityMixin):
         if self.annotations == None:
             self.annotations = []
         self.annotations.append((key, value))
+
+
+def filterVariants(minCoverage, minConfidence, variants):
+    return [ v for v in variants
+             if ((v.coverage >= minCoverage) and
+                 (v.confidence >= minConfidence)) ]
+
+def annotateVariants(variants, alns):
+    # Operates in place
+    for v in variants:
+        v.annotate("rows", ",".join(str(a.rowNumber) for a in alns))
