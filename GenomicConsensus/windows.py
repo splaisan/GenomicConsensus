@@ -167,3 +167,21 @@ def subWindow(refWindow, subinterval):
     assert intS >= winStart
     assert intE <= winEnd
     return winId, intS, intE
+
+def enumerateIntervals(bounds, stride):
+    """
+    Enumerate windows of size "stride", attempting to align window
+    boundaries on multiple of stride.
+    """
+    def alignDown(chunk, x):
+        return (x/chunk)*chunk
+    def alignUp(chunk, x):
+        return int(math.ceil(float(x)/chunk)*chunk)
+
+    start, end = bounds
+    roundStart = alignDown(stride, start)
+    roundEnd   = alignUp  (stride, end)
+
+    for s in xrange(roundStart, roundEnd, stride):
+        roundWin = (s, s + stride)
+        yield intersection(bounds, roundWin)

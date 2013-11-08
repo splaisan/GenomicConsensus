@@ -2,7 +2,9 @@
 import numpy as np
 from nose.tools import assert_equals
 
-from GenomicConsensus.windows import kSpannedIntervals, abut, holes
+from GenomicConsensus.windows import (kSpannedIntervals,
+                                      enumerateIntervals,
+                                      abut, holes)
 
 
 def test_intervals_1():
@@ -98,3 +100,10 @@ def test_holes_4():
     """
     assert_equals([(3, 7)],
                   holes((0, 0, 10), [(0,3), (7,10)]))
+
+
+def test_enumerateIntervals():
+    assert_equals(list(enumerateIntervals((55, 75), 100)), [(55, 75)])
+    assert_equals(list(enumerateIntervals((99,100), 100)), [(99,100)])
+    assert_equals(list(enumerateIntervals((99,101), 100)), [(99,100), (100, 101)])
+    assert_equals(list(enumerateIntervals((99,200), 100)), [(99,100), (100, 200)])

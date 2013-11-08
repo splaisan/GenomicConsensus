@@ -36,7 +36,7 @@ import logging, re
 from collections import OrderedDict
 from pbcore.io import FastaTable
 
-from .windows import holes, kCoveredIntervals
+from .windows import holes, kCoveredIntervals, enumerateIntervals
 from .utils import die, nub
 
 class WorkChunk(object):
@@ -193,12 +193,8 @@ def enumerateChunks(refId, referenceStride, referenceWindows=()):
     the windows, if provided).
     """
     for span in enumerateSpans(refId, referenceWindows):
-        _, start, end = span
-        for chunkBegin in xrange(start, end, referenceStride):
-            win = (refId,
-                   chunkBegin,
-                   min(chunkBegin + referenceStride, end))
-            yield WorkChunk(win, True)
+        for (s, e) in enumerateIntervals(span[1:], referenceStride):
+            yield WorkChunk((refId, s, e), True)
 
 def fancyEnumerateChunks(cmpH5, refId, referenceStride,
                          minCoverage, minMapQV, referenceWindows=()):
