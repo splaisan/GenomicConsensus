@@ -158,7 +158,7 @@ def parseOptions():
     # it as a string (referenceWindowsAsString) and it will later be
     # interpreted and stored as a proper window tuple (referenceWindow)
     readSelection.add_argument(
-        "--referenceWindows", "-w",
+        "--referenceWindow", "--referenceWindows", "-w",
         action="store",
         dest="referenceWindowsAsString",
         type=str,
