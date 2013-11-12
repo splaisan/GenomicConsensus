@@ -134,7 +134,8 @@ def refineConsensus(mms, quiverConfig):
             return (mms.Template(), False)
         if len(scoreHistory) > 0 and mms.BaselineScore() < scoreHistory[-1]:
             logging.debug( "Score decrease!")
-            return (tplHistory[-1], False)
+            # This is usually a recoverable condition, so we continue
+            # to iterate.
 
         tplHistory.append(mms.Template())
         scoreHistory.append(mms.BaselineScore())
