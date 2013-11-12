@@ -123,18 +123,29 @@ def refineConsensus(mms, quiverConfig):
     template mutations.  Return (consensus, didConverge) :: (str, bool)
     """
     favorableMutationsAndScores = None
-
     converged = False
+    tplHistory = []
+    scoreHistory = []
+
     for round_ in range(1, quiverConfig.maxIterations):
 
-        if favorableMutationsAndScores == None:
+        if mms.Template() in tplHistory:
+            logging.debug( "Cycle detected!")
+            return (mms.Template(), False)
+        if len(scoreHistory) > 0 and mms.BaselineScore() < scoreHistory[-1]:
+            logging.debug( "Score decrease!")
+            return (tplHistory[-1], False)
+
+        tplHistory.append(mms.Template())
+        scoreHistory.append(mms.BaselineScore())
+
+        if favorableMutationsAndScores is None:
             mutationsToTry = uniqueSingleBaseMutations(mms.Template())
         else:
             favorableMutations = map(fst, favorableMutationsAndScores)
             mutationsToTry = nearbyMutations(favorableMutations,
                                              mms.Template(),
                                              quiverConfig.mutationNeighborhood)
-
         favorableMutationsAndScores = \
             [(m, mms.Score(m)) for m in mutationsToTry
              if mms.FastIsFavorable(m) ]
@@ -144,16 +155,26 @@ def refineConsensus(mms, quiverConfig):
                                                 quiverConfig.mutationSeparation)
             bestMutations = map(fst, bestMutationsAndScores)
 
+            # Are there multiple muts, and will taking them all induce
+            # a cycle?  If so, only take some (one) of them.
+            if len(bestMutations) > 1:
+                nextTpl = cc.ApplyMutations(bestMutations, mms.Template())
+                if nextTpl in tplHistory:
+                    logging.debug( "Avoiding cycle")
+                    bestMutations = bestMutations[:1]
+
             if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
                 logging.debug("Round %d: Score=%f" % (round_, mms.BaselineScore()))
                 mutsApplied = "\n"+"\n".join(["\t\t[" + mut.ToString() + \
                                               "\t" + str(mms.Score(mut)) + "]"
                                          for mut in bestMutations])
                 logging.debug("Applying mutations: %s" % mutsApplied)
+
             mms.ApplyMutations(bestMutations)
 
         else:
             # If we can't find any favorable mutations, our work is done.
+            logging.debug("Round %d: Score=%f" % (round_, mms.BaselineScore()))
             converged = True
             break
 
