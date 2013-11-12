@@ -261,9 +261,10 @@ def configure(options, cmpH5):
 
     logging.info("Using Quiver parameter set %s" % params.name)
     return M.QuiverConfig(minMapQV=options.minMapQV,
-                        noEvidenceConsensus=options.noEvidenceConsensusCall,
-                        refineDinucleotideRepeats=options.refineDinucleotideRepeats,
-                        parameters=params)
+                          noEvidenceConsensus=options.noEvidenceConsensusCall,
+                          refineDinucleotideRepeats=(not options.fastMode) and options.refineDinucleotideRepeats,
+                          computeConfidence=(not options.fastMode),
+                          parameters=params)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.

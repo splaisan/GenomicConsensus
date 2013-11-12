@@ -329,6 +329,11 @@ def parseOptions():
         action="store_false",
         help="Disable dinucleotide refinement")
     advanced.set_defaults(refineDinucleotideRepeats=True)
+    advanced.add_argument(
+        "--fast",
+        dest="fastMode",
+        action="store_true",
+        help="Cut some corners to run faster.  Unsupported!")
 
     parser.parse_args(namespace=options)
 
