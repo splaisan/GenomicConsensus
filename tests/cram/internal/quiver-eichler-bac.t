@@ -25,7 +25,7 @@ MuMMer at the end are compared to the Sanger reference.
 
 
   $ fastacomposition css.fasta
-  css.fasta A 65440 C 51201 G 50137 N 1011 T 63120
+  css.fasta A 65600 C 51289 G 50239 N 511 T 63270
 
 Use the MuMMer suite to look at the differences from the reference.
 
@@ -35,7 +35,6 @@ First: no structural differences.
 
   $ show-diff -H -q out.delta | sed 's/\t/ /g'
   CH17-157L1|quiver BRK 1 500 500
-  CH17-157L1|quiver GAP 55492 55991 500 500 0
   CH17-157L1|quiver BRK 230890 230909 20
 
 Next, the SNPs.
@@ -44,7 +43,7 @@ Next, the SNPs.
      24558   . A   24577     |    24076    24558  |  AAAAAAAAAA.AGCCTGGATG  AAAAAAAAAAAAGCCTGGATG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      51215   C .   51233     |     1765    51215  |  GGCCCGCCCCCCGGGCAGCCA  GGCCCGCCCC.CGGGCAGCCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      52980   . A   52999     |     1765    52980  |  AAAAAAAAAA.ACAACAAACA  AAAAAAAAAAAACAACAAACA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     64634   C .   64652     |     8662    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     64634   C .   64652     |    11654    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      85478   . T   85497     |     8834    85478  |  TTTTTTTTTT.TACTAACCAG  TTTTTTTTTTTTACTAACCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
      94312   . T   94332     |     8834    94312  |  TTTTTTTTTT.TAGACAGAGT  TTTTTTTTTTTTAGACAGAGT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
     106985   . T   107006    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTTCCTGAGCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
