@@ -24,5 +24,5 @@ Wrong reference:
 Reference containing a subset of the reference that was aligned to:
 
   $ quiver $INPUT -r $REFERENCE_SUBSET -o variants.gff -o consensus.fastq
-  * [WARNING] Some reference contigs aligned against are not found in the reference FASTA.  Will process only those contigs supported by the reference FASTA. (glob)
-  * [WARNING] This .cmp.h5 file lacks some of the QV data tracks that are required for optimal performance of the Quiver algorithm.  For optimal results use the ResequencingQVs workflow in SMRTPortal with bas.h5 files from an instrument using software version 1.3.1 or later. (glob)
+  [WARNING] Some reference contigs aligned against are not found in the reference FASTA.  Will process only those contigs supported by the reference FASTA.
+  [WARNING] This .cmp.h5 file lacks some of the QV data tracks that are required for optimal performance of the Quiver algorithm.  For optimal results use the ResequencingQVs workflow in SMRTPortal with bas.h5 files from an instrument using software version 1.3.1 or later.
