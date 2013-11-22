@@ -291,7 +291,7 @@ class QuiverConfig(object):
                  maxPoaCoverage=11,
                  mutationSeparation=10,
                  mutationNeighborhood=20,
-                 maxIterations=20,
+                 maxIterations=40,
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus="nocall",
                  computeConfidence=True,
