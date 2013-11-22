@@ -72,7 +72,7 @@ class ToolRunner(object):
             logLevel = logging.INFO
         else:
             logLevel = logging.WARNING
-        logFormat = '%(asctime)s [%(levelname)s] %(message)s'
+        logFormat = '[%(levelname)s] %(message)s'
         logging.basicConfig(level=logLevel, format=logFormat)
 
     def _makeTemporaryDirectory(self):
