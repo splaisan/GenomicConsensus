@@ -101,15 +101,16 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                strategy="longest",
                                stratum=options.readStratum,
                                barcode=options.barcode)
-        logging.debug("%s: Row numbers being used: %s" %
-                      (reference.windowToString(subWin),
-                       " ".join(map(str, rows))))
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
         clippedAlns = U.filterAlns(subWin, clippedAlns_, quiverConfig)
 
         if len([ a for a in clippedAlns
                  if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
+
+            logging.debug("%s: Row numbers being used: %s" %
+                          (reference.windowToString(subWin),
+                           " ".join(map(str, rows))))
 
             css = U.consensusForAlignments(subWin,
                                            intRefSeq,
