@@ -10,7 +10,7 @@ but this data is from a really ancient instrument-software version, so
 I'm not all that surprised.
 
   $ quiver -x0 -q0 $INPUT -r $REFERENCE -o v.gff -o css.fa -o css.fq
-  * [WARNING] This .cmp.h5 file lacks some of the QV data tracks that are required for optimal performance of the Quiver algorithm.  For optimal results use the ResequencingQVs workflow in SMRTPortal with bas.h5 files from an instrument using software version 1.3.1 or later. (glob)
+  [WARNING] This .cmp.h5 file lacks some of the QV data tracks that are required for optimal performance of the Quiver algorithm.  For optimal results use the ResequencingQVs workflow in SMRTPortal with bas.h5 files from an instrument using software version 1.3.1 or later. (glob)
 
   $ cat v.gff
   ##gff-version 3
