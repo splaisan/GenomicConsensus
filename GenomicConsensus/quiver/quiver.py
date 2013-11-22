@@ -101,8 +101,9 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                strategy="longest",
                                stratum=options.readStratum,
                                barcode=options.barcode)
-        logging.debug("Row numbers being used: %s" %
-                      " ".join(map(str, rows)))
+        logging.debug("%s: Row numbers being used: %s" %
+                      (reference.windowToString(subWin),
+                       " ".join(map(str, rows))))
         alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
         clippedAlns = U.filterAlns(subWin, clippedAlns_, quiverConfig)
