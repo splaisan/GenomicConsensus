@@ -15,6 +15,7 @@ variants so much as errors in the assembly.  Variants assessed using
 MuMMer at the end are compared to the Sanger reference.
 
   $ sed 's/\t/ /g' variants.gff | grep -v '#'
+  CH17-157L1 . deletion 141 142 . . . reference=AC;variantSeq=.;coverage=100;confidence=47
   CH17-157L1 . deletion 797 797 . . . reference=G;variantSeq=.;coverage=100;confidence=48
   CH17-157L1 . deletion 805 805 . . . reference=T;variantSeq=.;coverage=100;confidence=47
   CH17-157L1 . deletion 26174 26175 . . . reference=AC;variantSeq=.;coverage=100;confidence=48
@@ -25,7 +26,7 @@ MuMMer at the end are compared to the Sanger reference.
 
 
   $ fastacomposition css.fasta
-  css.fasta A 65600 C 51289 G 50239 N 511 T 63270
+  css.fasta A 65735 C 51391 G 50341 N 28 T 63419
 
 Use the MuMMer suite to look at the differences from the reference.
 
@@ -34,19 +35,19 @@ Use the MuMMer suite to look at the differences from the reference.
 First: no structural differences.
 
   $ show-diff -H -q out.delta | sed 's/\t/ /g'
-  CH17-157L1|quiver BRK 1 500 500
-  CH17-157L1|quiver BRK 230890 230909 20
+  CH17-157L1|quiver BRK 1 29 29
+  CH17-157L1|quiver BRK 230895 230914 20
 
 Next, the SNPs.
 
   $ show-snps -H -C -x10 out.delta
-     24558   . A   24577     |    24076    24558  |  AAAAAAAAAA.AGCCTGGATG  AAAAAAAAAAAAGCCTGGATG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     51215   C .   51233     |     1765    51215  |  GGCCCGCCCCCCGGGCAGCCA  GGCCCGCCCC.CGGGCAGCCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     52980   . A   52999     |     1765    52980  |  AAAAAAAAAA.ACAACAAACA  AAAAAAAAAAAACAACAAACA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     64634   C .   64652     |    11654    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     85478   . T   85497     |     8834    85478  |  TTTTTTTTTT.TACTAACCAG  TTTTTTTTTTTTACTAACCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-     94312   . T   94332     |     8834    94312  |  TTTTTTTTTT.TAGACAGAGT  TTTTTTTTTTTTAGACAGAGT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    106985   . T   107006    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTTCCTGAGCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    106985   . T   107007    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTCCTGAGCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    182920   . A   182943    |      564    47946  |  AAAAAAAAAA.ATGTGGTCTC  AAAAAAAAAAAATGTGGTCTC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
-    183484   . A   183508    |      564    47382  |  AAAAAAAAAA.ATAGATGAAC  AAAAAAAAAAAATAGATGAAC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     24558   . A   24582     |    24552    24558  |  AAAAAAAAAA.AGCCTGGATG  AAAAAAAAAAAAGCCTGGATG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     51215   C .   51238     |     1765    51215  |  GGCCCGCCCCCCGGGCAGCCA  GGCCCGCCCC.CGGGCAGCCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     52980   . A   53004     |     1765    52980  |  AAAAAAAAAA.ACAACAAACA  AAAAAAAAAAAACAACAAACA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     64634   C .   64657     |    11654    64634  |  GACCCCCCCCCCACCGGTCAG  GACCCCCCCC.CACCGGTCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     85478   . T   85502     |     8834    85478  |  TTTTTTTTTT.TACTAACCAG  TTTTTTTTTTTTACTAACCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+     94312   . T   94337     |     8834    94312  |  TTTTTTTTTT.TAGACAGAGT  TTTTTTTTTTTTAGACAGAGT  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    106985   . T   107011    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTTCCTGAGCA  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    106985   . T   107012    |        0   106985  |  TTTTTTTTTT.TCCTGAGCAG  TTTTTTTTTTTTCCTGAGCAG  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    182920   . A   182948    |      564    47946  |  AAAAAAAAAA.ATGTGGTCTC  AAAAAAAAAAAATGTGGTCTC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
+    183484   . A   183513    |      564    47382  |  AAAAAAAAAA.ATAGATGAAC  AAAAAAAAAAAATAGATGAAC  |  1  1  CH17-157L1\tCH17-157L1|quiver (esc)
