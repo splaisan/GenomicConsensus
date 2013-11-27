@@ -90,7 +90,7 @@ def scoresForPosition(mms, pos):
     noMutScore = [0] * mms.NumReads()
     mutScores_ = [ mms.Scores(mut)
                    for mut in muts ]
-    mutScores = np.column_stack([noMutScore] + mutScores_)
+    mutScores = np.column_stack([noMutScore] + mutScores_).astype(np.float32)
     return mutScores
 
 
