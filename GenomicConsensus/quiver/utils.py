@@ -131,7 +131,10 @@ def refineConsensus(mms, quiverConfig):
 
         if mms.Template() in tplHistory:
             logging.debug( "Cycle detected!")
-            return (mms.Template(), False)
+            # While the template has cycled, convergence remains
+            # possible, because the state of the system is template + mappedReads.
+            # TODO: make sure that the system is ergodic.
+
         if len(scoreHistory) > 0 and mms.BaselineScore() < scoreHistory[-1]:
             logging.debug( "Score decrease!")
             # This is usually a recoverable condition, so we continue
