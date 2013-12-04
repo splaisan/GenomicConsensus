@@ -32,7 +32,7 @@
 
 from __future__ import absolute_import
 
-import logging, re
+import logging, re, numpy as np
 from collections import OrderedDict
 from pbcore.io import FastaTable
 
@@ -205,8 +205,8 @@ def fancyEnumerateChunks(cmpH5, refId, referenceStride,
     startRow = cmpH5.referenceInfo(refId).StartRow
     endRow   = cmpH5.referenceInfo(refId).EndRow
     goodMapQVs = (cmpH5.MapQV[startRow:endRow] >= minMapQV)
-    tStart = cmpH5.tStart[startRow:endRow][goodMapQVs]
-    tEnd   = cmpH5.tEnd  [startRow:endRow][goodMapQVs]
+    tStart = cmpH5.tStart[startRow:endRow][goodMapQVs].view(np.int32)
+    tEnd   = cmpH5.tEnd  [startRow:endRow][goodMapQVs].view(np.int32)
 
     for span in enumerateSpans(refId, referenceWindows):
         _, spanStart, spanEnd = span
