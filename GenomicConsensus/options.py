@@ -204,13 +204,15 @@ def parseOptions():
              "or D/GenomicConsensus/QuiverParameters.ini, is found.  In the " + \
              "former case, the lexically largest path is chosen.")
     algorithm.add_argument(
-        "--parameterSet", "-p",
+        "--parametersSpec", "-p",
         action="store",
-        dest="parameterSet",
+        dest="parametersSpec",
         type=str,
-        default="best",
-        help="Name of parameter set to select from the parameters file.")
-
+        default="auto",
+        help="Name of parameter set (chemistry.model) to select from the "   + \
+             "parameters file, or just the name of the chemistry, in which " + \
+             "case the best available model is chosen.  Default is 'auto', " + \
+             "which selects the best parameter set from the cmp.h5")
 
     debugging = parser.add_argument_group("Verbosity and debugging/profiling")
     debugging.add_argument("--help", "-h",

@@ -328,21 +328,46 @@ def allQVsLoaded(cmpH5):
     """
     return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
 
-def loadParameterSet(parameterSetNameOrCmpH5, parametersFile=None):
+
+def loadParameterSet(parametersFile=None, spec=None, cmpH5=None):
+    """
+    spec is either:
+      - chemName.modelName  (complete spec),
+      - chemName
+      - None
+    If the spec is incomplete, cmpH5 is required to determine the best
+    available option.
+    """
+    if spec is None:
+        chemistryName, modelName = None, None
+    elif "." in spec:
+        chemistryName, modelName = spec.split(".")
+    else:
+        chemistryName, modelName = spec, None
+    assert cmpH5 or (chemistryName and modelName)
+
     parametersFile = _findParametersFile(parametersFile)
     sets = _loadParameterSets(parametersFile)
-    if isinstance(parameterSetNameOrCmpH5, str):
+
+    if chemistryName and modelName:
         try:
-            params = sets[parameterSetNameOrCmpH5]
+            params = sets[spec]
         except:
             die("Quiver: no available parameter set named %s" % \
-                parameterSetNameOrCmpH5)
+                spec)
+    elif chemistryName:
+        qvsAvailable = cmpH5.pulseFeaturesAvailable()
+        params = _bestParameterSet(sets, chemistryName, qvsAvailable)
+        if params.chemistry != chemistryName:
+            die("Quiver: no parameter set available compatible with this " + \
+                "cmp.h5 for chemistry \"%s\" " % chemistryName)
     else:
-        chemistry = _majorityChemistry(parameterSetNameOrCmpH5)
-        qvsAvailable = parameterSetNameOrCmpH5.pulseFeaturesAvailable()
-        params = _bestParameterSet(sets, chemistry, qvsAvailable)
+        chemistryName = _majorityChemistry(cmpH5)
+        qvsAvailable = cmpH5.pulseFeaturesAvailable()
+        params = _bestParameterSet(sets, chemistryName, qvsAvailable)
     return params
 
-def loadQuiverConfig(parameterSetNameOrCmpH5, parametersFile=None, **quiverConfigOpts):
-    params = loadParameterSet(parameterSetNameOrCmpH5, parametersFile)
+
+def loadQuiverConfig(spec=None, cmpH5=None, parametersFile=None, **quiverConfigOpts):
+    params = loadParameterSet(parametersFile, spec, cmpH5)
     return QuiverConfig(parameters=params, **quiverConfigOpts)

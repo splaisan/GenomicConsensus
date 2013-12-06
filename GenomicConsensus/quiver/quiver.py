@@ -241,13 +241,13 @@ def configure(options, cmpH5):
         raise U.IncompatibleDataException(
             "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
 
-    if options.parameterSet == "best":
+    if options.parametersSpec == "auto":
         if options.diploid:
             logging.info("Diploid analysis--resorting to unknown.NoQVsModel until other " +
                          "parameter sets can be recalibrated.")
-            params = M.loadParameterSet("unknown.NoQVsModel", options.parametersFile)
+            params = M.loadParameterSet(options.parametersFile, spec="unknown.NoQVsModel")
         else:
-            params = M.loadParameterSet(cmpH5, options.parametersFile)
+            params = M.loadParameterSet(options.parametersFile, cmpH5=cmpH5)
             if not M.allQVsLoaded(cmpH5):
                 logging.warn(
                     "This .cmp.h5 file lacks some of the QV data tracks that are required " +
@@ -255,7 +255,9 @@ def configure(options, cmpH5):
                     " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
                     "from an instrument using software version 1.3.1 or later.")
     else:
-        params = M.loadParameterSet(options.parameterSet, options.parametersFile)
+        params = M.loadParameterSet(options.parametersFile,
+                                    spec=options.parametersSpec,
+                                    cmpH5=cmpH5)
         if not params.model.isCompatibleWithCmpH5(cmpH5):
             raise U.IncompatibleDataException(
                 "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
