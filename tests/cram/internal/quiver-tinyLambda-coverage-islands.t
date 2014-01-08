@@ -20,7 +20,7 @@ confidences are too high.  Fix this.
   lambda_NEB3011\t.\tinsertion\t30882\t30882\t.\t.\t.\treference=.;variantSeq=C;coverage=5;confidence=44 (esc)
 
   $ fastacomposition css.fa
-  css.fa A 282 C 266 G 305 N 47361 T 282
+  css.fa A 282 C 266 G 305 N 47361 T 281
 
   $ nucmer -mum $REFERENCE css.fa 2>/dev/null
 
@@ -142,23 +142,23 @@ confidences are too high.  Fix this.
   
   
   --   END alignment [ +1 30837 - 30950 | +1 30835 - 30945 ]
-  -- BEGIN alignment [ +1 43908 - 44037 | +1 43903 - 44031 ]
+  -- BEGIN alignment [ +1 43908 - 44037 | +1 43902 - 44030 ]
   
   
   43908      aatttcattcgccaaaaagcccgatgatgagcgactcaccacgggccac
-  43903      aatttcattcgccaaaaagc.cgatgatgagcgactcaccacgggccac
+  43902      aatttcattcgccaaaaagc.cgatgatgagcgactcaccacgggccac
                                  ^                            
   
   43957      ggcttctgactctctttccggtactgatgtgatggctgctatggggatg
-  43951      ggcttctgactctctttccggtactgatgtgatggctgctatggggatg
+  43950      ggcttctgactctctttccggtactgatgtgatggctgctatggggatg
                                                               
   
   44006      gcgcaatcacaagccggattcggtatggctgc
-  44000      gcgcaatcacaagccggattcggtatggctgc
+  43999      gcgcaatcacaagccggattcggtatggctgc
                                              
   
   
-  --   END alignment [ +1 43908 - 44037 | +1 43903 - 44031 ]
+  --   END alignment [ +1 43908 - 44037 | +1 43902 - 44030 ]
   
   ============================================================
 
