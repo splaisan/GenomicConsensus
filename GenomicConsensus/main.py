@@ -292,6 +292,7 @@ class ToolRunner(object):
                                                       "profile-main.out"))
 
             elif options.doDebugging:
+                logging.info("PID: %d", os.getpid())
                 try:    import ipdb as pdb
                 except: import pdb
                 return pdb.runeval("self._mainLoop()", globals(), locals())
