@@ -122,23 +122,25 @@ avoid using the reference even in zero coverage regions.
 
 What is Quiver's accuracy?
 --------------------------
-Quiver's expected accuracy is a function of coverage.  Using the C2
-and P4-C2 chemistries, our nominal expected accuracy levels are as
-follows:
+Quiver's expected accuracy is a function of coverage and chemistry.
+The C2 (discontinued) and P4-C2 chemistries provide the best accuracy,
+while the P5-C3 chemistry provides longer reads at a reduced accuracy
+and is thus best used for scaffolding-type applications.  Nominal
+consensus accuracy levels are as follows:
 
-+--------+---------+
-|Coverage|Expected |
-|        |consensus|
-|        |accuracy |
-+========+=========+
-|10x     | > Q30   |
-+--------+---------+
-|20x     | > Q40   |
-+--------+---------+
-|40x     | > Q50   |
-+--------+---------+
-|60-80x  | ~ Q60   |
-+--------+---------+
++----------+----------------------------+
+|Coverage  |Expected consensus accuracy |
+|          +---------------+------------+
+|          |C2, P4-C2      | P5-C3      |
++==========+===============+============+
+|10x       | > Q30         | > Q25      |
++----------+---------------+------------+
+|20x       | > Q40         | > Q35      |
++----------+---------------+------------+
+|40x       | > Q50         | > Q45      |
++----------+---------------+------------+
+|60-80x    | ~ Q60         | > Q50      |
++----------+---------------+------------+
 
 The "Q" values we refer to are Phred-scaled
 quality values::
@@ -146,7 +148,9 @@ quality values::
    q = -10 log_10 p_error
 
 so for instance Q50 corresponds to a p_error of 0.00001---an accuracy
-of 99.999%.
+of 99.999%.  These accuracy expectations are based on routine
+validations performed on multiple bacterial genomes before each
+chemistry release.
 
 We are working to lower the coverage requirements needed to achieve
 high accuracy.
