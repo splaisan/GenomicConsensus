@@ -112,7 +112,7 @@ def loadFromFile(filename_, cmpH5):
     # |cmpContigs ^ fastaContigs| == 0  : Nothing to work with.  This is an error.
     #
     # While we formerly used MD5s to vouch for the identity of a
-    # contig, we not use the name.  This is an inferior approach but
+    # contig, we now use the name.  This is an inferior approach but
     # is necessary, in using the FastaTable.
 
     # Load contigs
