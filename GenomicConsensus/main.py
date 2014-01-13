@@ -152,6 +152,15 @@ class ToolRunner(object):
         # Grok the referenceWindow spec, if any.
         if options.referenceWindowsAsString is None:
             options.referenceWindows = ()
+        elif options.skipUnrecognizedContigs:
+            # This is a workaround for smrtpipe scatter/gather.
+            options.referenceWindows = []
+            for s in options.referenceWindowsAsString.split(","):
+                try:
+                    win = reference.stringToWindow(s)
+                    options.referenceWindows.append(win)
+                except:
+                    pass
         else:
             options.referenceWindows = map(reference.stringToWindow,
                                            options.referenceWindowsAsString.split(","))

@@ -336,6 +336,12 @@ def parseOptions():
         dest="fastMode",
         action="store_true",
         help="Cut some corners to run faster.  Unsupported!")
+    advanced.add_argument(
+        "--skipUnrecognizedContigs",
+        action="store_true",
+        help="Do not abort when told to process a reference window (via -w/--referenceWindow[s]) " \
+             "that has no aligned coverage.  Outputs emptyish files if there are no remaining "    \
+             "non-degenerate windows.  Only intended for use by smrtpipe scatter/gather.")
 
     parser.parse_args(namespace=options)
 
