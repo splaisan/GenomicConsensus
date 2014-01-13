@@ -43,6 +43,7 @@ __all__ = [ "ParameterSet",
             "AllQVsModel",
             "NoMergeQVModel",
             "NoQVsModel",
+            "InDelQVsModel",
             "AllQVsMergingByChannelModel",
             "NoQVsMergingByChannelModel",
             "QuiverConfig",
@@ -154,6 +155,12 @@ class NoQVsMergingByChannelModel(Model):
     name = "NoQVsMergingByChannelModel"
     rank = -1
     requiredFeatures = set([])
+    parameterNames = _mergeByChannelParameterNames
+
+class InDelQVsModel(Model):
+    name = "InDelQVsModel"
+    rank = -1
+    requiredFeatures = { "InsertionQV", "SubstitutionQV" }
     parameterNames = _mergeByChannelParameterNames
 
 
