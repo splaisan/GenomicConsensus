@@ -127,13 +127,13 @@ def loadFromFile(filename_, cmpH5):
     for fastaRecord in f:
         refName = fastaRecord.name
         if refName in cmpContigNames:
-            cmpH5RefEntry = cmpH5.referenceInfo(refName)
-            refId         = cmpH5RefEntry.ID
-            sequence      = UppercasingMmappedFastaSequence(fastaRecord.sequence)
-            length        = len(fastaRecord.sequence)
-            contig = ReferenceContig(refId, refName, sequence, length)
-            byId[refId]          = contig
-            byName[refName]      = contig
+            cmpH5RefEntry   = cmpH5.referenceInfo(refName)
+            refId           = cmpH5RefEntry.ID
+            sequence        = UppercasingMmappedFastaSequence(fastaRecord.sequence)
+            length          = len(fastaRecord.sequence)
+            contig          = ReferenceContig(refId, refName, sequence, length)
+            byId[refId]     = contig
+            byName[refName] = contig
     loadedFastaContigNames = set(byName.keys())
     logging.info("Loaded %d of %d reference groups from %s " %
                  (len(byId), len(loadedFastaContigNames), filename_))
