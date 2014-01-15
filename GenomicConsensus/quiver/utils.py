@@ -312,11 +312,10 @@ def lifted(queryPositions, mappedRead):
     """
     newStart = queryPositions[mappedRead.TemplateStart]
     newEnd   = queryPositions[mappedRead.TemplateEnd]
-    return cc.MappedRead(mappedRead.Features,
-                         mappedRead.Strand,
-                         newStart,
-                         newEnd,
-                         mappedRead.ReadIdentifier)
+    copy = cc.MappedRead(mappedRead)
+    copy.TemplateStart = newStart
+    copy.TemplateEnd = newEnd
+    return copy
 
 
 _typeMap = { cc.INSERTION    : "Ins",
@@ -456,7 +455,8 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
-    mms = cc.SparseSseQvMultiReadMutationScorer(quiverConfig.ccQuiverConfig, poaCss)
+    configTbl = cc.QuiverConfigTable({"*": quiverConfig.ccQuiverConfig})
+    mms = cc.SparseSseQvMultiReadMutationScorer(configTbl, poaCss)
     for mr in mappedReads:
         mms.AddRead(mr)
 

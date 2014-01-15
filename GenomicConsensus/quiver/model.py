@@ -118,12 +118,13 @@ class Model(object):
         MappedRead.
         """
         assert aln.referenceSpan > 0
-        readIdentifier = str(aln.rowNumber)
-        return cc.MappedRead(cls.extractFeatures(aln),
+        name = str(aln.rowNumber)
+        chemistry = "*"
+        read = cc.Read(cls.extractFeatures(aln), name, chemistry)
+        return cc.MappedRead(read,
                              int(aln.RCRefStrand),
                              int(aln.referenceStart - windowStart),
-                             int(aln.referenceEnd   - windowStart),
-                             readIdentifier)
+                             int(aln.referenceEnd   - windowStart))
 
 class AllQVsModel(Model):
     name = "AllQVsModel"
