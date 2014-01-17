@@ -41,7 +41,7 @@ tags:
 	find GenomicConsensus -name "*.py" | xargs etags
 
 pip-install:
-	@which pip >& /dev/null
+	@which pip > /dev/null
 	@pip freeze|grep 'GenomicConsensus=='>/dev/null \
       && pip uninstall -y GenomicConsensus \
       || echo -n ''
