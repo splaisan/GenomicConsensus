@@ -40,12 +40,11 @@ clean:
 tags:
 	find GenomicConsensus -name "*.py" | xargs etags
 
-pip-uninstall: $(shell which pip > /dev/null)
+pip-install:
+	@which pip >& /dev/null
 	@pip freeze|grep 'GenomicConsensus=='>/dev/null \
       && pip uninstall -y GenomicConsensus \
       || echo -n ''
-
-pip-install: $(shell which pip > /dev/null)
 	@pip install --no-index \
            --install-option="--install-scripts=$(PREFIX)/bin" \
            ./
