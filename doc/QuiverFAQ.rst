@@ -155,6 +155,34 @@ chemistry release.
 We are working to lower the coverage requirements needed to achieve
 high accuracy.
 
+Does Quiver need to know what sequencing chemistry I used?
+----------------------------------------------------------
+
+At present, the Quiver model is trained per-chemistry, so it is very
+important that Quiver knows the sequencing chemistry of your reads.
+
+If you used SMRTanalysis software to build your `cmp.h5` file, the
+`cmp.h5` will be loaded with information about the sequencing
+chemistry used for each SMRTcell, and Quiver will automatically
+identify the right parameters to use.
+
+If you used custom software to build your `cmp.h5`, or if you want to
+override Quiver's autodetection, you can tell explicitly tell it the
+chemistry or model you want to use, for example::
+
+  % quiver -p P4-C2 ...
+  % quiver -p P4-C2.AllQVsMergingByChannelModel ...
+
+
+
+Can I use a mix of chemistries in a cmp.h5 file for Quiver?
+-----------------------------------------------------------
+
+Yes!  Quiver automatically sees the chemistry /per-SMRTcell/, so it
+can figure out the right parameters for each read and model them
+appropriately.  This is a new feature in 2.2 SMRTanalysis.
+
+
 
 What are these QVs that Quiver uses?
 ------------------------------------

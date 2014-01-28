@@ -3,7 +3,7 @@
 Variant Caller Functional Specification
 =======================================
 
-Version 1.4
+Version 2.2
 
 
 Introduction
@@ -176,6 +176,21 @@ consensus call is incorrect; i.e.
 cannot be encoded in a standard FASTQ file.
 
 
+
+Chemistry specificity
+---------------------
+
+The Quiver algorithm parameters are trained per-chemistry.
+SMRTanalysis software loads metadata into the `cmp.h5` to indicate the
+chemistry used per movie.  Quiver sees this table and automatically
+chooses the appropriate parameter set to use.  This selection can be
+overriden by a command line flag.
+
+When multiple chemistries are represented in the reads in a
+`cmp.h5`, Quiver will model each read appropriately using the
+parameter set for its chemistry, thus yielding optimal results.
+
+
 Performance Requirements
 ------------------------
 
@@ -194,7 +209,3 @@ BLASR.
 The amount of core memory (RAM) used among all the python processes launched
 by a ``variantCaller.py`` run should not exceed the size of the uncompressed
 input ``.cmp.h5`` file.
-
-
-
-
