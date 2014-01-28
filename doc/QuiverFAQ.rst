@@ -143,9 +143,10 @@ consensus accuracy levels are as follows:
 +----------+---------------+------------+
 
 The "Q" values we refer to are Phred-scaled
-quality values::
+quality values:
 
-   q = -10 log_10 p_error
+.. math::
+   q = -10 \log_{10} p_{error}
 
 so for instance Q50 corresponds to a p_error of 0.00001---an accuracy
 of 99.999%.  These accuracy expectations are based on routine
