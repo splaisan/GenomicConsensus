@@ -455,7 +455,8 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
-    configTbl = cc.QuiverConfigTable({"*": quiverConfig.ccQuiverConfig})
+    configTbl = cc.QuiverConfigTable()
+    configTbl.insert("*", quiverConfig.ccQuiverConfig)
     mms = cc.SparseSseQvMultiReadMutationScorer(configTbl, poaCss)
     for mr in mappedReads:
         mms.AddRead(mr)
