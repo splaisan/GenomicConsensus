@@ -448,15 +448,13 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Extract reads into ConsensusCore-compatible objects, and map them into the
     # coordinates relative to the POA consensus
-    mappedReads = [ quiverConfig.model.extractMappedRead(aln, refStart)
-                    for aln in alns ]
+    mappedReads = [ quiverConfig.extractMappedRead(aln, refStart) for aln in alns ]
     queryPositions = cc.TargetToQueryPositions(ga)
     mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
-    configTbl = cc.QuiverConfigTable()
-    configTbl.insert("*", quiverConfig.ccQuiverConfig)
+    configTbl = quiverConfig.ccQuiverConfigTbl
     mms = cc.SparseSseQvMultiReadMutationScorer(configTbl, poaCss)
     for mr in mappedReads:
         mms.AddRead(mr)

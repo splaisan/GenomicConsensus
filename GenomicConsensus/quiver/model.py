@@ -119,7 +119,7 @@ class Model(object):
         """
         assert aln.referenceSpan > 0
         name = str(aln.rowNumber)
-        chemistry = "*"
+        chemistry = aln.sequencingChemistry
         read = cc.Read(cls.extractFeatures(aln), name, chemistry)
         return cc.MappedRead(read,
                              int(aln.RCRefStrand),
@@ -171,11 +171,11 @@ class InDelQVsModel(Model):
 #
 
 class ParameterSet(object):
-    def __init__(self, name, model, chemistry, quiverConfig):
-        self.name         = name
-        self.chemistry    = chemistry
-        self.model        = model
-        self.quiverConfig = quiverConfig
+    def __init__(self, name, model, chemistry, ccQuiverConfig):
+        self.name           = name
+        self.chemistry      = chemistry
+        self.model          = model
+        self.ccQuiverConfig = ccQuiverConfig
 
 def _getResourcesDirectory():
     return resource_filename(Requirement.parse("GenomicConsensus"),
@@ -193,6 +193,9 @@ def _majorityChemistry(cmpH5):
     counts = collections.Counter(chemistries).most_common()
     sortedCounts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
     return sortedCounts[0][0]
+
+def _allChemistries(cmpH5):
+    return set(cmpH5.movieInfoTable.SequencingChemistry)
 
 def _findParametersFile(filenameOrDirectory=None):
     if filenameOrDirectory is None:
@@ -293,7 +296,7 @@ class QuiverConfig(object):
     Quiver configuration options
     """
     def __init__(self,
-                 parameters,
+                 parameterSets,
                  minMapQV=10,
                  minPoaCoverage=3,
                  maxPoaCoverage=11,
@@ -315,16 +318,21 @@ class QuiverConfig(object):
         self.noEvidenceConsensus        = noEvidenceConsensus
         self.computeConfidence          = computeConfidence
         self.readStumpinessThreshold    = readStumpinessThreshold
-        self.parameters                 = parameters
-
-        # Convenience
-        self.model                      = self.parameters.model
-        self.ccQuiverConfig             = self.parameters.quiverConfig
+        self.parameterSets              = parameterSets
+        qct = cc.QuiverConfigTable()
+        for (chem, pset) in self.parameterSets.items():
+            qct.insert(chem, pset.ccQuiverConfig)
+        self.ccQuiverConfigTbl          = qct
 
     @staticmethod
     def _defaultQuiverParameters():
         return loadQuiverConfig("unknown.NoQVsModel")
 
+    def extractMappedRead(self, aln, windowStart):
+        pset = self.parameterSets.get(aln.sequencingChemistry) or \
+               self.parameterSets.get("*")
+        model = pset.model
+        return model.extractMappedRead(aln, windowStart)
 
 #
 #   Convenience functions
@@ -337,7 +345,7 @@ def allQVsLoaded(cmpH5):
     return AllQVsModel.isCompatibleWithCmpH5(cmpH5)
 
 
-def loadParameterSet(parametersFile=None, spec=None, cmpH5=None):
+def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
     """
     spec is either:
       - chemName.modelName  (complete spec),
@@ -345,6 +353,8 @@ def loadParameterSet(parametersFile=None, spec=None, cmpH5=None):
       - None
     If the spec is incomplete, cmpH5 is required to determine the best
     available option.
+
+    Returned value is a dict of completeSpec -> QuiverConfig
     """
     if spec is None:
         chemistryName, modelName = None, None
@@ -360,23 +370,26 @@ def loadParameterSet(parametersFile=None, spec=None, cmpH5=None):
 
     if chemistryName and modelName:
         try:
-            params = sets[spec]
+            p = sets[spec]
+            params = { "*" : p }
         except:
             die("Quiver: no available parameter set named %s" % \
                 spec)
     elif chemistryName:
         qvsAvailable = cmpH5.pulseFeaturesAvailable()
-        params = _bestParameterSet(sets, chemistryName, qvsAvailable)
-        if params.chemistry != chemistryName:
+        p = _bestParameterSet(sets, chemistryName, qvsAvailable)
+        if p.chemistry != chemistryName:
             die("Quiver: no parameter set available compatible with this " + \
                 "cmp.h5 for chemistry \"%s\" " % chemistryName)
+        params = { "*" : p }
     else:
-        chemistryName = _majorityChemistry(cmpH5)
+        chemistryNames = _allChemistries(cmpH5)
         qvsAvailable = cmpH5.pulseFeaturesAvailable()
-        params = _bestParameterSet(sets, chemistryName, qvsAvailable)
+        bestParams = [ _bestParameterSet(sets, chemistryName, qvsAvailable)
+                       for chemistryName in chemistryNames ]
+        params = { p.chemistry : p for p in bestParams }
     return params
 
-
 def loadQuiverConfig(spec=None, cmpH5=None, parametersFile=None, **quiverConfigOpts):
-    params = loadParameterSet(parametersFile, spec, cmpH5)
+    params = loadParameterSets(parametersFile, spec, cmpH5)
     return QuiverConfig(parameters=params, **quiverConfigOpts)

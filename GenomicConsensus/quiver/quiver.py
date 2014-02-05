@@ -245,9 +245,9 @@ def configure(options, cmpH5):
         if options.diploid:
             logging.info("Diploid analysis--resorting to unknown.NoQVsModel until other " +
                          "parameter sets can be recalibrated.")
-            params = M.loadParameterSet(options.parametersFile, spec="unknown.NoQVsModel")
+            params = M.loadParameterSets(options.parametersFile, spec="unknown.NoQVsModel")
         else:
-            params = M.loadParameterSet(options.parametersFile, cmpH5=cmpH5)
+            params = M.loadParameterSets(options.parametersFile, cmpH5=cmpH5)
             if not M.allQVsLoaded(cmpH5):
                 logging.warn(
                     "This .cmp.h5 file lacks some of the QV data tracks that are required " +
@@ -255,20 +255,20 @@ def configure(options, cmpH5):
                     " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    +
                     "from an instrument using software version 1.3.1 or later.")
     else:
-        params = M.loadParameterSet(options.parametersFile,
+        params = M.loadParameterSets(options.parametersFile,
                                     spec=options.parametersSpec,
                                     cmpH5=cmpH5)
-        if not params.model.isCompatibleWithCmpH5(cmpH5):
+        if not all(ps.model.isCompatibleWithCmpH5(cmpH5) for ps in params.values()):
             raise U.IncompatibleDataException(
                 "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
                 "due to missing data tracks.")
 
-    logging.info("Using Quiver parameter set %s" % params.name)
+    logging.info("Using Quiver parameter set(s): %s" % (", ".join(ps.name for ps in params.values())))
     return M.QuiverConfig(minMapQV=options.minMapQV,
                           noEvidenceConsensus=options.noEvidenceConsensusCall,
                           refineDinucleotideRepeats=(not options.fastMode) and options.refineDinucleotideRepeats,
                           computeConfidence=(not options.fastMode),
-                          parameters=params)
+                          parameterSets=params)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
