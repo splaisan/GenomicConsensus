@@ -383,11 +383,12 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
                 "cmp.h5 for chemistry \"%s\" " % chemistryName)
         params = { "*" : p }
     else:
-        chemistryNames = _allChemistries(cmpH5)
+        chemistryNames = list(_allChemistries(cmpH5))
         qvsAvailable = cmpH5.pulseFeaturesAvailable()
         bestParams = [ _bestParameterSet(sets, chemistryName, qvsAvailable)
                        for chemistryName in chemistryNames ]
-        params = { p.chemistry : p for p in bestParams }
+        params = dict(zip(chemistryNames, bestParams))
+
     return params
 
 def loadQuiverConfig(spec=None, cmpH5=None, parametersFile=None, **quiverConfigOpts):
