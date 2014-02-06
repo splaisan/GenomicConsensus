@@ -23,12 +23,12 @@ Tiny lambda file.  Make sure it recognizes this cmp.h5 has an imcomplete set of 
 It should handle the request of a parameter set by complete name:
 
   $ quiver -v -p C2.NoQVsModel -r $REFERENCE -o variants.gff $INPUT 2>&1 | grep "Using Quiver parameter set"
-  [INFO] Using Quiver parameter set(s) C2.NoQVsModel
+  [INFO] Using Quiver parameter set(s): C2.NoQVsModel
 
 ... or by chemistry name:
 
   $ quiver -v -p C2 -r $REFERENCE -o variants.gff $INPUT 2>&1 | grep "Using Quiver parameter set"
-  [INFO] Using Quiver parameter set(s) C2.NoQVsModel
+  [INFO] Using Quiver parameter set(s): C2.NoQVsModel
 
 
 ... and should fail informatively when we ask for an unrecognized
