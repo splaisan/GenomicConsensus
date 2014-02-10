@@ -65,8 +65,9 @@ class ReferenceContig(object):
         self.sequence  = UppercasingMmappedFastaSequence(sequence)
         self.length    = length
 
-byName   = OrderedDict()   # Fasta header (string e.g. "chr1") -> FastaRecord
-byId     = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecord
+byName       = OrderedDict()   # Fasta header (string e.g. "chr1") -> FastaRecord
+byId         = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecord
+byPacBioName = OrderedDict()   # pacbio name ("ref000001")         -> FastaRecord
 
 def idToName(_id):
     return byId[_id].name
@@ -81,6 +82,8 @@ def anyKeyToId(stringKey):
     assert isLoaded()
     if stringKey in byName:
         return byName[stringKey].id
+    elif stringKey in byPacBioName:
+        return byPacBioName[stringKey].id
     elif stringKey.isdigit():
         refId = int(stringKey)
         return byId[refId].id
@@ -129,11 +132,13 @@ def loadFromFile(filename_, cmpH5):
         if refName in cmpContigNames:
             cmpH5RefEntry   = cmpH5.referenceInfo(refName)
             refId           = cmpH5RefEntry.ID
+            pacBioName      = cmpH5RefEntry.Name
             sequence        = UppercasingMmappedFastaSequence(fastaRecord.sequence)
             length          = len(fastaRecord.sequence)
             contig          = ReferenceContig(refId, refName, sequence, length)
             byId[refId]     = contig
             byName[refName] = contig
+            byPacBioName[pacBioName] = contig
     loadedFastaContigNames = set(byName.keys())
     logging.info("Loaded %d of %d reference groups from %s " %
                  (len(byId), len(loadedFastaContigNames), filename_))
