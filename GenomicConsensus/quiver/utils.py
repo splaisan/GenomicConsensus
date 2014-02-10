@@ -359,7 +359,7 @@ def scoreMatrix(mms):
         mutScores = mms.Scores(mut)
         scoreMatrix[:, j] = mutScores
     baselineScores =  np.array(mms.BaselineScores())
-    rowNames = [ mms.Read(i).ReadIdentifier
+    rowNames = [ mms.Read(i).Name
                  for i in xrange(mms.NumReads()) ]
     columnNames = [ _shortMutationDescription(mut, css)
                     for mut in allMutations ]
