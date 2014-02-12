@@ -393,4 +393,4 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
 
 def loadQuiverConfig(spec=None, cmpH5=None, parametersFile=None, **quiverConfigOpts):
     params = loadParameterSets(parametersFile, spec, cmpH5)
-    return QuiverConfig(parameters=params, **quiverConfigOpts)
+    return QuiverConfig(parameterSets=params, **quiverConfigOpts)
