@@ -166,6 +166,17 @@ def parseOptions():
              "be processed, in the format refGroup:refStart-refEnd "                 + \
              "(default: entire reference).",
         default=None)
+
+    def slurpWindowFile(fname):
+        return ",".join(open(fname).readlines())
+
+    readSelection.add_argument(
+        "--referenceWindowsFile", "-W",
+        action="store",
+        dest="referenceWindowsAsString",
+        type=slurpWindowFile,
+        help="A file containing reference window designations, one per line",
+        default=None)
     readSelection.add_argument(
         "--barcode",
         type=str,
