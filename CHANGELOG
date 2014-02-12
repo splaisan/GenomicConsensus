@@ -1,3 +1,10 @@
+Version 0.8.0 (released with SMRTanalysis 2.2)
+  * Improved consensus calling at edges of contigs and amplicons
+  * Fixes to reduce algorithmic convergence failures
+  * Improved support for chemistry mixtures
+  * Faster analysis of P5-C3 chemistry
+  * Faster startup time for large references
+
 Version 0.7.0 (released with SMRTanalysis 2.1)
   * Support for diploid variant calling in plurality and quiver algorithms
   * Auto-windowing to skip coverage deserts, drastically improving user experience
