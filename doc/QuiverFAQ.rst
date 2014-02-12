@@ -179,10 +179,14 @@ chemistry or model you want to use, for example::
 Can I use a mix of chemistries in a cmp.h5 file for Quiver?
 -----------------------------------------------------------
 
-Yes!  Quiver automatically sees the chemistry /per-SMRTcell/, so it
+Yes!  Quiver automatically sees the chemistry *per-SMRTcell*, so it
 can figure out the right parameters for each read and model them
-appropriately.  This is a new feature in 2.2 SMRTanalysis.
+appropriately.
 
+We only support chemistry mixtures of P4-C2, P5-C3, and C2.  If you
+mix other chemistries in a `cmp.h5`, Quiver will give undefined
+results.  However you can still safely use quiver on any `cmp.h5` file
+containing sequencing reads from a single chemistry.
 
 
 What are these QVs that Quiver uses?
