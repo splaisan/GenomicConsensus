@@ -238,11 +238,10 @@ def _buildParameterSet(parameterSetName, nameValuePairs):
     qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
 
     #
-    # Dirty hack for --diploid support and new scaling that I am using.
-    # TODO: add banding options into quiver parameters file.
+    # Dirty hack for --diploid support, diploid model is scaled
+    # differently.  Needs further work.
     #
-    if (parameterSetName == "unknown.NoQVsModel" or
-        parameterSetName == "P5-C3.AllQVsMergingByChannelModel"):
+    if parameterSetName == "unknown.NoQVsModel":
         bandingOptions     = cc.BandingOptions(4, 20)
         fastScoreThreshold = -50
     else:
