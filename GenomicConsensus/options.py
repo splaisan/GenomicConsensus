@@ -168,7 +168,7 @@ def parseOptions():
         default=None)
 
     def slurpWindowFile(fname):
-        return ",".join(open(fname).readlines())
+        return ",".join(map(str.strip, open(fname).readlines()))
 
     readSelection.add_argument(
         "--referenceWindowsFile", "-W",
