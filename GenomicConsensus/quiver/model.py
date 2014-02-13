@@ -197,6 +197,9 @@ def _majorityChemistry(cmpH5):
 def _allChemistries(cmpH5):
     return set(cmpH5.movieInfoTable.SequencingChemistry)
 
+def _isChemistryMixSupported(allChems):
+    return len(allChems) == 1 or set(allChems).issubset(set(["C2", "P4-C2", "P5-C3"]))
+
 def _findParametersFile(filenameOrDirectory=None):
     if filenameOrDirectory is None:
         filenameOrDirectory = _getResourcesDirectory()
@@ -383,6 +386,9 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
         params = { "*" : p }
     else:
         chemistryNames = list(_allChemistries(cmpH5))
+        if not _isChemistryMixSupported(chemistryNames):
+            logging.warn("Unsupported chemistry mix, results will be undefined: %s" % \
+                         ", ".join(chemistryNames))
         qvsAvailable = cmpH5.pulseFeaturesAvailable()
         bestParams = [ _bestParameterSet(sets, chemistryName, qvsAvailable)
                        for chemistryName in chemistryNames ]
