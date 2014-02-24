@@ -161,7 +161,7 @@ class NoQVsMergingByChannelModel(Model):
 class InDelQVsModel(Model):
     name = "InDelQVsModel"
     rank = -1
-    requiredFeatures = { "InsertionQV", "SubstitutionQV" }
+    requiredFeatures = { "InsertionQV", "DeletionQV", "DeletionTag" }
     parameterNames = _mergeByChannelParameterNames
 
 
