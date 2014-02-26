@@ -335,4 +335,45 @@ as opposed to a potential patchwork.  We are working on improvements
 for the 2.0 release.
 
 
+Why would I want to *iterate* the mapping+Quiver process?
+---------------------------------------------------------
+Some customers using Quiver for polishing highly repetitive genomes
+have found that if they take the consensus FASTA output of Quiver, use
+it as a new reference, and then perform mapping and Quiver again to
+get a new consensus, they get improved results from the second round
+of Quiver.
+
+This can be explained by noting that the output of the first round of
+Quiver is more accurate than the initial draft consensus output by the
+assembler, so the second round's mapping to the Quiver consensus can
+be more sensitive in mapping reads from repetitive regions.  This can
+then result in improved consensus in those repetitive regions, because
+the reads have been assigned more correctly to their true genomic
+loci.  However there is also a possibility that the potential shifting
+of reads around from one rounds' mapping to the next might alter
+borderline (low confidence) consensus calls even away from repetitive
+regions.
+
+We recommend the (mapping+Quiver) iteration for customers polishing
+repetitive genomes, and it could also prove useful for resequencing
+applications.  However we caution that this is very much an
+*exploratory* procedure and we make no guarantees about its
+performance.  In particular, borderline consensus calls can change
+when the procedure is iterated, and the procedure is *not* guaranteed
+to be convergent.
+
+
+Is iterating the (mapping+Quiver) process a convergent procedure?
+-----------------------------------------------------------------
+We have seen many examples where (mapping+Quiver), repeated many
+times, is evidently *not* a convergent procedure.  For example, a
+variant call may be present in iteration n, absent in n+1, and then
+present again in n+2.  It is possible for subtle changes in mapping to
+change the set of reads examined upon inspecting a genomic window, and
+therefore result in a different consensus sequence there.  We expect
+this to be the case primarily for "borderline" (low confidence) base
+calls.
+
+
+
 .. _HowToQuiver: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
