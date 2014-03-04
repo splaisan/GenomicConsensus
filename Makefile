@@ -44,7 +44,7 @@ pip-install:
 	@which pip > /dev/null
 	@pip freeze|grep 'GenomicConsensus=='>/dev/null \
       && pip uninstall -y GenomicConsensus \
-      || echo -n ''
+      || true
 	@pip install --no-index \
            --install-option="--install-scripts=$(PREFIX)/bin" \
            ./
