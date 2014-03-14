@@ -1,21 +1,36 @@
+GenomicConsensus (quiver)
+-------------------------
 
-GenomicConsensus provides one tool, variantCaller.py, which performs
-variant and consensus calling for PacBio sequence data.  It is the
-main driver program for the Quiver algorithm.
-
-INSTALLING:
-
-    Make sure you have set up and activated your virtualenv, and
-    installed pbcore and ConsensusCore (which cannot be installed
-    automatically by pip or setuptools).  Then:
-
-    % python setup.py install
+The ``GenomicConsensus`` package provides the ``quiver`` tool, PacBio's flagship consensus
+and variant caller.  The backend logic is provided by the
+``ConsensusCore`` library, which you must install first.
 
 
-LOOKING FOR QUIVER DOCUMENTATION?
+Installing
+----------
+Make sure you have set up and activated your virtualenv, and
+installed ``pbcore`` and ``ConsensusCore`` (which cannot be
+installed automatically by pip or setuptools).  Then:
 
-Read about it here:
-  https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
+```sh
+% python setup.py install
+````
+
+Running
+-------
+Basic usage is as follows:
+
+```sh
+% quiver aligned_reads.cmp.h5 -r reference.fasta -o variants.gff -o consensus.fasta -o consensus.fastq
+```
+
+in this example we perform haploid consensus and variant calling on the mapped reads in the ``aligned_reads.cmp.h5`` which was aligned to ``reference.fasta``.  The ``reference.fasta`` is only used for designating variant calls, not for computing the consensus.  The consensus quality score for every position can be found in the output FASTQ file.
 
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/378316e9951435792c453df2fc10857a "githalytics.com")](http://githalytics.com/PacificBiosciences/GenomicConsensus)
+Documentation
+-------------
+
+- [More detailed installation instructions](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst)
+- [Quiver FAQ](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst)
+- [variants.gff spec](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/VariantsGffSpecification.rst)
+- [CHANGELOG](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/CHANGELOG)
