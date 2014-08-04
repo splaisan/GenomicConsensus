@@ -1,0 +1,12 @@
+*~
+*.pyc
+*.pyo
+.project
+.pydevproject
+.idea
+*.egg-info
+doc/_build
+build/
+dist/
+TAGS
+evidence_dump/

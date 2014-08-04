@@ -1,0 +1,55 @@
+Run plurality on the small example file, and make sure the compressed
+output files are created correctly.
+
+  $ export DATA=$TESTDIR/../../data
+  $ export INPUT=$DATA/hcv/aligned_reads.cmp.h5
+  $ export REFERENCE=$DATA/hcv/HCV_Ref_For_187140.fasta
+  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff.gz -o consensus.fq.gz $INPUT
+
+I like to show the head of the output files inline here so that glaringly obvious changes will
+pop right out, but I verify that the files are exactly correct by looking at the md5 sums.
+
+First, the variants.gff:
+
+  $ gunzip variants.gff.gz
+  $ cat variants.gff
+  ##gff-version 3
+  ##pacbio-variant-version 2.1
+  ##date * (glob)
+  ##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.12
+  ##source GenomicConsensus * (glob)
+  ##source-commandline * (glob)
+  ##source-alignment-file * (glob)
+  ##source-reference-file * (glob)
+  ##sequence-region 5primeEnd 1 156
+  ##sequence-region 3primeEnd 1 386
+
+
+Examine consensus output.  This is identical to the reference
+
+  $ gunzip consensus.fq.gz
+  $ fold -60 consensus.fq
+  @5primeEnd|plurality
+  GGAACCGGTGAGTACACCGGAATTGCCAGGACGACCGGGTCCTTTCGTGGATAAACCCGC
+  TCAATGCCTGGAGATTTGGGCGTGCCCCCGCAAGACTGCTAGCCGAGTAGTGTTGGGTCG
+  CGAAAGGCCTTGTGGTACTGCCTGATAGGGTGCTTG
+  +
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  @3primeEnd|plurality
+  TACCTGGTCATAGCCTCCGTGAAGGCTCTCAGGCTCGCTGCATCCTCCGGGACTCCCTGA
+  CTTTCACAGATAACGACTAAGTCGTCGCCACACACGAGCATGGTGCAGTCCTGGAGCCCA
+  GCGGCTCGACAGGCTGCTTTGGCCTTGATGTAGCAGGTGAGGGTGTTACCACAGCTGGTC
+  GTCAGTACGCCGCTCGCGCGGCACCTGCGATAGCCGCAGTTTTCCCCCCTTGAATTAGTA
+  AGAGGGCCCCCGACATAGAGCCTCTCGGTGAGGGACTTGATGGCCACGCGGGCTTGGGGG
+  TCCAGGTCACAACATTGGTAAATTGCCTCCTCTGTACGGATATCGCTCTCAGTGACTGTG
+  GAGTCAAAGCAGCGGGTATCATACGA
+  +
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIII
