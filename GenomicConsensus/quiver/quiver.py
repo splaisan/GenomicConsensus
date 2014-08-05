@@ -237,6 +237,9 @@ name = "Quiver"
 availability = (True, "OK")
 
 def configure(options, cmpH5):
+    if options.verbosity > 1:
+        cc.Logging.EnableDiagnosticLogging()
+
     if cmpH5.readType != "standard":
         raise U.IncompatibleDataException(
             "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
