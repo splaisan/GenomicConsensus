@@ -22,6 +22,11 @@ since I built the new reference.
   ecoliK12_pbi_March2013 . deletion 219 219 . . . reference=A;variantSeq=.;coverage=58;confidence=47
   ecoliK12_pbi_March2013 . insertion 1536 1536 . . . reference=.;variantSeq=C;coverage=91;confidence=50
 
+No no-call windows.
+
+  $ fastacomposition css.fasta
+  css.fasta A 1141540 C 1177642 G 1180362 T 1142977
+
 MuMMer analysis.  No structural diffs
 
   $ nucmer -mum $REFERENCE css.fasta 2>/dev/null
