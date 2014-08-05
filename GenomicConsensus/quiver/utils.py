@@ -125,70 +125,6 @@ def refineConsensus(mms, quiverConfig):
     isConverged = cc.RefineConsensus(mms)
     return mms.Template(), isConverged
 
-    favorableMutationsAndScores = None
-    converged = False
-    tplHistory = []
-    scoreHistory = []
-
-    for round_ in range(1, quiverConfig.maxIterations):
-
-        if mms.Template() in tplHistory:
-            logging.debug( "Cycle detected!")
-            # While the template has cycled, convergence remains
-            # possible, because the state of the system is template + mappedReads.
-            # TODO: make sure that the system is ergodic.
-
-        if len(scoreHistory) > 0 and mms.BaselineScore() < scoreHistory[-1]:
-            logging.debug( "Score decrease!")
-            # This is usually a recoverable condition, so we continue
-            # to iterate.
-
-        tplHistory.append(mms.Template())
-        scoreHistory.append(mms.BaselineScore())
-
-        if favorableMutationsAndScores is None:
-            mutationsToTry = uniqueSingleBaseMutations(mms.Template())
-        else:
-            favorableMutations = map(fst, favorableMutationsAndScores)
-            mutationsToTry = nearbyMutations(favorableMutations,
-                                             mms.Template(),
-                                             quiverConfig.mutationNeighborhood)
-        favorableMutationsAndScores = \
-            [(m, mms.Score(m)) for m in mutationsToTry
-             if mms.FastIsFavorable(m) ]
-
-        if favorableMutationsAndScores:
-            bestMutationsAndScores = bestSubset(favorableMutationsAndScores,
-                                                quiverConfig.mutationSeparation)
-            bestMutations = map(fst, bestMutationsAndScores)
-
-            # Are there multiple muts, and will taking them all induce
-            # a cycle?  If so, only take some (one) of them.
-            if len(bestMutations) > 1:
-                nextTpl = cc.ApplyMutations(bestMutations, mms.Template())
-                if nextTpl in tplHistory:
-                    logging.debug( "Avoiding cycle")
-                    bestMutations = bestMutations[:1]
-
-            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-                logging.debug("Round %d: Score=%f" % (round_, mms.BaselineScore()))
-                mutsApplied = "\n"+"\n".join(["\t\t[" + mut.ToString() + \
-                                              "\t" + str(mms.Score(mut)) + "]"
-                                         for mut in bestMutations])
-                logging.debug("Applying mutations: %s" % mutsApplied)
-
-            mms.ApplyMutations(bestMutations)
-
-        else:
-            # If we can't find any favorable mutations, our work is done.
-            logging.debug("Round %d: Score=%f" % (round_, mms.BaselineScore()))
-            converged = True
-            break
-
-    logging.debug("Quiver: %d rounds" % round_)
-    return (mms.Template(), converged)
-
-
 def _buildDinucleotideRepeatPattern(minRepeatCount):
     allDinucs = [ a + b for a in "ACGT" for b in "ACGT" if a != b ]
     pattern = "(" + "|".join(["(?:%s){%d,}" % (dinuc, minRepeatCount)
@@ -225,20 +161,6 @@ def refineDinucleotideRepeats(mms):
     for wobbling on every dinucleotide repeat in the window.
     """
     return cc.RefineDinucleotideRepeats(mms)
-    runningLengthDiff = 0
-    for ((start_, end_), dinuc) in findDinucleotideRepeats(mms.Template()):
-        start = start_ + runningLengthDiff
-        end   = end_   + runningLengthDiff
-        assert mms.Template()[start:start+2] == dinuc    # probably remove this...
-        insMut = cc.Mutation(cc.INSERTION, start, start, dinuc)
-        delMut = cc.Mutation(cc.DELETION, start, start + 2, "")
-        insScore = mms.Score(insMut)
-        delScore = mms.Score(delMut)
-        if max(insScore, delScore) > 0:
-            goodMut = insMut if (insScore > 0) else delMut
-            logging.debug("Applying dinucleotide mutation: %s" % goodMut.ToString())
-            mms.ApplyMutations([goodMut])
-            runningLengthDiff += goodMut.LengthDiff()
 
 def consensusConfidence(mms, positions=None):
     """
@@ -247,24 +169,7 @@ def consensusConfidence(mms, positions=None):
     omitted, confidence values are returned for all positions in the
     consensus (mms.Template()).
     """
-    # TODO: We should be using all mutations here, not just all
-    # mutations leading to unique templates.  This should be a trivial
-    # fix, post-1.4.
     return np.array(cc.ConsensusQVs(mms), dtype=np.uint8)
-
-    css = mms.Template()
-    allMutations = uniqueSingleBaseMutations(css, positions)
-    cssQv = np.zeros((len(css),), dtype=np.uint8)
-
-    for pos, muts in itertools.groupby(allMutations, cc.Mutation.Start):
-        # Current score is '0'; exp(0) = 1
-        muts = list(muts)
-        altScores = [mms.FastScore(m) for m in muts]
-        with np.errstate(over="ignore", under="ignore"):
-            errProb = 1. - 1. / (1. + sum(np.exp(altScores)))
-        cssQv[pos] = error_probability_to_qv(errProb)
-
-    return cssQv
 
 def variantsFromAlignment(a, refWindow):
     """
