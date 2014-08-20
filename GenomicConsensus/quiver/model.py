@@ -319,7 +319,7 @@ class QuiverConfig(object):
         self.parameterSets              = parameterSets
         qct = cc.QuiverConfigTable()
         for (chem, pset) in self.parameterSets.items():
-            qct.insert(chem, pset.ccQuiverConfig)
+            qct.Insert(chem, pset.ccQuiverConfig)
         self.ccQuiverConfigTbl          = qct
 
     @staticmethod
