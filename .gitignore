@@ -10,3 +10,4 @@ build/
 dist/
 TAGS
 evidence_dump/
+.p4config
