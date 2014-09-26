@@ -1,3 +1,13 @@
+Version 0.9.0 (released with SMRTanalysis 2.3)
+  * Support for P6-C4 chemistry
+  * Rate of MLE convergences failures reduced drastically
+  * quiver will now abort if it is provided data lacking the full
+    complement of QV tracks (except the MergeQV, which is allowed to
+    be absent, as is the case in data from old basecaller versions)
+  * Use the new chemistry information decoding spec---expects barcode
+    information in the cmp.h5 but will fall back to the old
+    "SequencingChemistry" tag if the barcodes are absent.
+
 Version 0.8.0 (released with SMRTanalysis 2.2)
   * Improved consensus calling at edges of contigs and amplicons
   * Fixes to reduce algorithmic convergence failures
