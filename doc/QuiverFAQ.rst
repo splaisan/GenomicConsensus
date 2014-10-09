@@ -42,7 +42,10 @@ at the single-read level, the plurality sequence is "AAAA"---so the
 deletion is missed.  Local realignment, which plurality does not do,
 but which could be considered as implicit in the Quiver algorithm,
 essentially pushes the gaps here to the same column, thus identifying
-the deletion.
+the deletion.  While plurality could be adjusted to use a simple "gap
+normalizing" realignment, in practice noncognate extras (spurious
+non-homopolymer base calls) in the midst of homopolymer runs pose
+challenges.
 
 What is Quiver?
 ---------------
@@ -114,24 +117,23 @@ avoid using the reference even in zero coverage regions.
 What is Quiver's accuracy?
 --------------------------
 Quiver's expected accuracy is a function of coverage and chemistry.
-The C2 chemistry (no longer available) and P4-C2 chemistries provide the most accuracy,
-while the P5-C3 chemistry provide longer reads at a slightly reduced accuracy
-(and is thus best used for scaffolding-type applications).  Nominal
-consensus accuracy levels are as follows:
+The C2 chemistry (no longer available), P6-C4 and P4-C2 chemistries
+provide the most accuracy.  Nominal consensus accuracy levels are as
+follows:
 
-+----------+----------------------------+
-|Coverage  |Expected consensus accuracy |
-|          +---------------+------------+
-|          |C2, P4-C2      | P5-C3      |
-+==========+===============+============+
-|10x       | > Q30         | > Q30      |
-+----------+---------------+------------+
-|20x       | > Q40         | > Q40      |
-+----------+---------------+------------+
-|40x       | > Q50         | > Q45      |
-+----------+---------------+------------+
-|60-80x    | ~ Q60         | > Q55      |
-+----------+---------------+------------+
++----------+-------------------------------+
+|Coverage  |Expected consensus accuracy    |
+|          +------------------+------------+
+|          | C2, P4-C2, P6-C4 | P5-C3      |
++==========+==================+============+
+|10x       | > Q30            | > Q30      |
++----------+------------------+------------+
+|20x       | > Q40            | > Q40      |
++----------+------------------+------------+
+|40x       | > Q50            | > Q45      |
++----------+------------------+------------+
+|60-80x    | ~ Q60            | > Q55      |
++----------+------------------+------------+
 
 The "Q" values referred to are Phred-scaled
 quality values:
@@ -143,6 +145,13 @@ for instance, Q50 corresponds to a p_error of 0.00001---an accuracy
 of 99.999%.  These accuracy expectations are based on routine
 validations performed on multiple bacterial genomes before each
 chemistry release.
+
+What are the residual errors after applying Quiver?
+---------------------------------------------------
+
+If there are errors remaining applying Quiver, they will almost
+invariably be homopolymer run-length errors (insertions or deletions).
+
 
 
 Does Quiver need to know what sequencing chemistry was used?
@@ -172,8 +181,8 @@ Yes!  Quiver automatically sees the chemistry *per-SMRT Cell*, so it
 can figure out the right parameters for each read and model them
 appropriately.
 
-Chemistry mixtures of P4-C2, P5-C3, and C2 are supported.  
-If other chemistries are mixed in a `cmp.h5`, Quiver will give undefined
+Chemistry mixtures of P6-C4, P4-C2, P5-C3, and C2 are supported.  If
+other chemistries are mixed in a `cmp.h5`, Quiver will give undefined
 results.  However, Quiver can still be used on any `cmp.h5` file
 containing sequencing reads from a single chemistry.
 
