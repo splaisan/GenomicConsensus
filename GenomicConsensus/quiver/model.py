@@ -194,7 +194,7 @@ def chemOrUnknown(aln):
     return chemistry
 
 def _isChemistryMixSupported(allChems):
-    return len(allChems) == 1 or set(allChems).issubset(set(["C2", "P4-C2", "P5-C3"]))
+    return len(allChems) == 1 or set(allChems).issubset(set(["C2", "P4-C2", "P5-C3", "P6-C4"]))
 
 def _findParametersFile(filenameOrDirectory=None):
     if filenameOrDirectory is None:
