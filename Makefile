@@ -24,9 +24,13 @@ extra-tests:
 	PATH=`pwd`:$(PATH) cram tests/cram/extra/*.t
 
 internal-tests:
-	# Tests that depend on files located on PacBio internal NFS
+	# Long running tests that depend on files located on PacBio internal NFS
 	# servers, including some utilities (exonerate suite, MuMMer)
-	PATH=`pwd`:$(INTERNAL_UTILS_PATH):$(PATH) cram tests/cram/internal/*.t
+	(module add mummer/3.23         &&
+	 module add exonerate/2.0.0     &&
+	 module add blasr/2.3.0         &&
+	 module add gfftools/dalexander &&
+	 cram tests/cram/internal/*.t)
 
 doc:
 	cd doc; make html
