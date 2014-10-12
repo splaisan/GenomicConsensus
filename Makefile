@@ -26,7 +26,8 @@ extra-tests:
 internal-tests:
 	# Long running tests that depend on files located on PacBio internal NFS
 	# servers, including some utilities (exonerate suite, MuMMer)
-	(module add mummer/3.23         && \
+	(. /mnt/software/Modules/current/init/bash && \
+	 module add mummer/3.23         && \
 	 module add exonerate/2.0.0     && \
 	 module add blasr/2.3.0         && \
 	 module add gfftools/dalexander && \
