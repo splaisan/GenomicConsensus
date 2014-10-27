@@ -35,7 +35,7 @@ from multiprocessing import Process
 from threading import Thread
 from .options import options
 from .reference import windowToString
-from .utils import loadCmpH5
+from .io.utils import loadCmpH5, loadBam
 
 class Worker(object):
     """
@@ -53,8 +53,11 @@ class Worker(object):
         self._algorithmConfig = algorithmConfig
 
     def _run(self):
-        self._inCmpH5 = loadCmpH5(options.inputFilename,
-                                  disableChunkCache=options.disableHdf5ChunkCache)
+        if options.usingBam:
+            self._inCmpH5 = loadBam(options.inputFilename)
+        else:
+            self._inCmpH5 = loadCmpH5(options.inputFilename,
+                                      disableChunkCache=options.disableHdf5ChunkCache)
         self.onStart()
 
         while True:

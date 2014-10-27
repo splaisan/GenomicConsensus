@@ -31,9 +31,7 @@
 # Author: David Alexander
 
 from __future__ import absolute_import
-import h5py, math, numpy as np, os.path, sys
-
-from pbcore.io import CmpH5Reader
+import math, numpy as np, os.path, sys, itertools
 
 def die(msg):
     print msg
@@ -112,50 +110,40 @@ def readsInWindow(cmpH5, window, depthLimit=None,
     """
     assert strategy in {"longest", "spanning", "fileorder"}
 
-    def depthCap(lst):
-        if depthLimit is not None: return lst[:depthLimit]
-        else: return lst
+    if stratum is not None:
+        raise ValueError, "stratum needs to be reimplemented"
+
+    def depthCap(iter):
+        if depthLimit is not None:
+            return list(itertools.islice(iter, 0, depthLimit))
+        else:
+            return list(iter)
+
+    def lengthInWindow(hit):
+        return min(hit.tEnd, winEnd) - max(hit.tStart, winStart)
 
     winId, winStart, winEnd = window
-    rowNumbers = cmpH5.readsInRange(winId, winStart, winEnd, justIndices=True)
-    rowNumbers = rowNumbers[cmpH5.MapQV[rowNumbers] >= minMapQV]
-
-    if barcode != None:
-        rowNumbers = rowNumbers[cmpH5.barcodes[rowNumbers] == barcode]
+    if barcode == None:
+        alnHits = ( hit
+                    for hit in cmpH5.readsInRange(winId, winStart, winEnd)
+                    if hit.MapQV >= minMapQV )
+    else:
+        alnHits = ( hit
+                    for hit in cmpH5.readsInRange(winId, winStart, winEnd)
+                    if ((hit.MapQV >= minMapQV) and
+                        (hit.barcode == barcode)) )
 
     if strategy == "fileorder":
-        return depthCap(rowNumbers)
-
-    tStartTruncated = np.maximum(winStart, cmpH5.tStart[rowNumbers])
-    tEndTruncated   = np.minimum(winEnd,   cmpH5.tEnd[rowNumbers])
-    lengthsInWindow = tEndTruncated - tStartTruncated
-
-    if stratum is not None:
-        rowNumbers = [ rn for rn in rowNumbers
-                       if rowNumberIsInReadStratum(stratum, rn) ]
-
-    if strategy == "spanning":
-        return depthCap(rowNumbers[lengthsInWindow==(winEnd-winStart)])
+        return depthCap(alnHits)
+    elif strategy == "spanning":
+        winLen = winEnd - winStart
+        return depthCap( hit for hit in alnHits
+                         if lengthInWindow(hit) == winLen )
     elif strategy == "longest":
-        ordering = np.lexsort((rowNumbers, -lengthsInWindow))
-        return depthCap(rowNumbers[ordering])
+        # Well, this defeats the iterable/laziness, performs poorly if
+        # deep coverage.  sorted is stable.
+        return depthCap(sorted(alnHits, key=lengthInWindow, reverse=True))
 
-
-def loadCmpH5(filename, disableChunkCache=False):
-    """
-    Get a CmpH5Reader object, disabling the chunk cache if requested.
-    """
-    filename = os.path.abspath(os.path.expanduser(filename))
-    if not disableChunkCache:
-        file = h5py.File(filename, "r")
-    else:
-        propfaid = h5py.h5p.create(h5py.h5p.FILE_ACCESS)
-        propfaid.set_cache(0, 0, 0, 0)
-        fid = h5py.h5f.open(filename,
-                            flags=h5py.h5f.ACC_RDONLY,
-                            fapl=propfaid)
-        file = h5py.File(fid)
-    return CmpH5Reader(file)
 
 def datasetCountExceedsThreshold(cmpH5, threshold):
     """

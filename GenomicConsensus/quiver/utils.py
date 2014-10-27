@@ -36,6 +36,7 @@ from collections import Counter
 from GenomicConsensus.variants import *
 from GenomicConsensus.utils import *
 from GenomicConsensus.consensus import QuiverConsensus
+from pbcore.io.rangeQueries import projectIntoRange
 import ConsensusCore as cc
 
 def uniqueSingleBaseMutations(templateSequence, positions=None):
@@ -393,3 +394,14 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
         logging.info("%s: Quiver did not converge to MLE" % (refWindow,))
         return QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
                                                refWindow, refSequence)
+
+
+def coverageInWindow(refWin, hits):
+    winId, winStart, winEnd = refWin
+    a = np.array([(hit.referenceStart, hit.referenceEnd)
+                  for hit in hits
+                  if hit.referenceId == winId])
+    tStart = a[:,0]
+    tEnd   = a[:,1]
+    cov = projectIntoRange(tStart, tEnd, winStart, winEnd)
+    return cov

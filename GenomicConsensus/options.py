@@ -369,6 +369,11 @@ def parseOptions():
         elif fmt == "FASTQ": options.fastqOutputFilename = outputFilename
         elif fmt == "CSV":   options.csvOutputFilename   = outputFilename
 
+    if options.inputFilename.endswith(".bam"):
+        options.usingBam, options.usingCmpH5 = True, False
+    else:
+        options.usingBam, options.usingCmpH5 = False, True
+
     for path in (options.inputFilename, options.referenceFilename):
         if path != None:
             checkInputFile(path)

@@ -35,15 +35,16 @@ from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
+
 from pbcore.io import CmpH5Reader
+from GenomicConsensus.io import BamReader
 
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options,
                                       parseOptions,
                                       resolveOptions,
                                       consensusCoreVersion)
-from GenomicConsensus.utils import (rowNumberIsInReadStratum,
-                                    IncompatibleDataException,
+from GenomicConsensus.utils import (IncompatibleDataException,
                                     datasetCountExceedsThreshold,
                                     die)
 
@@ -140,9 +141,11 @@ class ToolRunner(object):
         store it as self._inCmpH5.
         """
         fname = options.inputFilename
-        logging.debug("Before open on main process, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
-        self._inCmpH5 = CmpH5Reader(fname)
-
+        if options.usingBam:
+            self._inCmpH5 = BamReader(fname)
+        else:
+            logging.debug("Before open on main process, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
+            self._inCmpH5 = CmpH5Reader(fname)
 
     def _loadReference(self, cmpH5):
         logging.info("Loading reference")
@@ -242,6 +245,7 @@ class ToolRunner(object):
         return self._slaves
 
     def main(self):
+
         # This looks scary but it's not.  Python uses reference
         # counting and has a secondary, optional garbage collector for
         # collecting garbage cycles.  Unfortunately when a cyclic GC
@@ -260,28 +264,38 @@ class ToolRunner(object):
         logging.info("hdf5 version: %s" % h5py.version.hdf5_version)
         logging.info("ConsensusCore version: %s" %
                      (consensusCoreVersion() or "ConsensusCore unavailable"))
-
         logging.info("Starting.")
+
         atexit.register(self._cleanup)
         if options.doProfiling:
             self._makeTemporaryDirectory()
 
-        # We need to peek at the cmp.h5 file to build the The
-        # refGroupId<->refGroupFullName mapping, and to determine
-        # whether the selected algorithm parameters (Quiver) are
-        # compatible with the data.  But we then have to close the
-        # file, and let the "real" open happen after the fork.
-        with CmpH5Reader(options.inputFilename) as peekCmpH5:
-            logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
-            logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
-            resolveOptions(peekCmpH5)
-            self._loadReference(peekCmpH5)
-            self._checkFileCompatibility(peekCmpH5)
-            self._configureAlgorithm(options, peekCmpH5)
-            options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekCmpH5)
-            if options.disableHdf5ChunkCache:
-                logging.info("Will disable HDF5 chunk cache (large number of datasets)")
-        logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
+        if options.usingBam:
+            # Peek at the bam file to build tables
+            with BamReader(options.inputFilename) as peekCmpH5:
+                logging.info("Peeking at BAM file %s" % options.inputFilename)
+                logging.info("Input BAM data: numAlnHits=%d" % len(peekCmpH5))
+                resolveOptions(peekCmpH5)
+                self._loadReference(peekCmpH5)
+                self._checkFileCompatibility(peekCmpH5)
+                self._configureAlgorithm(options, peekCmpH5)
+        else:
+            # We need to peek at the cmp.h5 file to build the The
+            # refGroupId<->refGroupFullName mapping, and to determine
+            # whether the selected algorithm parameters (Quiver) are
+            # compatible with the data.  But we then have to close the
+            # file, and let the "real" open happen after the fork.
+            with CmpH5Reader(options.inputFilename) as peekCmpH5:
+                logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
+                logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
+                resolveOptions(peekCmpH5)
+                self._loadReference(peekCmpH5)
+                self._checkFileCompatibility(peekCmpH5)
+                self._configureAlgorithm(options, peekCmpH5)
+                options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekCmpH5)
+                if options.disableHdf5ChunkCache:
+                    logging.info("Will disable HDF5 chunk cache (large number of datasets)")
+            logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
 
         if options.dumpEvidence:
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
@@ -326,7 +340,6 @@ class ToolRunner(object):
         self._inCmpH5.close()
         return 0
 
-
 def monitorSlaves(driver):
     """
     Promptly aborts if a child is found to have exited with a nonzero
@@ -347,4 +360,5 @@ def monitorSlaves(driver):
         time.sleep(1)
 
 def main():
-    return ToolRunner().main()
+    tr = ToolRunner()
+    tr.main()

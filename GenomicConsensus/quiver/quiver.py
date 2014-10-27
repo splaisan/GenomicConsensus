@@ -31,8 +31,7 @@
 # Author: David Alexander
 
 import logging
-from pbcore.io import rangeQueries
-import ConsensusCore as cc
+import ConsensusCore as cc, numpy as np
 
 from .. import reference
 from ..options import options
@@ -66,13 +65,13 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     if options.fancyChunking:
         # 1) identify the intervals with adequate coverage for quiver
         #    consensus; restrict to intervals of length > 10
-        allRows = U.readsInWindow(cmpH5, refWindow,
+        alnHits = U.readsInWindow(cmpH5, refWindow,
                                   minMapQV=quiverConfig.minMapQV,
                                   strategy="longest",
                                   stratum=options.readStratum,
                                   barcode=options.barcode)
-        starts = cmpH5.tStart[allRows]
-        ends   = cmpH5.tEnd[allRows]
+        starts = np.fromiter((hit.tStart for hit in alnHits), np.int)
+        ends   = np.fromiter((hit.tEnd   for hit in alnHits), np.int)
         intervals = kSpannedIntervals(refWindow, quiverConfig.minPoaCoverage,
                                       starts, ends, minLength=10)
         coverageGaps = holes(refWindow, intervals)
@@ -95,29 +94,28 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         subWin = subWindow(refWindow, interval)
 
         windowRefSeq = referenceContig[intStart:intEnd]
-        rows = U.readsInWindow(cmpH5, subWin,
+        alns = U.readsInWindow(cmpH5, subWin,
                                depthLimit=depthLimit,
                                minMapQV=quiverConfig.minMapQV,
                                strategy="longest",
                                stratum=options.readStratum,
                                barcode=options.barcode)
-        alns = cmpH5[rows]
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
         clippedAlns = U.filterAlns(subWin, clippedAlns_, quiverConfig)
 
         if len([ a for a in clippedAlns
                  if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
 
-            logging.debug("%s: Row numbers being used: %s" %
+            logging.debug("%s: Reads being used: %s" %
                           (reference.windowToString(subWin),
-                           " ".join(map(str, rows))))
+                           " ".join([str(hit.rowNumber) for hit in alns])))
 
             css = U.consensusForAlignments(subWin,
                                            intRefSeq,
                                            clippedAlns,
                                            quiverConfig)
 
-            siteCoverage = rangeQueries.getCoverageInRange(cmpH5, subWin, rows)
+            siteCoverage = U.coverageInWindow(subWin, alns)
 
             if options.diploid:
                 variants_ = diploid.variantsFromConsensus(subWin, windowRefSeq,
