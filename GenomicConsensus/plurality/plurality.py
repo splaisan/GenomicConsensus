@@ -385,13 +385,12 @@ class PluralityWorker(object):
                                                   referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
-        rowNumbers = readsInWindow(self._inCmpH5, referenceWindow,
+        alnHits = readsInWindow(self._inCmpH5, referenceWindow,
                                    depthLimit=options.coverage,
                                    minMapQV=options.minMapQV,
                                    strategy="longest",
                                    stratum=options.readStratum,
                                    barcode=options.barcode)
-        alnHits = self._inCmpH5[rowNumbers]
         return (referenceWindow,
                 pluralityConsensusAndVariants(referenceWindow, refSeqInWindow,
                                               alnHits, self.pluralityConfig))
