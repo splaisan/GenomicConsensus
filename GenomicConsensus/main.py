@@ -271,6 +271,9 @@ class ToolRunner(object):
             self._makeTemporaryDirectory()
 
         if options.usingBam:
+            logging.warn("'fancyChunking' not yet available for BAM, disabling")
+            options.fancyChunking = False
+
             # Peek at the bam file to build tables
             with BamReader(options.inputFilename) as peekCmpH5:
                 logging.info("Peeking at BAM file %s" % options.inputFilename)
