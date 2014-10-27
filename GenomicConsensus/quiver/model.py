@@ -38,6 +38,7 @@ from pkg_resources import resource_filename, Requirement
 from GenomicConsensus.utils import die
 from GenomicConsensus.quiver.utils import asFloatFeature, fst, snd
 from pbcore.chemistry import ChemistryLookupError
+from pbcore.io import CmpH5Alignment
 import ConsensusCore as cc
 
 __all__ = [ "ParameterSet",
@@ -73,6 +74,13 @@ _mergeByChannelParameterNames = \
             "MergeS_A"        , "MergeS_C",
             "MergeS_G"        , "MergeS_T" ]
 
+ALL_FEATURES = [ "InsertionQV"    ,
+                 "SubstitutionQV" ,
+                 "DeletionQV"     ,
+                 "DeletionTag"    ,
+                 "MergeQV"        ]
+
+
 #
 # Model classes
 #
@@ -93,23 +101,32 @@ class Model(object):
         ConsensusCore-friendly `QvSequenceFeatures` object.  Will
         extract only the features relevant to this Model, zero-filling
         the other features arrays.
-
-        Note that we have to use the AlnArray to see where the gaps
-        are, at least for the moment (see bug 20752).
         """
-        alnRead = np.fromstring(aln.read(), dtype=np.int8)
-        gapMask = alnRead == ord("-")
-        _args = [ alnRead[~gapMask].tostring() ]
-        for feature in [ "InsertionQV",
-                         "SubstitutionQV",
-                         "DeletionQV",
-                         "DeletionTag",
-                         "MergeQV" ]:
-            if feature in cls.requiredFeatures:
-                _args.append(asFloatFeature(aln.pulseFeature(feature)[~gapMask]))
-            else:
-                _args.append(cc.FloatFeature(int(aln.readLength)))
-        return cc.QvSequenceFeatures(*_args)
+        if isinstance(aln, CmpH5Alignment):
+            #
+            # For cmp.h5 input, we have to use the AlnArray to see where the
+            # gaps are (see bug 20752), in order to support old files.
+            #
+            alnRead = np.fromstring(aln.read(), dtype=np.int8)
+            gapMask = alnRead == ord("-")
+            _args = [ alnRead[~gapMask].tostring() ]
+            for feature in ALL_FEATURES:
+                if feature in cls.requiredFeatures:
+                    _args.append(asFloatFeature(aln.pulseFeature(feature)[~gapMask]))
+                else:
+                    _args.append(cc.FloatFeature(int(aln.readLength)))
+            return cc.QvSequenceFeatures(*_args)
+
+        else:
+            _args = [ aln.read(aligned=False, orientation="native") ]
+            for feature in ALL_FEATURES:
+                if feature in cls.requiredFeatures:
+                    _args.append(asFloatFeature(aln.pulseFeature(feature, aligned=False)))
+                else:
+                    _args.append(cc.FloatFeature(int(aln.readLength)))
+            return cc.QvSequenceFeatures(*_args)
+
+
 
     @classmethod
     def extractMappedRead(cls, aln, windowStart):
@@ -123,7 +140,7 @@ class Model(object):
         chemistry = chemOrUnknown(aln)
         read = cc.Read(cls.extractFeatures(aln), name, chemistry)
         return cc.MappedRead(read,
-                             int(aln.RCRefStrand),
+                             int(aln.isReverseStrand),
                              int(aln.referenceStart - windowStart),
                              int(aln.referenceEnd   - windowStart))
 

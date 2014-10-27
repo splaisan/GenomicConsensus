@@ -4,25 +4,30 @@ __all__ = ["BamReader", "BamAlignment"]
 from pysam import Samfile
 from pbcore.io import BasH5Collection
 from pbcore.io._utils import rec_join  # FIXME
+from pbcore.chemistry import decodeTriple, ChemistryLookupError
 
 
 import numpy as np
 from itertools import groupby
+from os.path import abspath, expanduser
 
 class UnavailableFeature(Exception): pass
 class Unimplemented(Exception): pass
 
-class BamReader(object):
-    def __init__(self, fname):
-        self.filename = fname
-        self.dual = Samfile(fname, "rb")
+PULSE_FEATURE_TAGS = { "InsertionQV"    : ("iq", "qv",   np.uint8),
+                       "DeletionQV"     : ("dq", "qv",   np.uint8),
+                       "DeletionTag"    : ("dt", "base", np.int8 ),
+                       "SubstitutionQV" : ("sq", "qv",   np.uint8),
+                       "MergeQV"        : ("mq", "qv",   np.uint8) }
 
-        # Make ref table.
-        refRecords = self.dual.header["SQ"]
+class BamReader(object):
+
+    def _loadReferenceInfo(self):
+        refRecords = self.peer.header["SQ"]
         refNames   = [r["SN"] for r in refRecords]
         refLengths = [r["LN"] for r in refRecords]
         refMD5s    = [r["M5"] for r in refRecords]
-        refIds = map(self.dual.gettid, refNames)
+        refIds = map(self.peer.gettid, refNames)
         nRefs = len(refRecords)
 
         self._referenceInfoTable = np.rec.fromrecords(zip(
@@ -42,7 +47,59 @@ class BamReader(object):
         self._referenceDict.update(zip(refIds, self._referenceInfoTable))
         self._referenceDict.update(zip(refNames, self._referenceInfoTable))
 
-        # Make movie table
+
+    def _loadReadGroupInfo(self):
+        rgs = self.peer.header["RG"]
+        readGroupTable_ = []
+        pulseFeaturesInAll_ = frozenset(PULSE_FEATURE_TAGS.keys())
+        for rg in rgs:
+            rgID = rg["ID"]
+            rgName = rg["PU"]
+            ds = dict([pair.split("=") for pair in rg["DS"].split(";")])
+            triple = ds["BINDINGKIT"], ds["SEQUENCINGKIT"], ds["SOFTWAREVERSION"]
+            rgChem = decodeTriple(*triple)
+            rgReadType = ds["READTYPE"]
+            readGroupTable_.append((rgID, rgName, rgReadType, rgChem))
+            pulseFeaturesInAll_ = pulseFeaturesInAll_.intersection(ds.keys())
+
+        self._readGroupTable = np.rec.fromrecords(
+            readGroupTable_,
+            dtype=[("ID"                 , "O"),
+                   ("MovieName"          , "O"),
+                   ("ReadType"           , "O"),
+                   ("SequencingChemistry", "O")])
+        self._readGroupDict = { rg.ID : rg
+                                for rg in self._readGroupTable }
+
+        self._pulseFeaturesAvailable = pulseFeaturesInAll_
+
+
+    def _loadProgramInfo(self):
+        # TODO: guarantee that these fields are nonoptional in our bams --- check with Marcus
+        # TODO: are we interesting in the PP info?
+        self._programTable = np.rec.fromrecords(
+            [ (pg["ID"], pg.get("VN", None), pg.get("CL", None))
+              for pg in self.peer.header["PG"] ],
+            dtype=[("ID"     ,     "O"),
+                   ("Version",     "O"),
+                   ("CommandLine", "O")])
+
+
+    def __init__(self, fname):
+        self.filename = fname = abspath(expanduser(fname))
+        self.peer = Samfile(fname, "rb")
+
+        # Check for sortedness, index.
+        # There doesn't seem to be a "public" way to do this right
+        # now, but that's fine because we're going to have to rewrite
+        # it all anyway once the pysam rewrite lands.
+        if not self.peer._hasIndex:
+            raise ValueError, "Specified bam file lacks a bam index---required for this API"
+
+        self._loadReferenceInfo()
+        self._loadReadGroupInfo()
+        self._loadProgramInfo()
+
 
     def attach(self, fofnFilename):
         self.basH5Collection = BasH5Collection(fofnFilename)
@@ -55,30 +112,64 @@ class BamReader(object):
     def alignmentIndex(self):
         raise UnavailableFeature("BAM has no alignment index")
 
+    #TODO: change concept to readGroupTable in cmp.h5
     @property
     def movieInfoTable(self):
         raise Unimplemented()
 
+    # TODO: change to read group accessor, this is semantically wrong now
+    def movieInfo(self, movieId):
+        raise Unimplemented()
+
+    @property
+    def movieNames(self):
+        return set([mi.MovieName for mi in self.readGroupTable])
+
+    @property
+    def readGroupTable(self):
+        return self._readGroupTable
+
+    def readGroup(self, readGroupId):
+        return self._readGroupDict[readGroupId]
+
+    @property
+    def sequencingChemistry(self):
+        """
+        List of the sequencing chemistries by movie.  Order is
+        unspecified.
+        """
+        return list(self.readGroupTable.SequencingChemistry)
+
+    #TODO: elide "Info" innames?
     @property
     def referenceInfoTable(self):
         return self._referenceInfoTable
 
+    #TODO: standard?  how about subread instead?  why capitalize ccs?
+    # can we standardize this?  is cDNA an additional possibility
     @property
     def readType(self):
-        raise Unimplemented()
+        """
+        Either "standard", "CCS", "mixed", or "unknown", to represent the
+        type of PacBio reads aligned in this BAM file.
+        """
+        readTypes = self.readGroupTable.ReadType
+        if all(readTypes == "SUBREAD"):
+            return "standard"
+        elif all(readTypes == "CCS"):
+            return "CCS"
+        elif all((readTypes == "CCS") | (readTypes == "SUBREAD")):
+            return "mixed"
+        else:
+            return "unknown"
 
+    #TODO: Marcus needs to put something in the spec for this
     @property
     def version(self):
         raise Unimplemented()
 
+    #TODO: Marcus needs to put something in the spec for this
     def versionAtLeast(self, minimalVersion):
-        raise Unimplemented()
-
-    @property
-    def primaryVersion(self):
-        raise Unimplemented()
-
-    def primaryVersionAtLeast(self, minimalVersion):
         raise Unimplemented()
 
     def softwareVersion(self, programName):
@@ -96,34 +187,30 @@ class BamReader(object):
     def isEmpty(self):
         return (len(self) == 0)
 
+    # TODO: make this private in cmp.h5 reader
     def alignmentGroup(self, alnGroupId):
         raise UnavailableFeature("BAM has no HDF5 groups")
-
-    @property
-    def movieNames(self):
-        raise Unimplemented()
-
-    def movieInfo(self, movieId):
-        raise Unimplemented()
 
     def referenceInfo(self, key):
         return self._referenceDict[key]
 
+    # TODO: cmp.h5 readsInRange only accepts int key, not string.
+    # that's just lame, fix it.
     def readsInRange(self, winId, winStart, winEnd, justIndices=False):
         # PYSAM BUG: fetch doesn't work if arg 1 is tid and not rname
         if not isinstance(winId, str):
-            winId = self.dual.getrname(winId)
+            winId = self.peer.getrname(winId)
         if justIndices == True:
             raise UnavailableFeature("BAM is not random-access")
         else:
             return ( BamAlignment(self, it)
-                     for it in self.dual.fetch(winId, winStart, winEnd) )
+                     for it in self.peer.fetch(winId, winStart, winEnd) )
 
     def hasPulseFeature(self, featureName):
-        return False
+        return featureName in self._pulseFeaturesAvailable
 
     def pulseFeaturesAvailable(self):
-        return []
+        return self._pulseFeaturesAvailable
 
     @property
     def barcode(self):
@@ -144,17 +231,14 @@ class BamReader(object):
         raise UnavailableFeature("BAM doesn't support true random access")
 
     def __iter__(self):
-        for a in self.dual:
+        for a in self.peer:
             yield BamAlignment(self, a)
 
     def __len__(self):
-        return self.dual.mapped
-
-    # def __getattr__(self, key):
-    #     raise Unimplemented()
+        return self.peer.mapped
 
     def close(self):
-        if hasattr(self, "file") and self.file != None:
+        if hasattr(self, "file") and self.file is not None:
             self.file.close()
             self.file = None
 
@@ -165,25 +249,56 @@ class BamReader(object):
         self.close()
 
 
+def _makePulseFeatureAccessor(featureName):
+    def f(self, aligned=True, orientation="native"):
+        return self.pulseFeature(featureName, aligned, orientation)
+    return f
 
 class BamAlignment(object):
     def __init__(self, bamReader, pysamAlignedRead):
-        # Since BAM is a stream-oriented format, we load all the stuff
-        # we need because we cannot (efficiently) seek back to the
-        # record.
-        dual             = pysamAlignedRead
+        #TODO: make these __slot__
+        self.peer        = pysamAlignedRead
         self.bam         = bamReader
-        self.tId         = dual.tid
-        self.tStart      = dual.pos
-        self.tEnd        = dual.aend
-        self.qStart      = dual.opt("XS")-1  # TODO: fix XS convention to be 0-based
-        self.qEnd        = dual.opt("XE")
-        self.qLen        = dual.qlen
-        self.isReverse   = dual.is_reverse
-        self.cigarString = dual.cigarstring  # Genome oriented
-        self.query       = dual.query        # Genome oriented, excludes soft-clipped bases
-        self.qName       = dual.qname
-        self.MapQV       = dual.mapq
+        self.tStart      = self.peer.pos
+        self.tEnd        = self.peer.aend
+        # Our terminology doesn't agree with pysam's terminology for
+        # "query", "read".  This makes this code confusing.
+        if self.peer.is_reverse:
+            clipLeft  = self.peer.rlen - self.peer.qend
+            clipRight = self.peer.qstart
+        else:
+            clipLeft  = self.peer.qstart
+            clipRight = self.peer.rlen - self.peer.qend
+        self.rStart = self.qStart + clipLeft
+        self.rEnd   = self.qEnd   - clipRight
+
+    @property
+    def qStart(self):
+        return self.peer.opt("YS")
+
+    @property
+    def qEnd(self):
+        return self.peer.opt("YE")
+
+    @property
+    def tId(self):
+        return self.peer.tid
+
+    @property
+    def isReverseStrand(self):
+        return self.peer.is_reverse
+
+    @property
+    def isForwardStrand(self):
+        return not self.peer.is_reverse
+
+    @property
+    def HoleNumber(self):
+        return self.peer.opt("ZM")
+
+    @property
+    def MapQV(self):
+        return self.peer.mapq
 
     @property
     def zmw(self):
@@ -191,27 +306,28 @@ class BamAlignment(object):
 
     @property
     def zmwRead(self):
-        if not self.cmpH5.moviesAttached:
+        if not self.bam.moviesAttached:
             raise ValueError("Movies not attached!")
-        return self.cmpH5.basH5Collection[self.readName]
+        return self.bam.basH5Collection[self.readName]
 
+    # TODO: change name to "offset" to be generic
     @property
     def rowNumber(self):
-        # BAM/SAM doesn't really define this, which is a shame.  There
-        # is a notion of "offset" in BAM, but it doesn't seem to be
-        # exposed to pysam.
-        return self.readName
+        #raise Unimplemented()
+        return "(unknown row)"
 
     def clippedTo(self, refStart, refEnd):
-        return ClippedBamAlignment(self, refStart, refEnd)
+        rStart, rEnd, uc = computeClipping(self, refStart, refEnd)
+        return ClippedBamAlignment(self, refStart, refEnd, rStart, rEnd)
 
+    #TODO: remove this
     @property
     def alignmentGroup(self):
         raise UnavailableFeature("BAM has no HDF5 groups")
 
     @property
     def referenceInfo(self):
-        return self.bam.referenceInfo(self.RefGroupID)
+        return self.bam.referenceInfo(self.referenceId)
 
     @property
     def referenceName(self):
@@ -219,20 +335,33 @@ class BamAlignment(object):
 
     @property
     def readName(self):
-        # TODO: qname needs to be updated to have the s_e
-        return "%s/%d_%d" % (self.qName, self.readStart, self.readEnd)
+        if self.readGroup.ReadType == "CCS":
+            return "%s/%d/%d_%d" % (self.readGroup.MovieName, self.HoleNumber, "ccs")
+        else:
+            return "%s/%d/%d_%d" % \
+                (self.readGroup.MovieName, self.HoleNumber, self.readStart, self.readEnd)
 
+
+    #TODO: get rid of this
     @property
     def movieInfo(self):
-        return self.cmpH5.movieInfo(self.MovieID)
+        raise Unimplemented()
+
+    @property
+    def readGroup(self):
+        return self.bam.readGroup(self.peer.opt("RG"))
+
+    @property
+    def sequencingChemistry(self):
+        return self.readGroup.SequencingChemistry
 
     @property
     def isForwardStrand(self):
-        return not self.isReverse
+        return not self.isReverseStrand
 
     @property
     def isReverseStrand(self):
-        return self.isReverse
+        return self.peer.is_reverse
 
     @property
     def referenceId(self):
@@ -247,12 +376,25 @@ class BamAlignment(object):
         return self.tEnd
 
     @property
-    def readStart(self):
+    def queryStart(self):
         return self.qStart
 
     @property
-    def readEnd(self):
+    def queryEnd(self):
         return self.qEnd
+
+    #TODO: provide this in cmp.h5 but throw "unsupported"
+    @property
+    def queryName(self):
+        return self.peer.qname
+
+    @property
+    def readStart(self):
+        return self.rStart
+
+    @property
+    def readEnd(self):
+        return self.rEnd
 
     @property
     def referenceSpan(self):
@@ -260,7 +402,7 @@ class BamAlignment(object):
 
     @property
     def readLength(self):
-        return self.qLen
+        return self.peer.qlen
 
     @property
     def alignedLength(self):
@@ -287,7 +429,7 @@ class BamAlignment(object):
 
     @property
     def numPasses(self):
-        raise Unimplemented()
+        return self.peer.opt("NP")
 
     @property
     def zScore(self):
@@ -307,57 +449,91 @@ class BamAlignment(object):
     def transcript(self, orientation="native", style="gusfield"):
         raise Unimplemented()
 
-    def cigar(self, orientation="native"):
-        if orientation=="genomic" or self.isForwardStrand:
-            return self.cigarString
-        else:
-            return reverseCigarString(self.cigarString)
+    # TODO: remove this from cmp.h5
+    @property
+    def cigar(self):
+        """
+        This returns the BAM-packed CIGAR op vector, NOT a CIGAR string
+        """
+        return self.peer.cigar
 
-    def read(self, aligned=True, orientation="native"):
-        # SAM/BAM stores the query unaligned in genomic order
-        shouldRC = self.isReverseStrand and orientation=="native"
-        rawQuery = self.query
-        if aligned:
-            return readFromBamSeq(rawQuery, shouldRC, self.cigar(orientation="genomic"))
-        else:
-            return readFromBamSeq(rawQuery, shouldRC)
-
+    # TODO: consider allowing the user to pass a fasta to bamreader constructor,
+    # enabling us to get the reference bases
     def reference(self, aligned=True, orientation="native"):
-        # BAM does not contain the actual reference, this returns "N"
-        # with gaps inserted as appropriate
-        seq = "N" * self.referenceSpan
-        cigar = self.cigar(orientation="genomic") if aligned else None
-        shouldRC = (orientation=="native") and (self.isReverseStrand)
-        return refFromBamSeq(seq, shouldRC, cigar)
+        raise UnavailableFeature()
 
     def referencePositions(self, orientation="native"):
-        # PYSAM BUG: as far as I can tell, "positions" is busted in pysam
-        # We will have to manage this on our own.
-        #referenceNonGapMask = (self.alignmentArray(orientation) & 0b1111) != GAP
-        cigarUnpacked = np.fromstring(rlDecodeCigarString(self.cigar(orientation)),
-                                      dtype=np.uint8)
-        M = ord("M")
-        D = ord("D")
-        referenceNonGapMask = (cigarUnpacked == M) | (cigarUnpacked == D)
-        if self.isReverseStrand and orientation == "native":
-            return self.tEnd - 1 - np.hstack([0, np.cumsum(referenceNonGapMask[:-1])])
-        else:
-            return self.tStart + np.hstack([0, np.cumsum(referenceNonGapMask[:-1])])
+        raise Unimplemented()
 
     def readPositions(self, orientation="native"):
         raise Unimplemented()
 
     def pulseFeature(self, featureName, aligned=True, orientation="native"):
-        raise Unimplemented()
+        """
+        Retrieve the pulse feature as indicated.
+        - `aligned`    : whether gaps should be inserted to reflect the alignment
+        - `orientation`: "native" or "genomic"
+        """
+        if aligned:
+            raise Unimplemented()
 
+        if featureName == "read":
+            kind_  = "base"
+            dtype_ = np.int8
+            data_  = self.peer.seq
+        elif featureName == "QualityValue":
+            kind_  = "raw"
+            dtype_ = np.uint8
+            data_  = self.peer.qual
+        else:
+            tag, kind_, dtype_ = PULSE_FEATURE_TAGS[featureName]
+            data_ = self.peer.opt(tag)
+        assert len(data_) == self.peer.rlen
+
+        # In a SAM/BAM file, the read data is all reversed if the aln
+        # is on the reverse strand.  Let's get it back in read
+        # (native) orientation, and remove the other artifacts of BAM
+        # encoding
+
+        if self.isReverseStrand:
+            if kind_ == "base": data = reverseComplement(data_)
+            else:               data = data_[::-1]
+        else:
+            data = data_
+        data = np.fromstring(data, dtype=dtype_)
+        if kind_ == "qv": data -= 33
+        del data_
+
+
+        # [s, e) delimits the range, within the query, that is in the aligned read.
+        # This will be determined by the soft clips actually in the file as well as those
+        # imposed by the clipping API here.
+        s = self.rStart - self.qStart
+        e = self.rEnd   - self.qStart
+        clipped = data[s:e]
+
+        # How to present it to the user
+        shouldReverse = self.isReverseStrand and orientation == "genomic"
+        if kind_ == "base":
+            return reverseComplementAscii(clipped) if shouldReverse else clipped
+        else:
+            return clipped[::-1] if shouldReverse else clipped
+
+    # TODO: We haven't yet decided where these guys are going to live.
     # IPD            = _makePulseFeatureAccessor("IPD")
     # PulseWidth     = _makePulseFeatureAccessor("PulseWidth")
-    # QualityValue   = _makePulseFeatureAccessor("QualityValue")
-    # InsertionQV    = _makePulseFeatureAccessor("InsertionQV")
-    # DeletionQV     = _makePulseFeatureAccessor("DeletionQV")
-    # DeletionTag    = _makePulseFeatureAccessor("DeletionTag")
-    # MergeQV        = _makePulseFeatureAccessor("MergeQV")
-    # SubstitutionQV = _makePulseFeatureAccessor("SubstitutionQV")
+
+    QualityValue   = _makePulseFeatureAccessor("QualityValue")
+    InsertionQV    = _makePulseFeatureAccessor("InsertionQV")
+    DeletionQV     = _makePulseFeatureAccessor("DeletionQV")
+    DeletionTag    = _makePulseFeatureAccessor("DeletionTag")
+    MergeQV        = _makePulseFeatureAccessor("MergeQV")
+    SubstitutionQV = _makePulseFeatureAccessor("SubstitutionQV")
+
+    def read(self, aligned=True, orientation="native"):
+        feature = self.pulseFeature("read", aligned, orientation)
+        return feature.tostring()
+
 
     # def __getattr__(self, key):
     #     return self.cmpH5.alignmentIndex[self.rowNumber][key]
@@ -373,23 +549,16 @@ class BamAlignment(object):
         return cmp((self.referenceId, self.tStart, self.tEnd),
                    (other.referenceId, other.tStart, other.tEnd))
 
-    def __dir__(self):
-        # Special magic improving IPython completion
-        return ALIGNMENT_INDEX_COLUMNS
-
 
 class ClippedBamAlignment(BamAlignment):
+    def __init__(self, aln, tStart, tEnd, rStart, rEnd):
+        self.peer   = aln.peer
+        self.bam    = aln.bam
+        self.tStart = tStart
+        self.tEnd   = tEnd
+        self.rStart = rStart
+        self.rEnd   = rEnd
 
-    def __init__(self, aln, winStart, winEnd):
-        self.tId         = aln.tId
-        self.MapQV       = aln.MapQV
-        self.isReverse   = aln.isReverse
-        self.qName       = aln.qName  # FIXME
-
-        (self.query, self.qStart, self.qEnd,
-         self.tStart, self.tEnd, self.cigarString) = computeClipping(aln, winStart, winEnd)
-
-        self.qLen        = self.qEnd - self.qStart
 
 
 # ------------------------------------------------------------
@@ -404,116 +573,93 @@ COMPLEMENT_MAP = { "A" : "T",
                    "N" : "N",
                    "-" : "-" }
 
+def complement(seq):
+    return "".join([ COMPLEMENT_MAP[b] for b in seq ])
+
 def reverseComplement(seq):
     return "".join([ COMPLEMENT_MAP[b] for b in seq[::-1]])
 
-def alignedRead(seq, cigar):
-    alnChunks = []
-    offset = 0
-    for op in rlDecodeCigarString(cigar):
-        if (op == "M") or (op == "I"):
-            alnChunks.append(seq[offset:offset+1])
-            offset += 1
-        elif (op == "D"):
-            alnChunks.append("-")
-    return "".join(alnChunks)
+def complementAscii(a):
+    return np.array([ord(COMPLEMENT_MAP[chr(b)]) for b in a], dtype=np.int8)
 
-def alignedRef(seq, cigar):
-    alnChunks = []
-    offset = 0
-    for op in rlDecodeCigarString(cigar):
-        if (op == "M") or (op == "D"):
-            alnChunks.append(seq[offset:offset+1])
-            offset += 1
-        elif (op == "I"):
-            alnChunks.append("-")
-    return "".join(alnChunks)
+def reverseComplementAscii(a):
+    return complementAscii(a)[::-1]
 
-def readFromBamSeq(seq, rc=False, cigar=None):
-    if cigar is not None:
-        seq = alignedRead(seq, cigar)
-    if rc:
-        seq = reverseComplement(seq)
-    return seq
 
-def refFromBamSeq(seq, rc=False, cigar=None):
-    if cigar is not None:
-        seq = alignedRef(seq, cigar)
-    if rc:
-        seq = reverseComplement(seq)
-    return seq
+BAM_CMATCH     = 0
+BAM_CINS       = 1
+BAM_CDEL       = 2
+BAM_CREF_SKIP  = 3
+BAM_CSOFT_CLIP = 4
+BAM_CHARD_CLIP = 5
+BAM_CPAD       = 6
+BAM_CEQUAL     = 7
+BAM_CDIFF      = 8
 
-DIGITS = map(str, range(10))
+def unrollCigar(cigar):
+    """
+    Run-length decode the cigar (input is BAM packed CIGAR, not a cigar string)
 
-def rlDecodeCigarString(cigarStr):
-    result = []
-    runLength = 0
-    for code in cigarStr:
-        if code in DIGITS:
-            n = int(code)
-            if runLength == 0:
-                runLength = n
-            else:
-                runLength = 10*runLength + n
+    Removes hard clip ops from the output.  Remove all?
+    """
+    cigarArray = np.array(cigar, dtype=int)
+    hasHardClipAtLeft = cigarArray[0,0] == BAM_CHARD_CLIP
+    hasHardClipAtRight = cigarArray[-1,0] == BAM_CHARD_CLIP
+    ncigar = len(cigarArray)
+    x = np.s_[int(hasHardClipAtLeft) : ncigar - int(hasHardClipAtLeft)]
+    ops = np.repeat(cigarArray[x,0], cigarArray[x,1])
+    return ops
+
+def refPositions(uc, tStart):
+    """
+    Access the aligned reference position for each read base
+
+    The returned value will always be sorted in ascending order.
+    """
+    tPos = tStart
+    move = uc[(uc != BAM_CSOFT_CLIP)]
+    delta = np.where((move == BAM_CMATCH) | (move == BAM_CDEL), 1, 0)
+    pos_ = (np.cumsum(delta) + tStart)[move != BAM_CDEL]
+    pos = np.hstack([[tStart], pos_])[:-1]
+    return pos
+
+def computeClipping(aln, tStart, tEnd):
+    """
+    Return rStart, rEnd, unrolled cigar for clipped
+    """
+    assert type(aln) is BamAlignment
+
+    if (tStart >= tEnd or
+        tStart >= aln.tEnd or
+        tEnd   <= aln.tStart):
+        raise IndexError, "Clipping query does not overlap alignment"
+    uc = unrollCigar(aln.cigar)
+    pos = refPositions(uc, aln.tStart)
+    s = pos.searchsorted(tStart, "left")
+    e = pos.searchsorted(tEnd, "left")
+    if aln.isForwardStrand:
+        return s + aln.rStart, e + aln.rStart, uc[s:e]
+    else:
+        return aln.rEnd - e, aln.rEnd - s, uc[s:e]
+
+def printAln(aln):
+    query = aln.peer.seq
+    uc = unrollCigar(aln.peer.cigarstring)
+    tuples = []
+    qpos = 0
+    for op in uc:
+        ref = "N"
+        if op == BAM_CMATCH:
+            tuples.append( (ref, query[qpos]) )
+            qpos += 1
+        elif op == BAM_CINS:
+            tuples.append( ("-", query[qpos]) )
+            qpos += 1
+        elif op == BAM_CDEL:
+            tuples.append( (ref, "-") )
+        elif op == BAM_CSOFT_CLIP:
+            qpos += 1
         else:
-            op = code
-            result.append(op * runLength)
-            runLength = 0
-    return "".join(result)
-
-def rlEncodeCigarString(cigarStr):
-    return "".join("%d%s" % (len(list(ops)), op)
-                   for (op, ops) in groupby(cigarStr))
-
-def reverseCigarString(cigarStr):
-    return rlEncodeCigarString(rlDecodeCigarString(cigarStr)[::-1])
-
-def computeClipping(aln, winStart, winEnd):
-    """
-    For given reference clipping, returns
-    (query, qStart, qEnd, tStart, tEnd, cigarString)
-    """
-    # Walk the cigar, update offset pointers;
-    # Shadow parent class members
-    refPos = aln.referenceStart
-    readOffset = 0
-    alnOffset = 0
-    unpackedCigar = rlDecodeCigarString(aln.cigarString)
-
-    # Extent pointers
-    alnOffsetStart  = 0
-    alnOffsetEnd    = len(unpackedCigar)
-    readOffsetStart = 0
-    readOffsetEnd   = aln.readLength
-
-    for op in unpackedCigar:
-        # Record start
-        if refPos == winStart:
-            alnOffsetStart = alnOffset
-            readOffsetStart = readOffset
-        # Update offsets
-        alnOffset += 1
-        assert op in "DIM"
-        if op == "M":
-            refPos += 1
-            readOffset += 1
-        elif op == "I":
-            readOffset += 1
-        elif op == "D":
-            refPos += 1
-        # Record end
-        if refPos == winEnd:
-            alnOffsetEnd = alnOffset
-            readOffsetEnd = readOffset
-            break
-
-    offsetBegin = readOffsetStart
-    offsetEnd   = readOffsetEnd
-    qStart      = aln.qStart + readOffsetStart
-    qEnd        = aln.qStart + readOffsetEnd
-    tStart      = 5 # FIXME
-    tEnd        = 6 # FIXME
-    cigarString = rlEncodeCigarString(unpackedCigar[alnOffsetStart:alnOffsetEnd])
-    query  = aln.query[offsetBegin:offsetEnd]
-
-    return (query, qStart, qEnd, tStart, tEnd, cigarString)
+            raise Exception, "Unexpected CIGAR code"
+    aref, aread = zip(*tuples)
+    return "".join(aref), "".join(aread)
