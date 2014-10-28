@@ -55,7 +55,7 @@ class BamReader(object):
         for rg in rgs:
             rgID = rg["ID"]
             rgName = rg["PU"]
-            ds = dict([pair.split("=") for pair in rg["DS"].split(";")])
+            ds = dict([pair.split("=") for pair in rg["DS"].split(";") if pair != ""])
             triple = ds["BINDINGKIT"], ds["SEQUENCINGKIT"], ds["SOFTWAREVERSION"]
             rgChem = decodeTriple(*triple)
             rgReadType = ds["READTYPE"]
