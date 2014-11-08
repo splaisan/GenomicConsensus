@@ -34,7 +34,7 @@ from __future__ import absolute_import
 
 import logging, re, numpy as np
 from collections import OrderedDict
-from pbcore.io import FastaTable
+from pbcore.io import FastaTable, splitFastaHeader
 
 from .windows import holes, kCoveredIntervals, enumerateIntervals
 from .utils import die, nub
@@ -125,10 +125,10 @@ def loadFromFile(filename_, cmpH5):
     except IOError as e:
         die(e)
 
-    cmpContigNames = set(cmpH5.referenceInfoTable.FullName)
+    cmpContigNames = set(splitFastaHeader(x)[0] for x in cmpH5.referenceInfoTable.FullName)
 
     for fastaRecord in f:
-        refName = fastaRecord.name
+        refName = fastaRecord.id
         if refName in cmpContigNames:
             cmpH5RefEntry   = cmpH5.referenceInfo(refName)
             refId           = cmpH5RefEntry.ID
