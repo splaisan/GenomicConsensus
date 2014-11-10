@@ -1,3 +1,6 @@
+Version 0.9.1 (released with SMRTanalysis 2.3.0p1)
+  * Preliminary support for BAM file in quiver
+
 Version 0.9.0 (released with SMRTanalysis 2.3)
   * Support for P6-C4 chemistry
   * Rate of MLE convergences failures reduced drastically
