@@ -364,4 +364,4 @@ def monitorSlaves(driver):
 
 def main():
     tr = ToolRunner()
-    tr.main()
+    return tr.main()
