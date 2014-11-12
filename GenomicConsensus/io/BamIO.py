@@ -204,7 +204,7 @@ class BamReader(object):
             raise UnavailableFeature("BAM is not random-access")
         else:
             return ( BamAlignment(self, it)
-                     for it in self.peer.fetch(winId, winStart, winEnd) )
+                     for it in self.peer.fetch(winId, winStart, winEnd, reopen=False) )
 
     def hasPulseFeature(self, featureName):
         return featureName in self._pulseFeaturesAvailable
