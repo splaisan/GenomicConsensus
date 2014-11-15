@@ -402,7 +402,7 @@ class BamAlignment(object):
 
     @property
     def readLength(self):
-        return self.peer.qlen
+        return self.rEnd - self.rStart
 
     @property
     def alignedLength(self):
