@@ -112,8 +112,13 @@ class BamReader(object):
         self._loadReadGroupInfo()
         self._loadProgramInfo()
 
+        self.referenceFasta = None
+        self.pacbioIndex = None
+
         if referenceFastaFname is not None:
             self._loadReferenceFasta(referenceFastaFname)
+
+
 
 
     @property
