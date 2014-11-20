@@ -6,6 +6,7 @@ from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)
 from nose.tools import assert_equal as EQ
 
+import numpy as np
 
 
 class TestBam(object):
@@ -39,18 +40,10 @@ class TestBam(object):
         EQ(c.tEnd            , b.tEnd)
         EQ(c.HoleNumber      , b.HoleNumber)
 
-        ARRAY_EQ(c.read(orientation="native", aligned=False),
-                 b.read(orientation="native", aligned=False))
-
-        ARRAY_EQ(c.read(orientation="genomic", aligned=False),
-                 b.read(orientation="genomic", aligned=False))
-
-        ARRAY_EQ(c.read(orientation="genomic", aligned=True),
-                 b.read(orientation="genomic", aligned=True))
-
-        ARRAY_EQ(c.read(orientation="native", aligned=True),
-                 b.read(orientation="native", aligned=True))
-
+        for orientation in ["native", "genomic"]:
+            for aligned in [True, False]:
+                ARRAY_EQ(c.read(aligned, orientation),
+                         b.read(aligned, orientation))
 
         # MergeQV is actually not identical presently, due to the
         # clipping at 93 used for ASCII encoding in BAM
@@ -58,20 +51,18 @@ class TestBam(object):
                              "InsertionQV",
                              "SubstitutionQV",
                              "DeletionTag" ]:
-            ARRAY_EQ(c.pulseFeature(featureName, orientation="native", aligned=False),
-                     b.pulseFeature(featureName, orientation="native", aligned=False))
 
-        ARRAY_EQ(c.referencePositions(orientation="genomic"),
-                 b.referencePositions(orientation="genomic"))
+            for orientation in ["native", "genomic"]:
+                for aligned in [True, False]:
+                    ARRAY_EQ(c.pulseFeature(featureName, aligned, orientation),
+                             b.pulseFeature(featureName, aligned, orientation))
 
-        ARRAY_EQ(c.referencePositions(orientation="native"),
-                 b.referencePositions(orientation="native"))
+        ARRAY_EQ(c.pulseFeature("DeletionTag", aligned=True, orientation="genomic"),
+                 b.pulseFeature("DeletionTag", aligned=True, orientation="genomic"))
 
-        ARRAY_EQ(c.readPositions(orientation="genomic"),
-                 b.readPositions(orientation="genomic"))
-
-        ARRAY_EQ(c.readPositions(orientation="native"),
-                 b.readPositions(orientation="native"))
+        for orientation in ["genomic", "native"]:
+            ARRAY_EQ(c.referencePositions(orientation),
+                     b.referencePositions(orientation))
 
 
     def testForwardStrandAln(self):
@@ -86,6 +77,18 @@ class TestBam(object):
         pass
 
 
-# BT = BamTests()
-# BT.test_forward_strand_aln()
-# BT.test_reverse_strand_aln()
+BT = TestBam()
+#BT.testForwardStrandAln()
+#BT.testReverseStrandAln()
+
+
+x = BT.cRev.DeletionQV(orientation="native", aligned=True)
+y = BT.bRev.DeletionQV(orientation="native", aligned=True)
+
+
+x = BT.cRev.pulseFeature("DeletionTag", orientation="genomic", aligned=True)
+y = BT.bRev.pulseFeature("DeletionTag", orientation="genomic", aligned=True)
+
+
+ARRAY_EQ(BT.cRev.read(True, "native"),
+         BT.bRev.read(True, "native"))

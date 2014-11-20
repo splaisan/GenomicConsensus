@@ -474,7 +474,7 @@ class BamAlignment(object):
 
     @requiresReference
     def reference(self, aligned=True, orientation="native"):
-        raise UnavailableFeature()
+        raise Unimplemented()
 
     def unrolledCigar(self, orientation="native", exciseHardClips=True, exciseSoftClips=False):
         """
@@ -531,9 +531,8 @@ class BamAlignment(object):
         - `aligned`    : whether gaps should be inserted to reflect the alignment
         - `orientation`: "native" or "genomic"
         """
-        if aligned:
-            raise Unimplemented()
-
+        if not (orientation == "native" or orientation == "genomic"):
+            raise ValueError, "Bad `orientation` value"
         if featureName == "read":
             kind_  = "base"
             dtype_ = np.int8
@@ -551,7 +550,6 @@ class BamAlignment(object):
         # is on the reverse strand.  Let's get it back in read
         # (native) orientation, and remove the other artifacts of BAM
         # encoding
-
         if self.isReverseStrand:
             if kind_ == "base": data = reverseComplement(data_)
             else:               data = data_[::-1]
@@ -567,14 +565,39 @@ class BamAlignment(object):
         # imposed by the clipping API here.
         s = self.rStart - self.qStart
         e = self.rEnd   - self.qStart
+        assert s >= 0 and e <= len(data)
         clipped = data[s:e]
 
         # How to present it to the user
         shouldReverse = self.isReverseStrand and orientation == "genomic"
         if kind_ == "base":
-            return reverseComplementAscii(clipped) if shouldReverse else clipped
+            ungapped = reverseComplementAscii(clipped) if shouldReverse else clipped
         else:
-            return clipped[::-1] if shouldReverse else clipped
+            ungapped = clipped[::-1] if shouldReverse else clipped
+
+        if aligned == False:
+            return ungapped
+        else:
+            return self._gapifyRead(ungapped, orientation)
+
+
+    def _gapifyRead(self, data, orientation):
+        return self._gapify(data, orientation, BAM_CDEL)
+
+    def _gapifyRef(self, data, orientation):
+        return self._gapify(data, orientation, BAM_CINS)
+
+    def _gapify(self, data, orientation, gapOp):
+        # Precondition: data must already be *in* the specified orientation
+        if data.dtype == np.int8:
+            gapCode = ord("-")
+        else:
+            gapCode = data.dtype.type(-1)
+        uc = self.unrolledCigar(orientation=orientation, exciseSoftClips=True)
+        alnData = np.repeat(np.array(gapCode, dtype=data.dtype), len(uc))
+        gapMask = (uc == gapOp)
+        alnData[~gapMask] = data
+        return alnData
 
     # TODO: We haven't yet decided where these guys are going to live.
     # IPD            = _makePulseFeatureAccessor("IPD")
@@ -619,9 +642,7 @@ class ClippedBamAlignment(BamAlignment):
 
 
 # ------------------------------------------------------------
-#  Helper functions.  All this stuff is really slow and should
-#  almost certainly be moved into C unless we can find a very
-#  clever way to do it with numpy
+#  Helper functions.
 
 COMPLEMENT_MAP = { "A" : "T",
                    "T" : "A",
@@ -693,7 +714,7 @@ def computeClipping(aln, tStart, tEnd):
         tStart >= aln.tEnd or
         tEnd   <= aln.tStart):
         raise IndexError, "Clipping query does not overlap alignment"
-    uc = unrollCigar(aln.cigar)
+    uc = unrollCigar(aln.peer.cigar)
     pos = refPositions(uc, aln.tStart)
     s = pos.searchsorted(tStart, "left")
     e = pos.searchsorted(tEnd, "left")
@@ -702,7 +723,12 @@ def computeClipping(aln, tStart, tEnd):
     else:
         return aln.rEnd - e, aln.rEnd - s, uc[s:e]
 
-def printAln(aln):
+
+# The routines below are unoptimized but are only ever used by code
+# requesting data in an "aligned" context.  Quiver, at least, never
+# asks for data like this.
+
+def printAln(aln, fastaTable=None):
     query = aln.peer.seq
     uc = unrollCigar(aln.peer.cigarstring)
     tuples = []
