@@ -19,6 +19,7 @@ setup(
                'bin/summarizeConsensus.py',
                'bin/gffToVcf.py',
                'bin/gffToBed.py',
+               'bin/makePbi.py',
                'bin/plurality',
                'bin/quiver'],
     packages = find_packages(),
