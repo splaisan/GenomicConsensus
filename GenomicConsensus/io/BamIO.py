@@ -3,11 +3,11 @@ __all__ = ["BamReader", "BamAlignment"]
 
 from pysam import Samfile
 from pbcore.io import BasH5Collection
-from pbcore.io._utils import rec_join  # FIXME
 from pbcore.chemistry import decodeTriple, ChemistryLookupError
 
 
 import numpy as np
+from functools import wraps
 from itertools import groupby
 from os.path import abspath, expanduser
 
@@ -100,6 +100,15 @@ class BamReader(object):
         self._loadReadGroupInfo()
         self._loadProgramInfo()
 
+
+
+    @property
+    def isIndexLoaded(self):
+        return False
+
+    @property
+    def isReferenceLoaded(self):
+        return False
 
     def attach(self, fofnFilename):
         self.basH5Collection = BasH5Collection(fofnFilename)
@@ -252,6 +261,21 @@ class BamReader(object):
 def _makePulseFeatureAccessor(featureName):
     def f(self, aligned=True, orientation="native"):
         return self.pulseFeature(featureName, aligned, orientation)
+    return f
+
+
+def requiresReference(method):
+    @wraps(method)
+    def f(bamAln, *args, **kwargs):
+        if not bamAln.bam.isReferenceLoaded:
+            raise UnavailableFeature, "this feature requires loaded reference sequence"
+    return f
+
+def requiresIndex(method):
+    @wraps(method)
+    def f(bamAln, *args, **kwargs):
+        if not bamAln.bam.isIndexLoaded:
+            raise UnavailableFeature, "this feature requires a PacBio BAM index"
     return f
 
 class BamAlignment(object):
@@ -423,6 +447,7 @@ class BamAlignment(object):
         assert start <= end
         return (start <= self.tStart <= self.tEnd <= end)
 
+    # TODO: rename this to identity
     @property
     def accuracy(self):
         raise Unimplemented()
@@ -443,11 +468,11 @@ class BamAlignment(object):
     def barcodeName(self):
         raise Unimplemented()
 
+    @requiresReference
     def transcript(self, orientation="native", style="gusfield"):
         raise Unimplemented()
 
-    # TODO: consider allowing the user to pass a fasta to bamreader constructor,
-    # enabling us to get the reference bases
+    @requiresReference
     def reference(self, aligned=True, orientation="native"):
         raise UnavailableFeature()
 
