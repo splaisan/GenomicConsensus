@@ -55,7 +55,12 @@ class BamReader(object):
         readGroupTable_ = []
         pulseFeaturesInAll_ = frozenset(PULSE_FEATURE_TAGS.keys())
         for rg in rgs:
-            rgID = rg["ID"]
+            # Regarding RG ID: BLASR currently outputs a hex digest of
+            # 10 nibbles, instead of the 8 which would fit into a
+            # 32-bit word.  So we truncate here for the purposes of
+            # cross-referencing within this API and the PacBioBamIndex
+            # API.  We do check for a collision below.
+            rgID = int(rg["ID"][:8], 16)
             rgName = rg["PU"]
             ds = dict([pair.split("=") for pair in rg["DS"].split(";") if pair != ""])
             triple = ds["BINDINGKIT"], ds["SEQUENCINGKIT"], ds["SOFTWAREVERSION"]
@@ -66,10 +71,13 @@ class BamReader(object):
 
         self._readGroupTable = np.rec.fromrecords(
             readGroupTable_,
-            dtype=[("ID"                 , "O"),
+            dtype=[("ID"                 , np.uint32),
                    ("MovieName"          , "O"),
                    ("ReadType"           , "O"),
                    ("SequencingChemistry", "O")])
+        assert len(set(self._readGroupTable.ID)) == len(self._readGroupTable), \
+            "First 8 chars of read group IDs must be unique!"
+
         self._readGroupDict = { rg.ID : rg
                                 for rg in self._readGroupTable }
 
@@ -434,7 +442,7 @@ class BamAlignment(object):
 
     @property
     def readGroup(self):
-        return self.bam.readGroup(self.peer.opt("RG"))
+        return self.bam.readGroup(int(self.peer.opt("RG")[:8], 16))
 
     @property
     def sequencingChemistry(self):
