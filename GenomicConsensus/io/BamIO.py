@@ -174,7 +174,6 @@ class BamReader(object):
 
         self.index = None
         pbiFname = self.filename + ".pbi"
-        print pbiFname
         if useIndex and exists(pbiFname):
             self._loadPacBioBamIndex(pbiFname)
 
