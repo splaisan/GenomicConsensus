@@ -2,7 +2,7 @@
 __all__ = ["BamReader", "BamAlignment"]
 
 from pysam import Samfile
-from pbcore.io import BasH5Collection
+from pbcore.io import BasH5Collection, FastaTable
 from pbcore.chemistry import decodeTriple, ChemistryLookupError
 
 
@@ -12,7 +12,8 @@ from itertools import groupby
 from os.path import abspath, expanduser
 
 class UnavailableFeature(Exception): pass
-class Unimplemented(Exception): pass
+class Unimplemented(Exception):      pass
+class ReferenceMismatch(Exception):  pass
 
 PULSE_FEATURE_TAGS = { "InsertionQV"    : ("iq", "qv",   np.uint8),
                        "DeletionQV"     : ("dq", "qv",   np.uint8),
@@ -84,8 +85,18 @@ class BamReader(object):
                    ("Version",     "O"),
                    ("CommandLine", "O")])
 
+    def _loadReferenceFasta(self, referenceFastaFname):
+        ft = FastaTable(referenceFastaFname)
+        # Verify that this FASTA is in agreement with the BAM's
+        # reference table---BAM should be a subset.
+        fastaIdsAndLens = set((c.id, c.length) for c in ft)
+        bamIdsAndLens   = set((c.Name, c.Length) for c in self.referenceInfoTable)
+        if not bamIdsAndLens.issubset(fastaIdsAndLens):
+            raise ReferenceMismatch, "FASTA file must contain superset of reference contigs in BAM"
+        self.referenceFasta = ft
 
-    def __init__(self, fname):
+
+    def __init__(self, fname, referenceFastaFname=None):
         self.filename = fname = abspath(expanduser(fname))
         self.peer = Samfile(fname, "rb")
 
@@ -100,6 +111,8 @@ class BamReader(object):
         self._loadReadGroupInfo()
         self._loadProgramInfo()
 
+        if referenceFastaFname is not None:
+            self._loadReferenceFasta(referenceFastaFname)
 
 
     @property
@@ -108,7 +121,7 @@ class BamReader(object):
 
     @property
     def isReferenceLoaded(self):
-        return False
+        return self.referenceFasta is not None
 
     def attach(self, fofnFilename):
         self.basH5Collection = BasH5Collection(fofnFilename)
@@ -269,6 +282,8 @@ def requiresReference(method):
     def f(bamAln, *args, **kwargs):
         if not bamAln.bam.isReferenceLoaded:
             raise UnavailableFeature, "this feature requires loaded reference sequence"
+        else:
+            return method(bamAln, *args, **kwargs)
     return f
 
 def requiresIndex(method):
@@ -276,6 +291,8 @@ def requiresIndex(method):
     def f(bamAln, *args, **kwargs):
         if not bamAln.bam.isIndexLoaded:
             raise UnavailableFeature, "this feature requires a PacBio BAM index"
+        else:
+            return method(bamAln, *args, **kwargs)
     return f
 
 class BamAlignment(object):
@@ -474,7 +491,17 @@ class BamAlignment(object):
 
     @requiresReference
     def reference(self, aligned=True, orientation="native"):
-        raise Unimplemented()
+        if not (orientation == "native" or orientation == "genomic"):
+            raise ValueError, "Bad `orientation` value"
+        tSeq = self.bam.referenceFasta[self.referenceName].sequence[self.tStart:self.tEnd]
+        shouldRC = orientation == "native" and self.isReverseStrand
+        tSeqOriented = reverseComplement(tSeq) if shouldRC else tSeq
+        if aligned:
+            x = np.fromstring(tSeqOriented, dtype=np.int8)
+            y = self._gapifyRef(x, orientation)
+            return y.tostring()
+        else:
+            return tSeqOriented
 
     def unrolledCigar(self, orientation="native", exciseHardClips=True, exciseSoftClips=False):
         """
