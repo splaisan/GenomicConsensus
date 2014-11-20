@@ -4,7 +4,7 @@ from GenomicConsensus.io import BamReader
 
 from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)
-from nose.tools import assert_equal as EQ
+from nose.tools import assert_equal as EQ, assert_raises
 
 import numpy as np
 
@@ -13,7 +13,9 @@ class TestBam(object):
 
     def __init__(self):
         bamFname, cmpFname = D.getBamAndCmpH5()
-        self.b = BamReader(bamFname, "~/Data/ecoliK12_pbi_March2013.fasta")
+        lambdaFasta = D.getLambdaFasta()
+
+        self.b = BamReader(bamFname, lambdaFasta)
         self.c = CmpH5Reader(cmpFname)
 
         # Note that sorting orders are not generally the same... BAM
@@ -27,6 +29,12 @@ class TestBam(object):
         self.cAlns = list(self.c)
         self.cFwd = self.cAlns[0]
         self.cRev = self.cAlns[1]
+
+        self.cFwdClipped = self.cFwd.clippedTo(10, 60)
+        self.bFwdClipped = self.bFwd.clippedTo(10, 60)
+        self.cRevClipped = self.cRev.clippedTo(310, 360)
+        self.bRevClipped = self.bRev.clippedTo(310, 360)
+
 
 
     @staticmethod
@@ -83,13 +91,8 @@ class TestBam(object):
         self.compareAlns(self.cRev, self.bRev)
 
     def testClipping(self):
-        cFwdClipped = self.cFwd.clippedTo(613110, 613130)
-        bFwdClipped = self.bFwd.clippedTo(613110, 613130)
-        self.compareAlns(cFwdClipped, bFwdClipped)
-
-        cRevClipped = self.cRev.clippedTo(613150, 613170)
-        bRevClipped = self.bRev.clippedTo(613150, 613170)
-        self.compareAlns(cRevClipped, bRevClipped)
+        self.compareAlns(self.cFwdClipped, self.bFwdClipped)
+        self.compareAlns(self.cRevClipped, self.bRevClipped)
 
     def testIndex(self):
         ARRAY_EQ([aln.tStart for aln in self.bAlns], self.b.index.tStart)
@@ -99,27 +102,22 @@ class TestBam(object):
         ARRAY_EQ([aln.MapQV  for aln in self.bAlns], self.b.index.MapQV)
         #print self.b.index.MapQV
 
+    # def testClippingRegression(self):
+    #     # Test a corner case
+    #     clipC1 = self.cFwd.clippedTo(56, 58)
+    #     clipB1 = self.bFwd.clippedTo(56, 58)
+    #     self.compareAlns(clipC1, clipB1)
+
+    # def testClippingExhaustively(self):
+    #     pass
+
+    def testIncorrectReference(self):
+        bamFname, _ = D.getBamAndCmpH5()
+        incorrectFasta = D.getTinyFasta()
+        with assert_raises(Exception):
+            f = BamReader(bamFname, incorrectFasta)
 
 
 BT = TestBam()
 #BT.testForwardStrandAln()
 #BT.testReverseStrandAln()
-
-
-x = BT.cRev.DeletionQV(orientation="native", aligned=True)
-y = BT.bRev.DeletionQV(orientation="native", aligned=True)
-
-
-x = BT.cRev.pulseFeature("DeletionTag", orientation="genomic", aligned=True)
-y = BT.bRev.pulseFeature("DeletionTag", orientation="genomic", aligned=True)
-
-
-ARRAY_EQ(BT.cRev.read(True, "native"),
-         BT.bRev.read(True, "native"))
-
-
-bFwdClipped = BT.bFwd.clippedTo(613110, 613130)
-bRevClipped = BT.bRev.clippedTo(613150, 613170)
-
-cFwdClipped = BT.cFwd.clippedTo(613110, 613130)
-cRevClipped = BT.cRev.clippedTo(613150, 613170)
