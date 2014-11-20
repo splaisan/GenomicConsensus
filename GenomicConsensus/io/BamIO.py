@@ -443,30 +443,62 @@ class BamAlignment(object):
     def barcodeName(self):
         raise Unimplemented()
 
-    def alignmentArray(self, orientation="native"):
-        raise UnavailableFeature()
-
     def transcript(self, orientation="native", style="gusfield"):
         raise Unimplemented()
-
-    # TODO: remove this from cmp.h5
-    @property
-    def cigar(self):
-        """
-        This returns the BAM-packed CIGAR op vector, NOT a CIGAR string
-        """
-        return self.peer.cigar
 
     # TODO: consider allowing the user to pass a fasta to bamreader constructor,
     # enabling us to get the reference bases
     def reference(self, aligned=True, orientation="native"):
         raise UnavailableFeature()
 
+    def unrolledCigar(self, orientation="native", exciseHardClips=True, exciseSoftClips=False):
+        """
+        Run-length decode the CIGAR encoding, and orient
+
+        If both `exciseSoftClips` and `exciseHardClips` are True,
+        returns an array length equal to that of the alignment.  If
+        clips are not excised, the return value length will also
+        include them.
+
+        `exciseSoftClips` requires `exciseHardClips`
+        """
+        if exciseSoftClips and not exciseHardClips:
+            raise ValueError, "`exciseSoftClips` requires `exciseHardClips`"
+        ucGenomic = unrollCigar(self.peer.cigar, exciseSoftClips=exciseSoftClips)
+        ucOriented = ucGenomic[::-1] if (orientation == "native" and self.isReverseStrand) else ucGenomic
+        return ucOriented
+
     def referencePositions(self, orientation="native"):
-        raise Unimplemented()
+        """
+        Returns an array of reference positions such that
+        referencePositions[i] = reference position of the i'th column
+        in the alignment.  Insertions are grouped with the following
+        reference base, in the specified orientation.
+
+        Length of output array = length of alignment
+        """
+        ucOriented = self.unrolledCigar(orientation, exciseSoftClips=True)
+        refNonGapMask = (ucOriented != BAM_CINS)
+        if self.isReverseStrand and orientation == "native":
+            return self.tEnd - 1 - np.hstack([0, np.cumsum(refNonGapMask[:-1])])
+        else:
+            return self.tStart + np.hstack([0, np.cumsum(refNonGapMask[:-1])])
 
     def readPositions(self, orientation="native"):
-        raise Unimplemented()
+        """
+        Returns an array of read positions such that
+        readPositions[i] = read position of the i'th column
+        in the alignment.  Insertions are grouped with the following
+        read base, in the specified orientation.
+
+        Length of output array = length of alignment
+        """
+        ucOriented = self.unrolledCigar(orientation, exciseSoftClips=True)
+        readNonGapMask = (ucOriented != BAM_CDEL)
+        if self.isReverseStrand and orientation == "genomic":
+            return self.rEnd - 1 - np.hstack([0, np.cumsum(readNonGapMask[:-1])])
+        else:
+            return self.rStart + np.hstack([0, np.cumsum(readNonGapMask[:-1])])
 
     def pulseFeature(self, featureName, aligned=True, orientation="native"):
         """
@@ -596,7 +628,7 @@ BAM_CPAD       = 6
 BAM_CEQUAL     = 7
 BAM_CDIFF      = 8
 
-def unrollCigar(cigar):
+def unrollCigar(cigar, exciseSoftClips=False):
     """
     Run-length decode the cigar (input is BAM packed CIGAR, not a cigar string)
 
@@ -608,7 +640,10 @@ def unrollCigar(cigar):
     ncigar = len(cigarArray)
     x = np.s_[int(hasHardClipAtLeft) : ncigar - int(hasHardClipAtRight)]
     ops = np.repeat(cigarArray[x,0], cigarArray[x,1])
-    return ops
+    if exciseSoftClips:
+        return ops[ops != BAM_CSOFT_CLIP]
+    else:
+        return ops
 
 def refPositions(uc, tStart):
     """
