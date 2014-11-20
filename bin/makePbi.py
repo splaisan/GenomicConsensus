@@ -42,7 +42,7 @@ def main():
 
     pbi = h5py.File(bamFname + ".pbi", "w")
 
-    B = BamReader(bamFname, refFname, useIndex=False)
+    B = BamReader(bamFname, refFname)
     p = pysam.Samfile(bamFname)
 
     shape = (len(B),)
@@ -78,8 +78,9 @@ def main():
 
     grp = pbi.create_group("PacBioBamIndex")
     grp.attrs["Version"] = PBI_VERSION
+    columnsGrp = grp.create_group("Columns")
     for (name, ds) in dsets.iteritems():
-        grp.create_dataset(name, data=ds, chunks=True, compression="gzip")
+        columnsGrp.create_dataset(name, data=ds, chunks=True, compression="gzip")
     pbi.close()
 
 

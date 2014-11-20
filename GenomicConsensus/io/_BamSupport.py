@@ -1,5 +1,5 @@
 #################################################################################
-# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
+# Copyright (c) 2011-2014, Pacific Biosciences of California, Inc.
 #
 # All rights reserved.
 #
@@ -30,9 +30,44 @@
 
 # Author: David Alexander
 
-from __future__ import absolute_import
-from .VariantsGffWriter import VariantsGffWriter
-from .BamIO import *
-from .BamAlignment import *
-from .PacBioBamIndex import *
-from .utils import *
+import numpy as np
+
+class UnavailableFeature(Exception): pass
+class Unimplemented(Exception):      pass
+class ReferenceMismatch(Exception):  pass
+
+PULSE_FEATURE_TAGS = { "InsertionQV"    : ("iq", "qv",   np.uint8),
+                       "DeletionQV"     : ("dq", "qv",   np.uint8),
+                       "DeletionTag"    : ("dt", "base", np.int8 ),
+                       "SubstitutionQV" : ("sq", "qv",   np.uint8),
+                       "MergeQV"        : ("mq", "qv",   np.uint8) }
+
+COMPLEMENT_MAP = { "A" : "T",
+                   "T" : "A",
+                   "C" : "G",
+                   "G" : "C",
+                   "N" : "N",
+                   "-" : "-" }
+
+def complement(seq):
+    return "".join([ COMPLEMENT_MAP[b] for b in seq ])
+
+def reverseComplement(seq):
+    return "".join([ COMPLEMENT_MAP[b] for b in seq[::-1]])
+
+def complementAscii(a):
+    return np.array([ord(COMPLEMENT_MAP[chr(b)]) for b in a], dtype=np.int8)
+
+def reverseComplementAscii(a):
+    return complementAscii(a)[::-1]
+
+
+BAM_CMATCH     = 0
+BAM_CINS       = 1
+BAM_CDEL       = 2
+BAM_CREF_SKIP  = 3
+BAM_CSOFT_CLIP = 4
+BAM_CHARD_CLIP = 5
+BAM_CPAD       = 6
+BAM_CEQUAL     = 7
+BAM_CDIFF      = 8

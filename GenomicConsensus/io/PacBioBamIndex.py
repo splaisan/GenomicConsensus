@@ -41,18 +41,35 @@ class PacBioBamIndex(object):
     The PacBio BAM index is a companion file allowing modest
     *semantic* queries on PacBio BAM files without iterating over the
     entire file.  By convention, the PacBio BAM index has extension
-    "bam.pbi".  Note that this file does not replace the SAMtools BAM
-    index (bam.bai file), which is still required.
+    "bam.pbi".
+
+    The bam.pbi index is an HDF5 file containing two data frames
+    (groups containing arrays (frame columns) of common length):
+
+      - A table with a row per BAM record, columns reflecting
+        precomputed statistics per record
+
+      - A table with a row per reference contig (tid) in the BAM,
+        indicating the range of rows pertaining to the
     """
+    def _loadColumns(self, f):
+        g = f["PacBioBamIndex/Columns"]
+        columnNamesAndColumns = sorted([ (k, v[:]) for (k, v) in g.iteritems() ])
+        columnNames, columns = zip(*columnNamesAndColumns)
+        return np.rec.fromarrays(columns, names=columnNames)
+
+    def _loadVersion(self, f):
+        return f["PacBioBamIndex"].attrs["Version"]
+
+    def _loadOffsets(self, f):
+        pass
 
     def __init__(self, pbiFilename):
         pbiFilename = abspath(expanduser(pbiFilename))
-        self._f = h5py.File(pbiFilename, "r")
-        g = self._f["PacBioBamIndex"]
-        self._version = g.attrs["Version"]
-        self._frame = { k : v[:] for (k, v) in g.iteritems() }
-        self._columnNames = sorted(self._frame.keys())
-        self._rowType = namedtuple("PacBioBamIndexRow", self._columnNames)
+        with h5py.File(pbiFilename, "r") as f:
+            self._version = self._loadVersion(f)
+            self._columns = self._loadColumns(f)
+            self._offsets = self._loadOffsets(f)
 
     @property
     def version(self):
@@ -60,46 +77,27 @@ class PacBioBamIndex(object):
 
     @property
     def columnNames(self):
-        return self._columnNames
+        return list(self._columns.dtype.names)
 
     def __getattr__(self, columnName):
-        if columnName in self._columnNames:
-            return self._frame[columnName]
+        if columnName in self.columnNames:
+            return self._columns[columnName]
         else:
             raise AttributeError, "pbi has no column named '%s'" % columnName
 
     def __getitem__(self, rowNumber):
-        data = [self._frame[k][rowNumber] for k in self._columnNames]
-        return self._rowType(*data)
+        return self._columns[rowNumber]
 
     def __dir__(self):
         # Special magic for IPython tab completion
-        return self._columnNames
+        return self.columnNames
 
+    def __len__(self):
+        return len(self._columns)
 
+    def __iter__(self):
+        for i in xrange(len(self)):
+            yield self[i]
 
-
-# def requiresIndex(method):
-#     @wraps(method)
-#     def f(self, *args, **kwargs):
-#         if not self.isIndexLoaded:
-#             raise UnavailableFeature, "this feature requires a PacBio BAM index"
-#         else:
-#             return method(bamAln, *args, **kwargs)
-#     return f
-
-# class _PacBioIndexedBamMixin(object):
-#     """
-#     Inheriting from this mixin class imbues a class with a loadable
-#     PacBioBamIndex.
-#     """
-#     def loadIndex(self, pbiFilename):
-#         self._index = PacBioBamIndex(pbiFilename)
-
-#     @property
-#     def isIndexLoaded(self):
-#         return hasattr(self, _index) and self._index is not None
-
-#     @property
-#     def index(self):
-#         return self._index
+    def rangeQuery():
+        pass

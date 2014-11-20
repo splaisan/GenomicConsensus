@@ -1,11 +1,10 @@
 import pbcore.data as D
 from pbcore.io import CmpH5Reader
-from GenomicConsensus.io import BamReader
+from GenomicConsensus.io import PacBioBamReader
 
 from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)
 from nose.tools import assert_equal as EQ, assert_raises
-
 import numpy as np
 
 
@@ -15,7 +14,7 @@ class TestBam(object):
         bamFname, cmpFname = D.getBamAndCmpH5()
         lambdaFasta = D.getLambdaFasta()
 
-        self.b = BamReader(bamFname, lambdaFasta)
+        self.b = PacBioBamReader(bamFname, lambdaFasta)
         self.c = CmpH5Reader(cmpFname)
 
         # Note that sorting orders are not generally the same... BAM
@@ -95,11 +94,11 @@ class TestBam(object):
         self.compareAlns(self.cRevClipped, self.bRevClipped)
 
     def testIndex(self):
-        ARRAY_EQ([aln.tStart for aln in self.bAlns], self.b.index.tStart)
-        ARRAY_EQ([aln.tEnd   for aln in self.bAlns], self.b.index.tEnd)
-        ARRAY_EQ([aln.rStart for aln in self.bAlns], self.b.index.rStart)
-        ARRAY_EQ([aln.rEnd   for aln in self.bAlns], self.b.index.rEnd)
-        ARRAY_EQ([aln.MapQV  for aln in self.bAlns], self.b.index.MapQV)
+        ARRAY_EQ([aln.tStart for aln in self.bAlns], self.b.pbi.tStart)
+        ARRAY_EQ([aln.tEnd   for aln in self.bAlns], self.b.pbi.tEnd)
+        ARRAY_EQ([aln.rStart for aln in self.bAlns], self.b.pbi.rStart)
+        ARRAY_EQ([aln.rEnd   for aln in self.bAlns], self.b.pbi.rEnd)
+        ARRAY_EQ([aln.MapQV  for aln in self.bAlns], self.b.pbi.MapQV)
         #print self.b.index.MapQV
 
     # def testClippingRegression(self):
