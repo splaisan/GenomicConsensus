@@ -502,10 +502,13 @@ class BamAlignment(object):
         assert start <= end
         return (start <= self.tStart <= self.tEnd <= end)
 
-    # TODO: rename this to identity
     @property
-    def accuracy(self):
-        raise Unimplemented()
+    @requiresIndex
+    def identity(self):
+        if self.readLength == 0:
+            return 0.
+        else:
+            return 1. - float(self.nMM + self.nIns + self.nDel)/self.readLength
 
     @property
     def numPasses(self):
@@ -719,16 +722,36 @@ class BamAlignment(object):
         feature = self.pulseFeature("read", aligned, orientation)
         return feature.tostring()
 
-
-    # def __getattr__(self, key):
-    #     return self.cmpH5.alignmentIndex[self.rowNumber][key]
-
     def __repr__(self):
         return "BAM alignment: %s  %3d  %9d  %9d" \
             % (("+" if self.isForwardStrand else "-"),
                self.referenceId, self.tStart, self.tEnd)
 
-    def __str__(self): return repr(self)
+    def __str__(self):
+        if self.bam.isReferenceLoaded:
+            COLUMNS = 80
+            val = ""
+            val += repr(self) + "\n\n"
+            val += "Read:        " + self.readName           + "\n"
+            val += "Reference:   " + self.referenceName      + "\n\n"
+            val += "Read length: " + str(self.readLength)    + "\n"
+            #val += "Identity:    " + "%0.3f" % self.identity + "\n"
+
+            alignedRead = self.read()
+            alignedRef = self.reference()
+            transcript = self.transcript(style="exonerate+")
+            refPos = self.referencePositions()
+            refPosString = "".join([str(pos % 10) for pos in refPos])
+            for i in xrange(0, len(alignedRef), COLUMNS):
+                val += "\n"
+                val += "  " + refPosString[i:i+COLUMNS] + "\n"
+                val += "  " + alignedRef  [i:i+COLUMNS] + "\n"
+                val += "  " + transcript  [i:i+COLUMNS] + "\n"
+                val += "  " + alignedRead [i:i+COLUMNS] + "\n"
+                val += "\n"
+            return val
+        else:
+            return repr(self)
 
     def __cmp__(self, other):
         return cmp((self.referenceId, self.tStart, self.tEnd),
