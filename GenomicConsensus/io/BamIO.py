@@ -606,7 +606,7 @@ def unrollCigar(cigar):
     hasHardClipAtLeft = cigarArray[0,0] == BAM_CHARD_CLIP
     hasHardClipAtRight = cigarArray[-1,0] == BAM_CHARD_CLIP
     ncigar = len(cigarArray)
-    x = np.s_[int(hasHardClipAtLeft) : ncigar - int(hasHardClipAtLeft)]
+    x = np.s_[int(hasHardClipAtLeft) : ncigar - int(hasHardClipAtRight)]
     ops = np.repeat(cigarArray[x,0], cigarArray[x,1])
     return ops
 
