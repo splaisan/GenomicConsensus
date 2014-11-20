@@ -60,14 +60,13 @@ def main():
         offset = p.tell()
         rawAln = next(p)
         aln = BamAlignment(B, rawAln)
-        print offset, repr(aln)
 
         transcript = aln.transcript()
         moveCounts = Counter(transcript)
 
         dsets["AlnID"]            [i] = -1
         dsets["AlnGroupID"]       [i] = -1
-        dsets["ReadGroupID"]      [i] = -1       # TODO, fix this.
+        dsets["ReadGroupID"]      [i] = aln.readGroup.ID
         dsets["RefGroupID"]       [i] = aln.tId
         dsets["tStart"]           [i] = aln.tStart
         dsets["tEnd"]             [i] = aln.tEnd
