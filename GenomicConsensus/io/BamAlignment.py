@@ -56,7 +56,6 @@ def _unrollCigar(cigar, exciseSoftClips=False):
     else:
         return ops
 
-
 def _makePulseFeatureAccessor(featureName):
     def f(self, aligned=True, orientation="native"):
         return self.pulseFeature(featureName, aligned, orientation)
@@ -72,20 +71,21 @@ def requiresReference(method):
             return method(bamAln, *args, **kwargs)
     return f
 
-def requiresIndex(method):
+def requiresPbi(method):
     @wraps(method)
     def f(bamAln, *args, **kwargs):
-        if not bamAln.bam.isIndexLoaded:
+        if bamAln.rowNumber is None:
             raise UnavailableFeature, "this feature requires a PacBio BAM index"
         else:
             return method(bamAln, *args, **kwargs)
     return f
 
 class BamAlignment(object):
-    def __init__(self, bamReader, pysamAlignedRead):
+    def __init__(self, bamReader, pysamAlignedRead, rowNumber=None):
         #TODO: make these __slot__
         self.peer        = pysamAlignedRead
         self.bam         = bamReader
+        self.rowNumber   = rowNumber
         self.tStart      = self.peer.pos
         self.tEnd        = self.peer.aend
         # Our terminology doesn't agree with pysam's terminology for
@@ -136,12 +136,6 @@ class BamAlignment(object):
         if not self.bam.moviesAttached:
             raise ValueError("Movies not attached!")
         return self.bam.basH5Collection[self.readName]
-
-    # TODO: change name to "offset" to be generic
-    @property
-    def rowNumber(self):
-        #raise Unimplemented()
-        return "(unknown row)"
 
     def clippedTo(self, refStart, refEnd):
         """
@@ -288,15 +282,7 @@ class BamAlignment(object):
         return (start <= self.tStart <= self.tEnd <= end)
 
     @property
-    @requiresIndex
-    def indexSummary(self):
-        """
-        The corresponding row from the PacBio BAM index
-        """
-        pass
-
-    @property
-    @requiresIndex
+    @requiresPbi
     def identity(self):
         if self.readLength == 0:
             return 0.
@@ -460,7 +446,6 @@ class BamAlignment(object):
         if kind_ == "qv": data -= 33
         del data_
 
-
         # [s, e) delimits the range, within the query, that is in the aligned read.
         # This will be determined by the soft clips actually in the file as well as those
         # imposed by the clipping API here.
@@ -550,24 +535,32 @@ class BamAlignment(object):
         return cmp((self.referenceId, self.tStart, self.tEnd),
                    (other.referenceId, other.tStart, other.tEnd))
 
+    @requiresPbi
+    def __getattr__(self, key):
+        if key in self.bam.pbi.columnNames:
+            return self.bam.pbi[self.rowNumber][key]
+        else:
+            raise AttributeError, "no such column in pbi index"
+
+    def __dir__(self):
+        if self.bam.pbi is not None:
+            return self.bam.pbi.columnNames
 
 class ClippedBamAlignment(BamAlignment):
     def __init__(self, aln, tStart, tEnd, rStart, rEnd, unrolledCigar):
-
         # Self-consistency checks
         assert tStart <= tEnd
         assert rStart <= rEnd
         assert sum(unrolledCigar != BAM_CDEL) == (rEnd - rStart)
-
-        self.peer   = aln.peer
-        self.bam    = aln.bam
-        self.tStart = tStart
-        self.tEnd   = tEnd
-        self.rStart = rStart
-        self.rEnd   = rEnd
+        # Assigment
+        self.peer           = aln.peer
+        self.bam            = aln.bam
+        self.rowNumber      = aln.rowNumber
+        self.tStart         = tStart
+        self.tEnd           = tEnd
+        self.rStart         = rStart
+        self.rEnd           = rEnd
         self._unrolledCigar = unrolledCigar  # genomic orientation
-
-
 
     def unrolledCigar(self, orientation="native"):
         if orientation=="native" and self.isReverseStrand:

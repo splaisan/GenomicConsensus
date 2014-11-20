@@ -275,7 +275,7 @@ class _BamReaderBase(object):
         raise Unimplemented()
 
     def __repr__(self):
-        return "<%s for %s>" % type(self).__name__, self.filename
+        return "<%s for %s>" % (type(self).__name__, self.filename)
 
 
     def __len__(self):
@@ -340,24 +340,30 @@ class PacBioBamReader(_BamReaderBase):
             raise ValueError, "PacBioBamReader requires bam.pbi index file"
         assert len(self.pbi) == self.peer.mapped, "Corrupt or mismatched pbi index file"
 
-    def __iter__(self):
-        for summary in self.pbi:
-            yield self.atOffset(summary.virtualFileOffset)
-
-    def __len__(self):
-        return len(self.pbi)
-
-    def atOffset(self, offset):
-        self.peer.seek(offset)
-        return BamAlignment(self, next(self.peer))
-
     def atRowNumber(self, rn):
         offset = self.pbi.virtualFileOffset[rn]
-        return self.atOffset(offset)
-
-    def __getitem__(self, rowNumber):
-        return self.atRowNumber(rowNumber)
+        self.peer.seek(offset)
+        return BamAlignment(self, next(self.peer), rn)
 
     def readsInRange(self, winId, winStart, winEnd, justIndices=False):
         # range queries based on tStart, tEnd
         pass
+
+    def __iter__(self):
+        for rn in xrange(len(self.pbi)):
+            yield self.atRowNumber(rn)
+
+    def __len__(self):
+        return len(self.pbi)
+
+    def __getitem__(self, rowNumber):
+        return self.atRowNumber(rowNumber)
+
+    def __getattr__(self, key):
+        if key in self.pbi.columnNames:
+            return self.pbi[key]
+        else:
+            raise AttributeError, "no such column in pbi index"
+
+    def __dir__(self):
+        return self.pbi.columnNames
