@@ -42,6 +42,10 @@ class TestBam(object):
 
         for o in ["native", "genomic"]:
 
+            for s in ("cigar", "exonerate", "exonerate+", "gusfield"):
+                EQ(c.transcript(style=s),
+                   b.transcript(style=s))
+
             ARRAY_EQ(c.referencePositions(orientation=o),
                      b.referencePositions(orientation=o))
 
