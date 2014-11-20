@@ -13,7 +13,7 @@ class TestBam(object):
 
     def __init__(self):
         bamFname, cmpFname = D.getBamAndCmpH5()
-        self.b = BamReader(bamFname)
+        self.b = BamReader(bamFname, "~/Data/ecoliK12_pbi_March2013.fasta")
         self.c = CmpH5Reader(cmpFname)
 
         # Note that sorting orders are not generally the same... BAM
@@ -83,13 +83,21 @@ class TestBam(object):
         self.compareAlns(self.cRev, self.bRev)
 
     def testClipping(self):
-        cFwdClipped = BT.cFwd.clippedTo(613110, 613130)
-        bFwdClipped = BT.bFwd.clippedTo(613110, 613130)
+        cFwdClipped = self.cFwd.clippedTo(613110, 613130)
+        bFwdClipped = self.bFwd.clippedTo(613110, 613130)
         self.compareAlns(cFwdClipped, bFwdClipped)
 
-        cRevClipped = BT.cRev.clippedTo(613150, 613170)
-        bRevClipped = BT.bRev.clippedTo(613150, 613170)
+        cRevClipped = self.cRev.clippedTo(613150, 613170)
+        bRevClipped = self.bRev.clippedTo(613150, 613170)
         self.compareAlns(cRevClipped, bRevClipped)
+
+    def testIndex(self):
+        ARRAY_EQ([aln.tStart for aln in self.bAlns], self.b.index.tStart)
+        ARRAY_EQ([aln.tEnd   for aln in self.bAlns], self.b.index.tEnd)
+        ARRAY_EQ([aln.rStart for aln in self.bAlns], self.b.index.rStart)
+        ARRAY_EQ([aln.rEnd   for aln in self.bAlns], self.b.index.rEnd)
+        ARRAY_EQ([aln.MapQV  for aln in self.bAlns], self.b.index.MapQV)
+        #print self.b.index.MapQV
 
 
 

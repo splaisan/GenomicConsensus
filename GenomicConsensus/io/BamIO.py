@@ -40,8 +40,10 @@ from pbcore.chemistry import decodeTriple, ChemistryLookupError
 import numpy as np
 from functools import wraps
 from itertools import groupby
-from os.path import abspath, expanduser
+from os.path import abspath, expanduser, exists
 from bisect import bisect_right, bisect_left
+
+from .PacBioBamIndex import PacBioBamIndex
 
 class UnavailableFeature(Exception): pass
 class Unimplemented(Exception):      pass
@@ -53,7 +55,24 @@ PULSE_FEATURE_TAGS = { "InsertionQV"    : ("iq", "qv",   np.uint8),
                        "SubstitutionQV" : ("sq", "qv",   np.uint8),
                        "MergeQV"        : ("mq", "qv",   np.uint8) }
 
+def requiresIndex(method):
+    @wraps(method)
+    def f(self, *args, **kwargs):
+        if not self.isIndexLoaded:
+            raise UnavailableFeature, "this feature requires a PacBio BAM index"
+        else:
+            return method(self, *args, **kwargs)
+    return f
+
+
 class BamReader(object):
+    """
+    The BamReader class provides a high-level interface to PacBio BAM
+    files.  If a PacBio BAM index (bam.pbi file) is present and the
+    user instantiates the BamReader using the reference FASTA as the
+    second argument, the BamReader will provide an interface
+    compatible with CmpH5Reader.
+    """
 
     def _loadReferenceInfo(self):
         refRecords = self.peer.header["SQ"]
@@ -135,8 +154,10 @@ class BamReader(object):
             raise ReferenceMismatch, "FASTA file must contain superset of reference contigs in BAM"
         self.referenceFasta = ft
 
+    def _loadPacBioBamIndex(self, pbiFname):
+        self.index = PacBioBamIndex(pbiFname)
 
-    def __init__(self, fname, referenceFastaFname=None):
+    def __init__(self, fname, referenceFastaFname=None, useIndex=True):
         self.filename = fname = abspath(expanduser(fname))
         self.peer = Samfile(fname, "rb")
 
@@ -151,18 +172,19 @@ class BamReader(object):
         self._loadReadGroupInfo()
         self._loadProgramInfo()
 
-        self.referenceFasta = None
-        self.pacbioIndex = None
+        self.index = None
+        pbiFname = self.filename + ".pbi"
+        print pbiFname
+        if useIndex and exists(pbiFname):
+            self._loadPacBioBamIndex(pbiFname)
 
+        self.referenceFasta = None
         if referenceFastaFname is not None:
             self._loadReferenceFasta(referenceFastaFname)
 
-
-
-
     @property
     def isIndexLoaded(self):
-        return False
+        return self.index is not None
 
     @property
     def isReferenceLoaded(self):
@@ -273,6 +295,15 @@ class BamReader(object):
             return ( BamAlignment(self, it)
                      for it in self.peer.fetch(winId, winStart, winEnd, reopen=False) )
 
+    @requiresIndex
+    def atRowNumber(self, rn):
+        offset = self.index.virtualFileOffset[rn]
+        return self.atOffset(offset)
+
+    def atOffset(self, offset):
+        self.peer.seek(offset)
+        return BamAlignment(self, next(self.peer))
+
     def hasPulseFeature(self, featureName):
         return featureName in self._pulseFeaturesAvailable
 
@@ -294,6 +325,7 @@ class BamReader(object):
     def __repr__(self):
         return "<BamReader for %s>" % self.filename
 
+    @requiresIndex
     def __getitem__(self, rowNumbers):
         raise UnavailableFeature("BAM doesn't support true random access")
 
@@ -546,6 +578,14 @@ class BamAlignment(object):
     def containedInReferenceRange(self, start, end):
         assert start <= end
         return (start <= self.tStart <= self.tEnd <= end)
+
+    @property
+    @requiresIndex
+    def indexSummary(self):
+        """
+        The corresponding row from the PacBio BAM index
+        """
+        pass
 
     @property
     @requiresIndex

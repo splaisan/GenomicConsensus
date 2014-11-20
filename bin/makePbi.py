@@ -47,10 +47,10 @@ def main():
 
     pbi = h5py.File(bamFname + ".pbi", "w")
 
-    B = BamReader(bamFname, refFname)
+    B = BamReader(bamFname, refFname, useIndex=False)
     p = pysam.Samfile(bamFname)
 
-    shape = (len(B), 1)
+    shape = (len(B),)
     #shape = (len(B), len(PBI_COLUMNS_AND_TYPES))
 
     dsets = OrderedDict((columnName, np.zeros(shape=shape, dtype=dtype_))
