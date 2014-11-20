@@ -345,24 +345,11 @@ class PacBioBamReader(_BamReaderBase):
         return BamAlignment(self, next(self.peer), rn)
 
     def readsInRange(self, winId, winStart, winEnd, justIndices=False):
-        #
-        # A read overlaps the window if winId == tid and
-        #
-        #  (tStart < winEnd) && (tEnd > winStart)     (1)
-        #
-        # We are presently doing this naively right now, just
-        # computing the predicate over all rows. If/when we determine
-        # this is too slow, we can accelerate using the nBackread
-        # approach we use int he cmph5, doing binary search to
-        # identify a candidate range and then culling the range.
-        #
-        idx = np.flatnonzero((self.pbi.RefGroupID == winId)  &
-                             (self.pbi.tStart      < winEnd) &
-                             (self.pbi.tEnd        > winStart))
+        ix = self.pbi.rangeQuery(winId, winStart, winEnd)
         if justIndices:
-            return idx
+            return ix
         else:
-            return self[idx]
+            return self[ix]
 
     def __iter__(self):
         for rn in xrange(len(self.pbi)):

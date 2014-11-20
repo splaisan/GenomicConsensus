@@ -1,6 +1,6 @@
 import pbcore.data as D
 from pbcore.io import CmpH5Reader
-from GenomicConsensus.io import PacBioBamReader
+from GenomicConsensus.io import PacBioBamReader, BamReader
 
 from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)
@@ -16,6 +16,7 @@ class TestBam(object):
 
         self.b = PacBioBamReader(bamFname, lambdaFasta)
         self.c = CmpH5Reader(cmpFname)
+        self.bBasic = BamReader(bamFname)
 
         # Note that sorting orders are not generally the same... BAM
         # sorts + alns before - alns, when there is a tie on tStart;
@@ -99,7 +100,6 @@ class TestBam(object):
         ARRAY_EQ([aln.rStart for aln in self.bAlns], self.b.pbi.rStart)
         ARRAY_EQ([aln.rEnd   for aln in self.bAlns], self.b.pbi.rEnd)
         ARRAY_EQ([aln.MapQV  for aln in self.bAlns], self.b.pbi.MapQV)
-        #print self.b.index.MapQV
 
     # def testClippingRegression(self):
     #     # Test a corner case
@@ -115,6 +115,13 @@ class TestBam(object):
         incorrectFasta = D.getTinyFasta()
         with assert_raises(Exception):
             f = BamReader(bamFname, incorrectFasta)
+
+    # def testRangeQueries1(self):
+    #     win = (0, 1000, 2000)
+    #     expectedReadNames =
+
+    # def testRangeQueries2(self):
+
 
 
 BT = TestBam()

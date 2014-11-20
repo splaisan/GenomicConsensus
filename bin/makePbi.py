@@ -16,19 +16,19 @@ from GenomicConsensus.io import BamReader, BamAlignment
 
 PBI_VERSION = "0.1"
 
-PBI_COLUMNS_AND_TYPES = [ ("ReadGroupID"       , np.uint32),
-                          ("RefGroupID"        , np.uint32),
-                          ("tStart"            , np.uint32),
-                          ("tEnd"              , np.uint32),
-                          ("isReverseStrand"   , np.uint32),
-                          ("HoleNumber"        , np.uint32),
-                          ("rStart"            , np.uint32),
-                          ("rEnd"              , np.uint32),
-                          ("MapQV"             , np.uint32),
-                          ("nM"                , np.uint32),
-                          ("nMM"               , np.uint32),
-                          ("nIns"              , np.uint32),
-                          ("nDel"              , np.uint32),
+PBI_COLUMNS_AND_TYPES = [ ("ReadGroupID"       , np.int32),
+                          ("tId"               , np.int32),
+                          ("tStart"            , np.int32),
+                          ("tEnd"              , np.int32),
+                          ("isReverseStrand"   , np.uint8),
+                          ("HoleNumber"        , np.int32),
+                          ("rStart"            , np.int32),
+                          ("rEnd"              , np.int32),
+                          ("MapQV"             , np.uint8),
+                          ("nM"                , np.int32),
+                          ("nMM"               , np.int32),
+                          ("nIns"              , np.int32),
+                          ("nDel"              , np.int32),
                           ("virtualFileOffset" , np.int64)  ]
 
 def main():
@@ -60,7 +60,7 @@ def main():
         moveCounts = Counter(transcript)
 
         dsets["ReadGroupID"]      [i] = aln.readGroup.ID
-        dsets["RefGroupID"]       [i] = aln.tId
+        dsets["tId"]              [i] = aln.tId
         dsets["tStart"]           [i] = aln.tStart
         dsets["tEnd"]             [i] = aln.tEnd
         dsets["isReverseStrand"]  [i] = aln.isReverseStrand

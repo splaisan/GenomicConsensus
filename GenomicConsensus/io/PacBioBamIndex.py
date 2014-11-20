@@ -99,5 +99,19 @@ class PacBioBamIndex(object):
         for i in xrange(len(self)):
             yield self[i]
 
-    def rangeQuery():
-        pass
+    def rangeQuery(self, winId, winStart, winEnd):
+        #
+        # A read overlaps the window if winId == tid and
+        #
+        #  (tStart < winEnd) && (tEnd > winStart)     (1)
+        #
+        # We are presently doing this naively right now, just
+        # computing the predicate over all rows. If/when we determine
+        # this is too slow, we can accelerate using the nBackread
+        # approach we use int he cmph5, doing binary search to
+        # identify a candidate range and then culling the range.
+        #
+        ix = np.flatnonzero((self.tId    == winId)  &
+                            (self.tStart  < winEnd) &
+                            (self.tEnd    > winStart))
+        return ix
