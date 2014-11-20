@@ -40,29 +40,35 @@ class TestBam(object):
         EQ(c.tEnd            , b.tEnd)
         EQ(c.HoleNumber      , b.HoleNumber)
 
-        for orientation in ["native", "genomic"]:
-            for aligned in [True, False]:
-                ARRAY_EQ(c.read(aligned, orientation),
-                         b.read(aligned, orientation))
+        for o in ["native", "genomic"]:
 
-        # MergeQV is actually not identical presently, due to the
-        # clipping at 93 used for ASCII encoding in BAM
-        for featureName in [ "DeletionQV",
-                             "InsertionQV",
-                             "SubstitutionQV",
-                             "DeletionTag" ]:
+            ARRAY_EQ(c.referencePositions(orientation=o),
+                     b.referencePositions(orientation=o))
 
-            for orientation in ["native", "genomic"]:
-                for aligned in [True, False]:
-                    ARRAY_EQ(c.pulseFeature(featureName, aligned, orientation),
-                             b.pulseFeature(featureName, aligned, orientation))
+            ARRAY_EQ(c.readPositions(orientation=o),
+                     b.readPositions(orientation=o))
 
-        ARRAY_EQ(c.pulseFeature("DeletionTag", aligned=True, orientation="genomic"),
-                 b.pulseFeature("DeletionTag", aligned=True, orientation="genomic"))
+            for a in [True, False]:
+                ARRAY_EQ(c.read(a, o),
+                         b.read(a, o))
 
-        for orientation in ["genomic", "native"]:
-            ARRAY_EQ(c.referencePositions(orientation),
-                     b.referencePositions(orientation))
+                ARRAY_EQ(c.reference(a, o),
+                         b.reference(a, o))
+
+                # MergeQV is actually not identical presently, due to the
+                # clipping at 93 used for ASCII encoding in BAM
+                for featureName in [ "DeletionQV",
+                                     "InsertionQV",
+                                     "SubstitutionQV" ]:
+                    ARRAY_EQ(c.pulseFeature(featureName, a, o),
+                             b.pulseFeature(featureName, a, o))
+
+
+        # DelTag in "genomic" orientation is arguably done incorrectly by the
+        # cmp.h5 reader (it doesn't RC the bases), so we don't compare that.
+        ARRAY_EQ(c.pulseFeature("DeletionTag", aligned=False, orientation="native"),
+                 b.pulseFeature("DeletionTag", aligned=False, orientation="native"))
+
 
 
     def testForwardStrandAln(self):
@@ -72,9 +78,15 @@ class TestBam(object):
     def testReverseStrandAln(self):
         self.compareAlns(self.cRev, self.bRev)
 
-
     def testClipping(self):
-        pass
+        cFwdClipped = BT.cFwd.clippedTo(613110, 613130)
+        bFwdClipped = BT.bFwd.clippedTo(613110, 613130)
+        self.compareAlns(cFwdClipped, bFwdClipped)
+
+        cRevClipped = BT.cRev.clippedTo(613150, 613170)
+        bRevClipped = BT.bRev.clippedTo(613150, 613170)
+        self.compareAlns(cRevClipped, bRevClipped)
+
 
 
 BT = TestBam()
@@ -92,3 +104,10 @@ y = BT.bRev.pulseFeature("DeletionTag", orientation="genomic", aligned=True)
 
 ARRAY_EQ(BT.cRev.read(True, "native"),
          BT.bRev.read(True, "native"))
+
+
+bFwdClipped = BT.bFwd.clippedTo(613110, 613130)
+bRevClipped = BT.bRev.clippedTo(613150, 613170)
+
+cFwdClipped = BT.cFwd.clippedTo(613110, 613130)
+cRevClipped = BT.cRev.clippedTo(613150, 613170)
