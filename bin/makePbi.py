@@ -14,7 +14,7 @@ from GenomicConsensus.io import BamReader, BamAlignment
 
 # Call: makePbi.py bamfile referenceFasta
 
-PBI_VERSION = 0.1
+PBI_VERSION = "0.1"
 
 PBI_COLUMNS_AND_TYPES = [ ("AlnID"             , np.uint32),
                           ("AlnGroupID"        , np.uint32),
