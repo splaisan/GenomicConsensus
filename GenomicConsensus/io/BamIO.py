@@ -254,6 +254,7 @@ class BamReader(object):
         raise UnavailableFeature("BAM doesn't support true random access")
 
     def __iter__(self):
+        self.peer.reset()
         for a in self.peer:
             yield BamAlignment(self, a)
 
