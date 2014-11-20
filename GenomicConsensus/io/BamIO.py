@@ -135,7 +135,6 @@ class _BamReaderBase(object):
     def __init__(self, fname, referenceFastaFname=None):
         self.filename = fname = abspath(expanduser(fname))
         self.peer = Samfile(fname, "rb")
-
         # Check for sortedness, index.
         # There doesn't seem to be a "public" way to do this right
         # now, but that's fine because we're going to have to rewrite
@@ -346,8 +345,24 @@ class PacBioBamReader(_BamReaderBase):
         return BamAlignment(self, next(self.peer), rn)
 
     def readsInRange(self, winId, winStart, winEnd, justIndices=False):
-        # range queries based on tStart, tEnd
-        pass
+        #
+        # A read overlaps the window if winId == tid and
+        #
+        #  (tStart < winEnd) && (tEnd > winStart)     (1)
+        #
+        # We are presently doing this naively right now, just
+        # computing the predicate over all rows. If/when we determine
+        # this is too slow, we can accelerate using the nBackread
+        # approach we use int he cmph5, doing binary search to
+        # identify a candidate range and then culling the range.
+        #
+        idx = np.flatnonzero((self.pbi.RefGroupID == winId)  &
+                             (self.pbi.tStart      < winEnd) &
+                             (self.pbi.tEnd        > winStart))
+        if justIndices:
+            return idx
+        else:
+            return self[idx]
 
     def __iter__(self):
         for rn in xrange(len(self.pbi)):
@@ -356,8 +371,23 @@ class PacBioBamReader(_BamReaderBase):
     def __len__(self):
         return len(self.pbi)
 
-    def __getitem__(self, rowNumber):
-        return self.atRowNumber(rowNumber)
+    def __getitem__(self, rowNumbers):
+        if (isinstance(rowNumbers, int) or
+            issubclass(type(rowNumbers), np.integer)):
+            return self.atRowNumber(rowNumbers)
+        elif isinstance(rowNumbers, slice):
+            return [ self.atRowNumber(r)
+                     for r in xrange(*rowNumbers.indices(len(self)))]
+        elif isinstance(rowNumbers, list) or isinstance(rowNumbers, np.ndarray):
+            if len(rowNumbers) == 0:
+                return []
+            else:
+                entryType = type(rowNumbers[0])
+                if entryType == int or issubclass(entryType, np.integer):
+                    return [ self.atRowNumber(r) for r in rowNumbers ]
+                elif entryType == bool or issubclass(entryType, np.bool_):
+                    return [ self.atRowNumber(r) for r in np.flatnonzero(rowNumbers) ]
+                    raise TypeError, "Invalid type for PacBioBamReader slicing"
 
     def __getattr__(self, key):
         if key in self.pbi.columnNames:
