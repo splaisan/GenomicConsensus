@@ -16,17 +16,12 @@ from GenomicConsensus.io import BamReader, BamAlignment
 
 PBI_VERSION = "0.1"
 
-PBI_COLUMNS_AND_TYPES = [ ("AlnID"             , np.uint32),
-                          ("AlnGroupID"        , np.uint32),
-                          ("ReadGroupID"       , np.uint32),
+PBI_COLUMNS_AND_TYPES = [ ("ReadGroupID"       , np.uint32),
                           ("RefGroupID"        , np.uint32),
                           ("tStart"            , np.uint32),
                           ("tEnd"              , np.uint32),
                           ("isReverseStrand"   , np.uint32),
                           ("HoleNumber"        , np.uint32),
-                          ("SetNumber"         , np.uint32),
-                          ("StrobeNumber"      , np.uint32),
-                          ("MoleculeID"        , np.uint32),
                           ("rStart"            , np.uint32),
                           ("rEnd"              , np.uint32),
                           ("MapQV"             , np.uint32),
@@ -64,17 +59,12 @@ def main():
         transcript = aln.transcript()
         moveCounts = Counter(transcript)
 
-        dsets["AlnID"]            [i] = -1
-        dsets["AlnGroupID"]       [i] = -1
         dsets["ReadGroupID"]      [i] = aln.readGroup.ID
         dsets["RefGroupID"]       [i] = aln.tId
         dsets["tStart"]           [i] = aln.tStart
         dsets["tEnd"]             [i] = aln.tEnd
         dsets["isReverseStrand"]  [i] = aln.isReverseStrand
         dsets["HoleNumber"]       [i] = aln.HoleNumber
-        dsets["SetNumber"]        [i] = -1
-        dsets["StrobeNumber"]     [i] = -1
-        dsets["MoleculeID"]       [i] = -1
         dsets["rStart"]           [i] = aln.rStart
         dsets["rEnd"]             [i] = aln.rEnd
         dsets["MapQV"]            [i] = aln.MapQV
@@ -89,7 +79,7 @@ def main():
     grp = pbi.create_group("PacBioBamIndex")
     grp.attrs["Version"] = PBI_VERSION
     for (name, ds) in dsets.iteritems():
-        grp.create_dataset(name, data=ds)  # TODO: chunking & compression
+        grp.create_dataset(name, data=ds, chunks=True, compression="gzip")
     pbi.close()
 
 
