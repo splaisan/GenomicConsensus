@@ -59,9 +59,10 @@ class ReferenceContig(object):
     """
     A contig from a reference (i.e. FASTA) file.
     """
-    def __init__(self, id, name, sequence, length):
+    def __init__(self, id, name, fullName, sequence, length):
         self.id        = id          # CmpH5-local id
-        self.name      = name        # Fasta header
+        self.name      = name        # Prefix of FASTA heder
+        self.fullName  = fullName
         self.sequence  = UppercasingMmappedFastaSequence(sequence)
         self.length    = length
 
@@ -72,8 +73,8 @@ byPacBioName = OrderedDict()   # pacbio name ("ref000001")         -> FastaRecor
 def idToName(_id):
     return byId[_id].name
 
-def nameToId(name):
-    return byName[name].id
+def idToFullName(_id):
+    return byId[_id].fullName
 
 # Interpret a string key (one of name, or id (as string))
 # and find the associated id.  Only to be used in interpretation of
@@ -133,9 +134,10 @@ def loadFromFile(filename_, cmpH5):
             cmpH5RefEntry   = cmpH5.referenceInfo(refName)
             refId           = cmpH5RefEntry.ID
             pacBioName      = cmpH5RefEntry.Name
+            refFullName     = cmpH5RefEntry.FullName
             sequence        = UppercasingMmappedFastaSequence(fastaRecord.sequence)
             length          = len(fastaRecord.sequence)
-            contig          = ReferenceContig(refId, refName, sequence, length)
+            contig          = ReferenceContig(refId, refName, refFullName, sequence, length)
             byId[refId]     = contig
             byName[refName] = contig
             byPacBioName[pacBioName] = contig
