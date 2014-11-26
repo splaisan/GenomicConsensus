@@ -37,7 +37,7 @@ from pbcore.io import CmpH5Reader
 from .BamIO import BamReader
 
 
-def loadCmpH5(filename, disableChunkCache=False):
+def loadCmpH5(filename, referenceFname, disableChunkCache=False):
     """
     Get a CmpH5Reader object, disabling the chunk cache if requested.
     """
@@ -53,6 +53,6 @@ def loadCmpH5(filename, disableChunkCache=False):
         file = h5py.File(fid)
     return CmpH5Reader(file)
 
-def loadBam(filename):
+def loadBam(filename, referenceFname):
     filename = os.path.abspath(os.path.expanduser(filename))
-    return BamReader(filename)
+    return BamReader(filename, referenceFname)

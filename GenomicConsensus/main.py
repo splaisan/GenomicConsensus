@@ -142,7 +142,7 @@ class ToolRunner(object):
         """
         fname = options.inputFilename
         if options.usingBam:
-            self._inCmpH5 = BamReader(fname)
+            self._inCmpH5 = BamReader(fname, options.referenceFilename)
         else:
             logging.debug("Before open on main process, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
             self._inCmpH5 = CmpH5Reader(fname)
