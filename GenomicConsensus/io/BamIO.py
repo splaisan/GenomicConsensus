@@ -351,6 +351,50 @@ class PacBioBamReader(_BamReaderBase):
         else:
             return self[ix]
 
+    def readsByName(self, query):
+        """
+        Identifies reads by name query.  The name query is interpreted as follows:
+
+         - "movieName/holeNumber[/[*]]"      => gets all records from a chosen movie, ZMW
+         - "movieName/holeNumber/rStart_rEnd => gets all records *overlapping* read range query in movie, ZMW
+         - "movieName/holeNumber/ccs"        => gets CCS records from chose movie, ZMW (zero or one)
+
+        Records are returned in a list in ascending order of rStart
+        """
+        def rgIDs(movieName):
+            return self.readGroupTable.ID[self.readGroupTable.MovieName == movieName]
+
+        def rangeOverlap(w1, w2):
+            s1, e1 = w1
+            s2, e2 = w2
+            return (e1 > s2) and (e2 > s1)
+
+        def rQueryMatch(readName, rQuery):
+            if rQuery == "*" or rQuery == "":
+                return True
+            elif rQuery == "ccs":
+                return readName.endswith("ccs")
+            elif readName.endswith("ccs"):
+                return False
+            else:
+                q = map(int, rQuery.split("_"))
+                r = map(int, readName.split("/")[-1].split("_"))
+                return rangeOverlap(q, r)
+
+        fields = query.split("/")
+        movieName = fields[0]
+        holeNumber = int(fields[1])
+        if len(fields) > 2: rQuery = fields[2]
+        else:               rQuery = "*"
+
+        rgs = rgIDs(movieName)
+        rns = np.flatnonzero(np.in1d(self.ReadGroupID, rgs) &
+                             (self.HoleNumber == holeNumber))
+        alns = [ a for a in self[rns]
+                 if rQueryMatch(a.readName, rQuery) ]
+        return sorted(alns, key=lambda a: a.readStart)
+
+
     def __iter__(self):
         for rn in xrange(len(self.pbi)):
             yield self.atRowNumber(rn)
