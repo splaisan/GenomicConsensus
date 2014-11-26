@@ -81,7 +81,12 @@ class Worker(object):
 
 
     def run(self):
-        if options.doProfiling:
+        if options.doDebugging:
+            import ipdb
+            with ipdb.launch_ipdb_on_exception():
+                self._run()
+
+        elif options.doProfiling:
             cProfile.runctx("self._run()",
                             globals=globals(),
                             locals=locals(),

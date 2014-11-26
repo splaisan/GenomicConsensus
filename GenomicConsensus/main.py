@@ -318,10 +318,13 @@ class ToolRunner(object):
                                                       "profile-main.out"))
 
             elif options.doDebugging:
+                if not options.threaded:
+                    die("Debugging only works with -T (threaded) mode")
                 logging.info("PID: %d", os.getpid())
-                try:    import ipdb as pdb
-                except: import pdb
-                return pdb.runeval("self._mainLoop()", globals(), locals())
+                import ipdb
+                with ipdb.launch_ipdb_on_exception():
+                    self._mainLoop()
+
             else:
                 self._mainLoop()
         except:
