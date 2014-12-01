@@ -115,7 +115,7 @@ class ResultCollector(object):
     def _flushContigIfCompleted(self, window):
         refId, _, _ = window
         refEntry = reference.byId[refId]
-        refName = refEntry.name
+        refName = refEntry.fullName
         basesProcessed = self.referenceBasesProcessedById[refId]
         requiredBases = reference.numReferenceBases(refId, options.referenceWindows)
         if basesProcessed == requiredBases:
