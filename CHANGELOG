@@ -1,3 +1,6 @@
+Version 0.9.2 (bugfix release, issued with SMRTanalysis 2.3.0p2)
+  * Fix bug where output contained truncated contig names
+
 Version 0.9.1 (released with SMRTanalysis 2.3.0p1)
   * Preliminary support for BAM file in quiver
 
