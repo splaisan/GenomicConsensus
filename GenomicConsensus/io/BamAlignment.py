@@ -99,6 +99,9 @@ class BamAlignment(object):
         self.rStart = self.qStart + clipLeft
         self.rEnd   = self.qEnd   - clipRight
 
+        # Cache of unrolled cigar, in genomic orientation
+        self._unrolledCigar = None
+
     @property
     def qStart(self):
         return self.peer.opt("YS")
@@ -351,9 +354,14 @@ class BamAlignment(object):
         """
         Run-length decode the CIGAR encoding, and orient.  Clipping ops are removed.
         """
-        ucGenomic = _unrollCigar(self.peer.cigar, exciseSoftClips=True)
-        ucOriented = ucGenomic[::-1] if (orientation == "native" and self.isReverseStrand) else ucGenomic
-        return ucOriented
+        if self._unrolledCigar is None:
+            self._unrolledCigar = _unrollCigar(self.peer.cigar, exciseSoftClips=True)
+
+        if (orientation == "native" and self.isReverseStrand):
+            return self._unrolledCigar[::-1]
+        else:
+            return self._unrolledCigar
+
 
     def referencePositions(self, aligned=True, orientation="native"):
         """
