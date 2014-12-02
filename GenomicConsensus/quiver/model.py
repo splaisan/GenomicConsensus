@@ -251,7 +251,8 @@ def _buildParameterSet(parameterSetName, nameValuePairs):
     if map(fst, nameValuePairs) != model.parameterNames:
         die("Malformed parameter set file")
 
-    qvModelParams = cc.QvModelParams(*[ float(snd(pair)) for pair in nameValuePairs ])
+    qvModelParams = cc.QvModelParams(chem, modelName,
+        *[ float(snd(pair)) for pair in nameValuePairs ])
 
     #
     # Dirty hack for --diploid support, diploid model is scaled
@@ -336,7 +337,10 @@ class QuiverConfig(object):
         self.parameterSets              = parameterSets
         qct = cc.QuiverConfigTable()
         for (chem, pset) in self.parameterSets.items():
-            qct.Insert(chem, pset.ccQuiverConfig)
+            if chem == "*":
+                qct.InsertDefault(pset.ccQuiverConfig)
+            else:
+                qct.Insert(pset.ccQuiverConfig)
         self.ccQuiverConfigTbl          = qct
 
     @staticmethod
