@@ -33,6 +33,7 @@
 from functools import wraps
 from bisect import bisect_right, bisect_left
 
+from pbcore.util.sequences import reverseComplement
 from ._BamSupport import *
 
 

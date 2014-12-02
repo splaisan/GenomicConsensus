@@ -49,12 +49,6 @@ COMPLEMENT_MAP = { "A" : "T",
                    "N" : "N",
                    "-" : "-" }
 
-def complement(seq):
-    return "".join([ COMPLEMENT_MAP[b] for b in seq ])
-
-def reverseComplement(seq):
-    return "".join([ COMPLEMENT_MAP[b] for b in seq[::-1]])
-
 def complementAscii(a):
     return np.array([ord(COMPLEMENT_MAP[chr(b)]) for b in a], dtype=np.int8)
 
