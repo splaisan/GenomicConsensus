@@ -218,7 +218,7 @@ def variantsFromAlignment(refWindow, refSeq, cssSeq,
             refPos_ = min(v.refStart-refStart, len(refCoverage)-1)
             cssPos_ = min(cssPosition[v.refStart-refStart], len(cssQV)-1)
 
-            if refCoverage != None: v.coverage   = refCoverage[refPos_]
-            if cssQV       != None: v.confidence = cssQV[cssPos_]
+            if refCoverage is not None: v.coverage   = refCoverage[refPos_]
+            if cssQV       is not None: v.confidence = cssQV[cssPos_]
 
     return variants
