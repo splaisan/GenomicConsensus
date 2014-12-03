@@ -410,9 +410,12 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
         params = { "*" : p }
     else:
         chemistryNames = list(set(cmpH5.sequencingChemistry))  # uniquify
+        if "unknown" in chemistryNames:
+            die("\"unknown\" chemistry in alignment file: either an unsupported chemistry " +
+                "has been used, the alignment file has been improperly constructed, or " +
+                "this version of SMRTanalysis is too old to recognize a new chemistry.")
         if not _isChemistryMixSupported(chemistryNames):
-            logging.warn("Unsupported chemistry mix, results will be undefined: %s" % \
-                         ", ".join(chemistryNames))
+            die("Unsupported chemistry mix, cannot proceed.")
         qvsAvailable = cmpH5.pulseFeaturesAvailable()
         bestParams = [ _bestParameterSet(sets, chemistryName, qvsAvailable)
                        for chemistryName in chemistryNames ]
