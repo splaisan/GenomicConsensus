@@ -315,7 +315,7 @@ class BamReader(_BamReaderBase):
             raise UnavailableFeature("BAM is not random-access")
         else:
             return ( BamAlignment(self, it)
-                     for it in self.peer.fetch(winId, winStart, winEnd, reopen=False) )
+                     for it in self.peer.fetch(winId, winStart, winEnd, multiple_iterators=False) )
 
     def __getitem__(self, rowNumbers):
         raise UnavailableFeature("Use PacBioBamReader to get row-number based slicing.")
