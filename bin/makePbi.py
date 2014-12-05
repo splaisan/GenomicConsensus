@@ -8,10 +8,6 @@ from collections import Counter, OrderedDict
 
 from GenomicConsensus.io import BamReader, BamAlignment
 
-# Note: there is a bug in the htslib bundled in pysam 0.8.0 that
-# effects "tell".  In order to get this to work, you need pysam 0.8.0
-# built against htslib 1.1.  Hopefully this will be fixed in pysam 0.8.1.
-
 # Call: makePbi.py bamfile referenceFasta
 
 PBI_VERSION = "0.1"
@@ -77,7 +73,7 @@ def main():
     # Write to file, gzipped
 
     grp = pbi.create_group("PacBioBamIndex")
-    grp.attrs["Version"] = PBI_VERSION
+    grp.attrs["Version"] = np.string_(PBI_VERSION)
     columnsGrp = grp.create_group("Columns")
     for (name, ds) in dsets.iteritems():
         columnsGrp.create_dataset(name, data=ds, chunks=True, compression="gzip")

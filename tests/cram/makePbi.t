@@ -4,7 +4,8 @@ expected.  We have to copy it and the bam.bai locally because we can't
 write to the pbcore directory.
 
   $ export REMOTE_BAM=`python -c "import pbcore.data as D; print D.getBamAndCmpH5()[0]"`
-  $ cp $REMOTE_BAM* .
+  $ cp $REMOTE_BAM .
+  $ cp ${REMOTE_BAM}.bai .
   $ export BAM=`echo *.bam`
   $ export REF=`python -c "import pbcore.data as D; print D.getLambdaFasta()"`
 
@@ -16,8 +17,8 @@ write to the pbcore directory.
      GROUP "PacBioBamIndex" {
         ATTRIBUTE "Version" {
            DATATYPE  H5T_STRING {
-              STRSIZE H5T_VARIABLE;
-              STRPAD H5T_STR_NULLTERM;
+              STRSIZE 3;
+              STRPAD H5T_STR_NULLPAD;
               CSET H5T_CSET_ASCII;
               CTYPE H5T_C_S1;
            }
