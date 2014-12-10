@@ -109,7 +109,7 @@ Notes
 -----
 http://www.sequenceontology.org/gff3.shtml
 http://smrtwiki/wiki/SMRTpipe
-http://usmp-acid/dwebster/dag/index.html
+http://web/~mhsieh/dag/index.html
 
 Evicons
 ~~~~~~~

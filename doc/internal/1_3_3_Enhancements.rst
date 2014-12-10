@@ -70,4 +70,4 @@ This functionality will be optional.
     We may also choose to include an output of read IDs associated with reported
     sets of co-located mutations.  Formats TBD.
 
-.. _BCR-ABL Project Details: http://usmp-acid/mbrown/mbrown/workspace2011Q4/bcrAblASHRuns/
+.. _BCR-ABL Project Details: http://web/~mbrown/workspace2011Q4/bcrAblASHRuns/
