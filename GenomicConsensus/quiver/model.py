@@ -340,8 +340,8 @@ class QuiverConfig(object):
             if chem == "*":
                 qct.InsertDefault(pset.ccQuiverConfig)
             else:
-                qct.Insert(pset.ccQuiverConfig)
-        self.ccQuiverConfigTbl          = qct
+                qct.InsertAs(chem, pset.ccQuiverConfig)
+        self.ccQuiverConfigTbl = qct
 
     @staticmethod
     def _defaultQuiverParameters():
