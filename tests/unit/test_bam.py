@@ -1,5 +1,5 @@
 import pbcore.data as D
-from pbcore.io import CmpH5Reader, BamReader, PacBioBamReader
+from pbcore.io import CmpH5Reader, BamReader, IndexedBamReader
 
 from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)
@@ -13,7 +13,7 @@ class TestBam(object):
         bamFname, cmpFname = D.getBamAndCmpH5()
         lambdaFasta = D.getLambdaFasta()
 
-        self.b = PacBioBamReader(bamFname, lambdaFasta)
+        self.b = IndexedBamReader(bamFname, lambdaFasta)
         self.c = CmpH5Reader(cmpFname)
         self.bBasic = BamReader(bamFname)
 

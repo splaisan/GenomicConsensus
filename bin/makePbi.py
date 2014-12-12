@@ -55,7 +55,7 @@ def main():
         transcript = aln.transcript()
         moveCounts = Counter(transcript)
 
-        dsets["ReadGroupID"]      [i] = aln.readGroup.ID
+        dsets["ReadGroupID"]      [i] = aln.readGroupInfo.ID
         dsets["tId"]              [i] = aln.tId
         dsets["tStart"]           [i] = aln.tStart
         dsets["tEnd"]             [i] = aln.tEnd
