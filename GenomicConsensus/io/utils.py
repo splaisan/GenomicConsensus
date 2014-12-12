@@ -33,8 +33,7 @@
 __all__ = ["loadCmpH5", "loadBam"]
 
 import h5py, os.path
-from pbcore.io import CmpH5Reader
-from .BamIO import BamReader
+from pbcore.io import CmpH5Reader, BamReader
 
 
 def loadCmpH5(filename, referenceFname, disableChunkCache=False):

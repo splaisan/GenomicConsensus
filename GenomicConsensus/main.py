@@ -36,9 +36,7 @@ from __future__ import absolute_import
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 
-from pbcore.io import CmpH5Reader
-from GenomicConsensus.io import BamReader
-
+from pbcore.io import CmpH5Reader, BamReader
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options,
                                       parseOptions,

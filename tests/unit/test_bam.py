@@ -1,6 +1,5 @@
 import pbcore.data as D
-from pbcore.io import CmpH5Reader
-from GenomicConsensus.io import PacBioBamReader, BamReader
+from pbcore.io import CmpH5Reader, BamReader, PacBioBamReader
 
 from numpy.testing import (assert_array_equal        as ARRAY_EQ,
                            assert_array_almost_equal as ARRAY_SIM)

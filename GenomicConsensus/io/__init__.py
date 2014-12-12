@@ -32,7 +32,4 @@
 
 from __future__ import absolute_import
 from .VariantsGffWriter import VariantsGffWriter
-from .BamIO import *
-from .BamAlignment import *
-from .PacBioBamIndex import *
 from .utils import *

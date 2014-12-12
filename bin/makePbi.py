@@ -6,7 +6,7 @@ import pysam
 import numpy as np
 from collections import Counter, OrderedDict
 
-from GenomicConsensus.io import BamReader, BamAlignment
+from pbcore.io import BamReader, BamAlignment
 
 # Call: makePbi.py bamfile referenceFasta
 
