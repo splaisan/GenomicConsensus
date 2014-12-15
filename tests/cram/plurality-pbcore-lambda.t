@@ -9,9 +9,6 @@ Run plurality on the lambda file in pbcore.
   $ cat v-cmph5.gff | grep -v "#" | sed 's/	/ /g'
   lambda_NEB3011 . deletion 4945 4945 . . . reference=C;variantSeq=.;frequency=4;coverage=7;confidence=40
 
-  $ fastacomposition css-cmph5.fa
-  css-cmph5.fa A 960 C 994 G 1129 T 941 a 11376 c 10366 g 11689 t 11047
-
   $ plurality $BAM -r $REF -o css-bam.fa -o v-bam.gff
   [WARNING] 'fancyChunking' not yet available for BAM, disabling
   $ cat v-bam.gff | grep -v "#" | sed  's/	/ /g'
