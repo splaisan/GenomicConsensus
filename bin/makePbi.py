@@ -9,69 +9,99 @@ from collections import Counter, OrderedDict
 from pbcore.io import BamReader, BamAlignment
 
 # Call: makePbi.py bamfile referenceFasta
+# Warning: this is a very inefficient reference implementation.
 
-PBI_VERSION = "0.1"
+PBI_VERSION = "3.0"
 
-PBI_COLUMNS_AND_TYPES = [ ("ReadGroupID"       , np.uint32),
-                          ("tId"               , np.uint32),
-                          ("tStart"            , np.uint32),
-                          ("tEnd"              , np.uint32),
-                          ("isReverseStrand"   , np.uint8),
-                          ("HoleNumber"        , np.uint32),
-                          ("rStart"            , np.uint32),
-                          ("rEnd"              , np.uint32),
-                          ("MapQV"             , np.uint8),
-                          ("nM"                , np.uint32),
-                          ("nMM"               , np.uint32),
-                          ("nIns"              , np.uint32),
-                          ("nDel"              , np.uint32),
-                          ("virtualFileOffset" , np.uint64)  ]
+PBI_COLUMNS_AND_TYPES = [ ("tId"               , np.int32),
+                          ("tStart"            , np.int32),
+                          ("tEnd"              , np.int32),
+                          ("qId"               , np.int32),
+                          ("qStart"            , np.int32),
+                          ("qEnd"              , np.int32),
+                          ("rStart"            , np.int32),
+                          ("rEnd"              , np.int32),
+                          ("holeNumber"        , np.int32),
+                          ("isReverseStrand"   , np.int8),
+                          ("nM"                , np.int32),
+                          ("nMM"               , np.int32),
+                          ("mapQV"             , np.uint8),
+                          ("virtualFileOffset" , np.uint64) ]
 
 def main():
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description="Build PacBio BAM index for a bam")
     parser.add_argument("bamFile", type=argparse.FileType("r"))
-    parser.add_argument("referenceFasta", type=argparse.FileType("r"))
+    parser.add_argument("--referenceFasta", type=argparse.FileType("r"))
+    parser.add_argument("--lite", action="store_true")
+
     args = parser.parse_args()
 
     bamFname = args.bamFile.name
-    refFname = args.referenceFasta.name
+    if args.referenceFasta:
+        refFname = args.referenceFasta.name
+    else:
+        refFname = None
 
     pbi = h5py.File(bamFname + ".pbi", "w")
-
+    p = pysam.Samfile(bamFname, check_sq=False)
     B = BamReader(bamFname, refFname)
-    p = pysam.Samfile(bamFname)
 
-    shape = (len(B),)
-    #shape = (len(B), len(PBI_COLUMNS_AND_TYPES))
-
-    dsets = OrderedDict((columnName, np.zeros(shape=shape, dtype=dtype_))
-                        for (columnName, dtype_) in PBI_COLUMNS_AND_TYPES)
+    lsts = dict((columnName, [])
+                for (columnName, dtype_) in PBI_COLUMNS_AND_TYPES)
     p.reset()
-    for i in xrange(len(B)):
+    while True:
         offset = p.tell()
-        rawAln = next(p)
+        try:
+            rawAln = next(p)
+        except StopIteration:
+            break
+
         aln = BamAlignment(B, rawAln)
 
-        transcript = aln.transcript()
-        moveCounts = Counter(transcript)
+        if aln.isMapped:
+            lsts["tId"               ].append(aln.tId)
+            lsts["tStart"            ].append(aln.tStart)
+            lsts["tEnd"              ].append(aln.tEnd)
+            lsts["qId"               ].append(aln.qId)
+            lsts["qStart"            ].append(aln.qStart)
+            lsts["qEnd"              ].append(aln.qEnd)
+            lsts["rStart"            ].append(aln.rStart)
+            lsts["rEnd"              ].append(aln.rEnd)
+            lsts["holeNumber"        ].append(aln.HoleNumber)
+            lsts["isReverseStrand"   ].append(aln.isReverseStrand)
+            lsts["mapQV"             ].append(aln.MapQV)
+            lsts["virtualFileOffset" ].append(offset)
+            if not args.lite:
+                transcript = aln.transcript()
+                moveCounts = Counter(transcript)
+                lsts["nM"            ].append(moveCounts["M"])
+                lsts["nMM"           ].append(moveCounts["R"])
 
-        dsets["ReadGroupID"]      [i] = aln.readGroupInfo.ID
-        dsets["tId"]              [i] = aln.tId
-        dsets["tStart"]           [i] = aln.tStart
-        dsets["tEnd"]             [i] = aln.tEnd
-        dsets["isReverseStrand"]  [i] = aln.isReverseStrand
-        dsets["HoleNumber"]       [i] = aln.HoleNumber
-        dsets["rStart"]           [i] = aln.rStart
-        dsets["rEnd"]             [i] = aln.rEnd
-        dsets["MapQV"]            [i] = aln.MapQV
-        dsets["nM"]               [i] = moveCounts["M"]
-        dsets["nMM"]              [i] = moveCounts["R"]
-        dsets["nIns"]             [i] = moveCounts["I"]
-        dsets["nDel"]             [i] = moveCounts["D"]
-        dsets["virtualFileOffset"][i] = offset
+        else:
+            # Unmapped
+            lsts["tId"               ].append(-1)
+            lsts["tStart"            ].append(-1)
+            lsts["tEnd"              ].append(-1)
+            lsts["qId"               ].append(aln.qId)
+            lsts["qStart"            ].append(aln.qStart)
+            lsts["qEnd"              ].append(aln.qEnd)
+            lsts["rStart"            ].append(-1)
+            lsts["rEnd"              ].append(-1)
+            lsts["holeNumber"        ].append(aln.HoleNumber)
+            lsts["isReverseStrand"   ].append(-1)
+            lsts["mapQV"             ].append(-1)
+            lsts["virtualFileOffset" ].append(offset)
+            lsts["nM"                ].append(-1)
+            lsts["nMM"               ].append(-1)
+
+
+    # Lists to arrays
+    dsets = {}
+    for (name, dtype) in PBI_COLUMNS_AND_TYPES:
+        dsets[name] = np.fromiter(lsts[name], dtype)
+        del lsts[name]
 
     # Write to file, gzipped
-
     grp = pbi.create_group("PacBioBamIndex")
     grp.attrs["Version"] = np.string_(PBI_VERSION)
     columnsGrp = grp.create_group("Columns")
