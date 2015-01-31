@@ -18,15 +18,15 @@ First try the cmp.h5:
 
   $ cd ..
 
-Now run on the BAM:
-
-  $ mkdir BAM; cd BAM
-  $ quiver -j${JOBS-8} --noEvidenceConsensusCall=nocall $BAM -r $REFERENCE \
-  > -o variants.gff -o css.fasta.gz -o css.fq.gz
-  [WARNING] 'fancyChunking' not yet available for BAM, disabling
-
-  $ grep -v "##" variants.gff
-  [1]
-
-  $ gunzip css.fasta.gz
-  $ fastadiff -c FALSE css.fasta $REFERENCE
+#Now run on the BAM:
+#
+#  $ mkdir BAM; cd BAM
+#  $ quiver -j${JOBS-8} --noEvidenceConsensusCall=nocall $BAM -r $REFERENCE \
+#  > -o variants.gff -o css.fasta.gz -o css.fq.gz
+#  [WARNING] 'fancyChunking' not yet available for BAM, disabling
+#
+#  $ grep -v "##" variants.gff
+#  [1]
+#
+#  $ gunzip css.fasta.gz
+#  $ fastadiff -c FALSE css.fasta $REFERENCE
