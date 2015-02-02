@@ -152,7 +152,7 @@ def datasetCountExceedsThreshold(cmpH5, threshold):
     """
     total = 0
     for i in np.unique(cmpH5.AlnGroupID):
-        total += len(cmpH5.alignmentGroup(i))
+        total += len(cmpH5._alignmentGroup(i))
         if total > threshold:
             return True
     return False

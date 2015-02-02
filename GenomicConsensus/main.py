@@ -173,8 +173,11 @@ class ToolRunner(object):
             die("Input CmpH5 file must be nonempty.")
 
     def _shouldDisableChunkCache(self, cmpH5):
-        threshold = options.autoDisableHdf5ChunkCache
-        return datasetCountExceedsThreshold(cmpH5, threshold)
+        if isinstance(cmpH5, CmpH5Reader):
+            threshold = options.autoDisableHdf5ChunkCache
+            return datasetCountExceedsThreshold(cmpH5, threshold)
+        else:
+            return False
 
     def _configureAlgorithm(self, options, cmpH5):
         assert self._algorithm != None
