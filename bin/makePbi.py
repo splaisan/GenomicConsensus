@@ -19,8 +19,8 @@ PBI_COLUMNS_AND_TYPES = [ ("tId"               , np.int32),
                           ("qId"               , np.int32),
                           ("qStart"            , np.int32),
                           ("qEnd"              , np.int32),
-                          ("rStart"            , np.int32),
-                          ("rEnd"              , np.int32),
+                          ("aStart"            , np.int32),
+                          ("aEnd"              , np.int32),
                           ("holeNumber"        , np.int32),
                           ("isReverseStrand"   , np.int8),
                           ("nM"                , np.int32),
@@ -65,8 +65,8 @@ def main():
             lsts["qId"               ].append(aln.qId)
             lsts["qStart"            ].append(aln.qStart)
             lsts["qEnd"              ].append(aln.qEnd)
-            lsts["rStart"            ].append(aln.rStart)
-            lsts["rEnd"              ].append(aln.rEnd)
+            lsts["aStart"            ].append(aln.aStart)
+            lsts["aEnd"              ].append(aln.aEnd)
             lsts["holeNumber"        ].append(aln.HoleNumber)
             lsts["isReverseStrand"   ].append(aln.isReverseStrand)
             lsts["mapQV"             ].append(aln.MapQV)
@@ -85,8 +85,8 @@ def main():
             lsts["qId"               ].append(aln.qId)
             lsts["qStart"            ].append(aln.qStart)
             lsts["qEnd"              ].append(aln.qEnd)
-            lsts["rStart"            ].append(-1)
-            lsts["rEnd"              ].append(-1)
+            lsts["aStart"            ].append(-1)
+            lsts["aEnd"              ].append(-1)
             lsts["holeNumber"        ].append(aln.HoleNumber)
             lsts["isReverseStrand"   ].append(-1)
             lsts["mapQV"             ].append(-1)
