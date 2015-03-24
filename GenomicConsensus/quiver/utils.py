@@ -359,9 +359,9 @@ def consensusForAlignments(refWindow, refSequence, alns, quiverConfig):
         logging.info("%s: POA could not be generated" % (refWindow,))
         return QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
                                                refWindow, refSequence)
-    ga = cc.Align(refSequence, p.Sequence())
+    ga = cc.Align(refSequence, p.Sequence)
     numPoaVariants = ga.Errors()
-    poaCss = p.Sequence()
+    poaCss = p.Sequence
 
     # Extract reads into ConsensusCore-compatible objects, and map them into the
     # coordinates relative to the POA consensus

@@ -30,7 +30,7 @@ setup(
         'pbcore >= 0.9.2',
         'numpy >= 1.6.0',
         'h5py >= 2.0.1',
-        'ConsensusCore >= 0.9.0',
+        'ConsensusCore >= 0.9.1',
         'pysam == 0.8.1'
         ]
     )
