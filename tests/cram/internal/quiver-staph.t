@@ -1,4 +1,3 @@
-
 This input data is taken from the output of the mapping job in Pysiv:
 pysiv_jobs/jobs/BAMMapping/saureus_p6c4
 
@@ -19,15 +18,15 @@ seems.
 One window is nocalled.  Follow up on this.
 
   $ fastacomposition css.fasta
-  css.fasta A 960147 C 470678 G 470218 T 971370 a 176 c 74 g 91 t 159
+  css.fasta A 960146 C 470678 G 470218 T 971370 a 176 c 74 g 91 t 159
 
 No gaps.
 
   $ nucmer -mum $REFERENCE css.fasta 2>/dev/null
   $ show-diff -H out.delta | sed 's/\t/ /g'
 
-Why is the latter variant not included here, below?  Is it because the
-alignment is ambiguous?
+SNPs in consensus the same as called.
 
   $ show-snps -H -C out.delta
-   1592556   T .   1592555   |   586882  1280359  |  1  1  Staphylococcus_aureus_subsp_aureus_USA300_TCH1516\tStaphylococcus_aureus_subsp_aureus_USA300_TCH1516|quiver (esc)
+   1040006   A .   1040005   |   552550  1040005  |  1  1  Staphylococcus_aureus_subsp_aureus_USA300_TCH1516\tStaphylococcus_aureus_subsp_aureus_USA300_TCH1516|quiver (esc)
+   1592556   T .   1592554   |   552550  1280359  |  1  1  Staphylococcus_aureus_subsp_aureus_USA300_TCH1516\tStaphylococcus_aureus_subsp_aureus_USA300_TCH1516|quiver (esc)
