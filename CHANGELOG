@@ -1,3 +1,6 @@
+Version 1.0.0
+  * Working support for BAM files adhering to our BAM spec (version 3.0b6)
+
 Version 0.9.2 (bugfix release, issued with SMRTanalysis 2.3.0p2)
   * Fix bug where output contained truncated contig names
 
