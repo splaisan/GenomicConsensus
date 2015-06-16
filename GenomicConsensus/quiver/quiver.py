@@ -108,7 +108,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
 
             logging.debug("%s: Reads being used: %s" %
                           (reference.windowToString(subWin),
-                           " ".join([str(hit.rowNumber) for hit in alns])))
+                           " ".join([str(hit.readName) for hit in alns])))
 
             css = U.consensusForAlignments(subWin,
                                            intRefSeq,

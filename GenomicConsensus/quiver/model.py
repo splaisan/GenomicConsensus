@@ -136,7 +136,7 @@ class Model(object):
         MappedRead.
         """
         assert aln.referenceSpan > 0
-        name = str(aln.rowNumber)
+        name = aln.readName
         chemistry = chemOrUnknown(aln)
         read = cc.Read(cls.extractFeatures(aln), name, chemistry)
         return cc.MappedRead(read,
