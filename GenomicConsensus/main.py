@@ -36,7 +36,8 @@ from __future__ import absolute_import
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 
-from pbcore.io import CmpH5Reader, BamReader
+from pbcore.io import AlignmentSet
+
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options,
                                       parseOptions,
@@ -139,11 +140,7 @@ class ToolRunner(object):
         store it as self._inCmpH5.
         """
         fname = options.inputFilename
-        if options.usingBam:
-            self._inCmpH5 = BamReader(fname, options.referenceFilename)
-        else:
-            logging.debug("Before open on main process, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
-            self._inCmpH5 = CmpH5Reader(fname)
+        self._inCmpH5 = AlignmentSet(fname)
 
     def _loadReference(self, cmpH5):
         logging.info("Loading reference")
@@ -165,6 +162,8 @@ class ToolRunner(object):
         else:
             options.referenceWindows = map(reference.stringToWindow,
                                            options.referenceWindowsAsString.split(","))
+        if options.referenceWindowsFromAlignment:
+            options.referenceWindows = cmpH5.refWindows
 
     def _checkFileCompatibility(self, cmpH5):
         if not cmpH5.isSorted:
@@ -173,11 +172,12 @@ class ToolRunner(object):
             die("Input CmpH5 file must be nonempty.")
 
     def _shouldDisableChunkCache(self, cmpH5):
-        if isinstance(cmpH5, CmpH5Reader):
-            threshold = options.autoDisableHdf5ChunkCache
-            return datasetCountExceedsThreshold(cmpH5, threshold)
-        else:
-            return False
+        #if isinstance(cmpH5, CmpH5Reader):
+        #    threshold = options.autoDisableHdf5ChunkCache
+        #    return datasetCountExceedsThreshold(cmpH5, threshold)
+        #else:
+        #    return False
+        return False
 
     def _configureAlgorithm(self, options, cmpH5):
         assert self._algorithm != None
@@ -192,17 +192,17 @@ class ToolRunner(object):
         logging.debug("Starting main loop.")
         ids = reference.enumerateIds(options.referenceWindows)
         for _id in ids:
-            if options.fancyChunking:
-                chunks = reference.fancyEnumerateChunks(self._inCmpH5,
-                                                        _id,
-                                                        options.referenceChunkSize,
-                                                        options.minCoverage,
-                                                        options.minMapQV,
-                                                        options.referenceWindows)
-            else:
-                chunks = reference.enumerateChunks(_id,
-                                                   options.referenceChunkSize,
-                                                   options.referenceWindows)
+            #if options.fancyChunking:
+            #    chunks = reference.fancyEnumerateChunks(self._inCmpH5,
+            #                                            _id,
+            #                                            options.referenceChunkSize,
+            #                                            options.minCoverage,
+            #                                            options.minMapQV,
+            #                                            options.referenceWindows)
+            #else:
+            chunks = reference.enumerateChunks(_id,
+                                               options.referenceChunkSize,
+                                               options.referenceWindows)
             for chunk in chunks:
                 if self._aborting: return
                 self._workQueue.put(chunk)
@@ -276,7 +276,7 @@ class ToolRunner(object):
             options.fancyChunking = False
 
             # Peek at the bam file to build tables
-            with BamReader(options.inputFilename) as peekCmpH5:
+            with AlignmentSet(options.inputFilename) as peekCmpH5:
                 logging.info("Peeking at BAM file %s" % options.inputFilename)
                 logging.info("Input BAM data: numAlnHits=%d" % len(peekCmpH5))
                 resolveOptions(peekCmpH5)
@@ -289,7 +289,7 @@ class ToolRunner(object):
             # whether the selected algorithm parameters (Quiver) are
             # compatible with the data.  But we then have to close the
             # file, and let the "real" open happen after the fork.
-            with CmpH5Reader(options.inputFilename) as peekCmpH5:
+            with AlignmentSet(options.inputFilename) as peekCmpH5:
                 logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
                 logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
                 resolveOptions(peekCmpH5)

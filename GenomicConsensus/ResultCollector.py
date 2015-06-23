@@ -139,7 +139,7 @@ class ResultCollector(object):
                 if (s == 0) and (e == refEntry.length):
                     spanName = refName
                 else:
-                    spanName = refName + ":%d-%d" % (s, e)
+                    spanName = refName + "_%d_%d" % (s, e)
                 cssName = consensus.consensusContigName(spanName,
                                                         options.algorithm)
                 # Gather just the chunks pertaining to this span

@@ -33,7 +33,7 @@
 __all__ = ["loadCmpH5", "loadBam"]
 
 import h5py, os.path
-from pbcore.io import CmpH5Reader, BamReader
+from pbcore.io import AlignmentSet
 
 
 def loadCmpH5(filename, referenceFname, disableChunkCache=False):
@@ -41,17 +41,10 @@ def loadCmpH5(filename, referenceFname, disableChunkCache=False):
     Get a CmpH5Reader object, disabling the chunk cache if requested.
     """
     filename = os.path.abspath(os.path.expanduser(filename))
-    if not disableChunkCache:
-        file = h5py.File(filename, "r")
-    else:
-        propfaid = h5py.h5p.create(h5py.h5p.FILE_ACCESS)
-        propfaid.set_cache(0, 0, 0, 0)
-        fid = h5py.h5f.open(filename,
-                            flags=h5py.h5f.ACC_RDONLY,
-                            fapl=propfaid)
-        file = h5py.File(fid)
-    return CmpH5Reader(file)
+    return AlignmentSet(filename)
 
 def loadBam(filename, referenceFname):
     filename = os.path.abspath(os.path.expanduser(filename))
-    return BamReader(filename, referenceFname)
+    aln = AlignmentSet(filename)
+    aln.addReference(referenceFname)
+    return aln

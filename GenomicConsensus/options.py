@@ -167,6 +167,15 @@ def parseOptions():
              "(default: entire reference).",
         default=None)
 
+    readSelection.add_argument(
+        "--alignmentSetRefWindows",
+        action="store_true",
+        dest="referenceWindowsFromAlignment",
+        help="The window (or multiple comma-delimited windows) of the reference to " + \
+             "be processed, in the format refGroup:refStart-refEnd "                 + \
+             "will be pulled from the alignment file.",
+        default=False)
+
     def slurpWindowFile(fname):
         return ",".join(map(str.strip, open(fname).readlines()))
 
