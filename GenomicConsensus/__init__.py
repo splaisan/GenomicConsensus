@@ -30,4 +30,4 @@
 
 # Author: David Alexander
 
-__VERSION__ = "1.0.0"
+__VERSION__ = "1.1.0"

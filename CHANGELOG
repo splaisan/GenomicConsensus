@@ -1,3 +1,6 @@
+Version 1.1.0
+  * Working support for DataSet read and reference files
+
 Version 1.0.0
   * Working support for BAM files adhering to our BAM spec (version 3.0b6)
 

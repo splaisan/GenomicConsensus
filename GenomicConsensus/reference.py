@@ -210,11 +210,22 @@ def fancyEnumerateChunks(cmpH5, refId, referenceStride,
     Enumerate chunks, creating chunks with hasCoverage=False for
     coverage cutouts.
     """
-    startRow = cmpH5.referenceInfo(refId).StartRow
-    endRow   = cmpH5.referenceInfo(refId).EndRow
-    goodMapQVs = (cmpH5.MapQV[startRow:endRow] >= minMapQV)
-    tStart = cmpH5.tStart[startRow:endRow][goodMapQVs].view(np.int32)
-    tEnd   = cmpH5.tEnd  [startRow:endRow][goodMapQVs].view(np.int32)
+
+    # The abstraction frays here, unless we want to push all of this into
+    # pbdataset. With the fairly specific nature of this query, a composition
+    # of standard accessors is probably ok:
+    tStart = []
+    tEnd = []
+    for reader in cmpH5.resourceReaders(refId):
+        startRow = reader.referenceInfo(refId).StartRow
+        endRow = reader.referenceInfo(refId).EndRow
+        goodMapQVs = (reader.MapQV[startRow:endRow] >= minMapQV)
+        tStart.extend(
+            reader.tStart[startRow:endRow][goodMapQVs].view(np.int32))
+        tEnd.extend(reader.tEnd[startRow:endRow][goodMapQVs].view(np.int32))
+    # Sort the intervals (not sure if it matters, but might as well be
+    # consistent with the inputs:
+    tStart, tEnd = map(list, zip(*sorted(zip(tStart, tEnd))))
 
     for span in enumerateSpans(refId, referenceWindows):
         _, spanStart, spanEnd = span

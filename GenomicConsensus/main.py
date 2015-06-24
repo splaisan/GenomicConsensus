@@ -173,6 +173,7 @@ class ToolRunner(object):
 
     def _shouldDisableChunkCache(self, cmpH5):
         #if isinstance(cmpH5, CmpH5Reader):
+        #if cmpH5.isCmpH5:
         #    threshold = options.autoDisableHdf5ChunkCache
         #    return datasetCountExceedsThreshold(cmpH5, threshold)
         #else:
@@ -192,17 +193,17 @@ class ToolRunner(object):
         logging.debug("Starting main loop.")
         ids = reference.enumerateIds(options.referenceWindows)
         for _id in ids:
-            #if options.fancyChunking:
-            #    chunks = reference.fancyEnumerateChunks(self._inCmpH5,
-            #                                            _id,
-            #                                            options.referenceChunkSize,
-            #                                            options.minCoverage,
-            #                                            options.minMapQV,
-            #                                            options.referenceWindows)
-            #else:
-            chunks = reference.enumerateChunks(_id,
-                                               options.referenceChunkSize,
-                                               options.referenceWindows)
+            if options.fancyChunking:
+                chunks = reference.fancyEnumerateChunks(self._inCmpH5,
+                                                        _id,
+                                                        options.referenceChunkSize,
+                                                        options.minCoverage,
+                                                        options.minMapQV,
+                                                        options.referenceWindows)
+            else:
+                chunks = reference.enumerateChunks(_id,
+                                                   options.referenceChunkSize,
+                                                   options.referenceWindows)
             for chunk in chunks:
                 if self._aborting: return
                 self._workQueue.put(chunk)
