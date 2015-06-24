@@ -123,6 +123,7 @@ def loadFromFile(filename_, cmpH5):
     assert not isLoaded()
     try:
         f = ReferenceSet(filename_)
+        f.assertIndexed()
     except IOError as e:
         die(e)
 
