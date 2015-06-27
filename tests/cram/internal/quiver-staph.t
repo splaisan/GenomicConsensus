@@ -5,7 +5,6 @@ pysiv_jobs/jobs/BAMMapping/saureus_p6c4
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/staph/S_aureus_USA300_TCH1516.fasta
 
   $ quiver -j${JOBS-8} $BAM -r $REFERENCE -o variants.gff -o css.fasta -o css.fastq
-  [WARNING] 'fancyChunking' not yet available for BAM, disabling
 
 Inspect the variant calls.  The first variant call might be an error
 (follow up on this) but the latter is an error in the reference, it

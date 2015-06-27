@@ -217,12 +217,17 @@ def fancyEnumerateChunks(cmpH5, refId, referenceStride,
     tStart = []
     tEnd = []
     for reader in cmpH5.resourceReaders(refId):
-        startRow = reader.referenceInfo(refId).StartRow
-        endRow = reader.referenceInfo(refId).EndRow
-        goodMapQVs = (reader.MapQV[startRow:endRow] >= minMapQV)
-        tStart.extend(
-            reader.tStart[startRow:endRow][goodMapQVs].view(np.int32))
-        tEnd.extend(reader.tEnd[startRow:endRow][goodMapQVs].view(np.int32))
+        if cmpH5.isCmpH5:
+            startRow = reader.referenceInfo(refId).StartRow
+            endRow = reader.referenceInfo(refId).EndRow
+            rows = slice(startRow, endRow)
+        else:
+            refLen = reader.referenceInfo(refId).Length
+            rows = reader.readsInRange(refId, 0, refLen, justIndices=True)
+        goodMapQVs = (reader.mapQV[rows] >= minMapQV)
+        tStart.extend(reader.tStart[rows][goodMapQVs].view(np.int32))
+        tEnd.extend(reader.tEnd[rows][goodMapQVs].view(np.int32))
+
     # Sort the intervals (not sure if it matters, but might as well be
     # consistent with the inputs:
     tStart, tEnd = map(list, zip(*sorted(zip(tStart, tEnd))))

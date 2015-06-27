@@ -178,7 +178,7 @@ class ToolRunner(object):
         #    return datasetCountExceedsThreshold(cmpH5, threshold)
         #else:
         #    return False
-        return False
+        return True
 
     def _configureAlgorithm(self, options, cmpH5):
         assert self._algorithm != None
@@ -272,35 +272,23 @@ class ToolRunner(object):
         if options.doProfiling:
             self._makeTemporaryDirectory()
 
-        if options.usingBam:
-            logging.warn("'fancyChunking' not yet available for BAM, disabling")
-            options.fancyChunking = False
-
-            # Peek at the bam file to build tables
-            with AlignmentSet(options.inputFilename) as peekCmpH5:
-                logging.info("Peeking at BAM file %s" % options.inputFilename)
-                logging.info("Input BAM data: numAlnHits=%d" % len(peekCmpH5))
-                resolveOptions(peekCmpH5)
-                self._loadReference(peekCmpH5)
-                self._checkFileCompatibility(peekCmpH5)
-                self._configureAlgorithm(options, peekCmpH5)
-        else:
-            # We need to peek at the cmp.h5 file to build the The
-            # refGroupId<->refGroupFullName mapping, and to determine
-            # whether the selected algorithm parameters (Quiver) are
-            # compatible with the data.  But we then have to close the
-            # file, and let the "real" open happen after the fork.
-            with AlignmentSet(options.inputFilename) as peekCmpH5:
-                logging.info("Peeking at CmpH5 file %s" % options.inputFilename)
-                logging.info("Input CmpH5 data: numAlnHits=%d" % len(peekCmpH5))
-                resolveOptions(peekCmpH5)
-                self._loadReference(peekCmpH5)
-                self._checkFileCompatibility(peekCmpH5)
-                self._configureAlgorithm(options, peekCmpH5)
-                options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekCmpH5)
-                if options.disableHdf5ChunkCache:
-                    logging.info("Will disable HDF5 chunk cache (large number of datasets)")
-            logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
+        with AlignmentSet(options.inputFilename) as peekFile:
+            if not peekFile.isCmpH5 and not peekFile.hasPbi:
+                logging.warn("'fancyChunking' not yet available for BAM "
+                             "files without accompanying .pbi files, "
+                             "disabling")
+                options.fancyChunking = False
+            logging.info("Peeking at file %s" % options.inputFilename)
+            logging.info("Input data: numAlnHits=%d" % len(peekFile))
+            resolveOptions(peekFile)
+            self._loadReference(peekFile)
+            self._checkFileCompatibility(peekFile)
+            self._configureAlgorithm(options, peekFile)
+            options.disableHdf5ChunkCache = True
+            #options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekFile)
+            #if options.disableHdf5ChunkCache:
+            #    logging.info("Will disable HDF5 chunk cache (large number of datasets)")
+            #logging.debug("After peek, # hdf5 objects open: %d" % h5py.h5f.get_obj_count())
 
         if options.dumpEvidence:
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
