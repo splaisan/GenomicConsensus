@@ -127,7 +127,13 @@ def loadFromFile(filename_, cmpH5):
     except IOError as e:
         die(e)
 
-    cmpContigNames = set(cmpH5.refNames)
+    if cmpH5.isCmpH5:
+        # This shouldn't have to be the case, but there are some underlying
+        # issues here with naming across fasta, cmp, and bam files. id,
+        # shortname, name, and fullname. MDS will figure out and document.
+        cmpContigNames = set(cmpH5.fullRefNames)
+    else:
+        cmpContigNames = set(cmpH5.refNames)
 
     for fastaRecord in f.contigs:
         refName = fastaRecord.id
