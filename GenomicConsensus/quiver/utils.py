@@ -400,7 +400,7 @@ def coverageInWindow(refWin, hits):
     winId, winStart, winEnd = refWin
     a = np.array([(hit.referenceStart, hit.referenceEnd)
                   for hit in hits
-                  if hit.referenceId == winId])
+                  if hit.referenceName == winId])
     tStart = a[:,0]
     tEnd   = a[:,1]
     cov = projectIntoRange(tStart, tEnd, winStart, winEnd)

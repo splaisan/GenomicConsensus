@@ -185,7 +185,7 @@ class QuiverWorker(object):
         # to the reference and clip the consensus at the implied
         # bounds.  This seems to be more reliable thank cutting the
         # consensus bluntly
-        refContig = reference.byId[refId].sequence
+        refContig = reference.byName[refId].sequence
         refSequenceInEnlargedWindow = refContig[eStart:eEnd]
 
         #

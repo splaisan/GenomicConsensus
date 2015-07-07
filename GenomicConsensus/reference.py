@@ -71,10 +71,12 @@ byId         = OrderedDict()   # CmpH5 local id (integer)          -> FastaRecor
 byPacBioName = OrderedDict()   # pacbio name ("ref000001")         -> FastaRecord
 
 def idToName(_id):
-    return byId[_id].name
+    # At this point ids should always be names
+    return byName[_id].name
 
 def idToFullName(_id):
-    return byId[_id].fullName
+    # At this point ids should always be names
+    return byName[_id].fullName
 
 # Interpret a string key (one of name, or id (as string))
 # and find the associated id.  Only to be used in interpretation of
@@ -82,18 +84,19 @@ def idToFullName(_id):
 def anyKeyToId(stringKey):
     assert isLoaded()
     if stringKey in byName:
-        return byName[stringKey].id
+        return byName[stringKey].name
     elif stringKey in byPacBioName:
-        return byPacBioName[stringKey].id
+        return byPacBioName[stringKey].name
     elif stringKey.isdigit():
         refId = int(stringKey)
-        return byId[refId].id
+        # at this  point, refId can still be the old numeric identifier
+        return byId[refId].name
     else:
         raise Exception, "Unknown reference name: %s" % stringKey
 
 def sequenceInWindow(window):
     refId, refStart, refEnd = window
-    return byId[refId].sequence[refStart:refEnd]
+    return byName[refId].sequence[refStart:refEnd]
 
 filename = None
 
@@ -144,9 +147,9 @@ def loadFromFile(filename_, cmpH5):
             byPacBioName[pacBioName] = contig
     loadedFastaContigNames = set(byName.keys())
     logging.info("Loaded %d of %d reference groups from %s " %
-                 (len(byId), len(loadedFastaContigNames), filename_))
+                 (len(byName), len(loadedFastaContigNames), filename_))
 
-    if len(byId) == 0:
+    if len(byName) == 0:
         die("No reference groups in the FASTA file were aligned against.  " \
             "Did you select the wrong reference FASTA file?")
     elif (cmpContigNames - loadedFastaContigNames):
@@ -167,11 +170,11 @@ def stringToWindow(s):
     if m:
         refId    = anyKeyToId(m.group(1))
         refStart = int(m.group(2))
-        refEnd   = min(int(m.group(3)), byId[refId].length)
+        refEnd   = min(int(m.group(3)), byName[refId].length)
     else:
         refId    = anyKeyToId(s)
         refStart = 0
-        refEnd   = byId[refId].length
+        refEnd   = byName[refId].length
     return (refId, refStart, refEnd)
 
 def windowToString(referenceWindow):
@@ -187,7 +190,7 @@ def enumerateSpans(refId, referenceWindows=()):
     are to be analyzed.
     """
     assert isLoaded()
-    referenceEntry = byId[refId]
+    referenceEntry = byName[refId]
     referenceEntrySpan = (refId, 0, referenceEntry.length)
 
     for refWin in (referenceWindows or [referenceEntrySpan]):
@@ -230,7 +233,12 @@ def fancyEnumerateChunks(cmpH5, refId, referenceStride,
 
     # Sort the intervals (not sure if it matters, but might as well be
     # consistent with the inputs:
-    tStart, tEnd = map(list, zip(*sorted(zip(tStart, tEnd))))
+    if tStart and tEnd:
+        tStart = np.array(tStart)
+        tEnd = np.array(tEnd)
+        sort_order = tStart.argsort()
+        tStart = tStart[sort_order]
+        tEnd = tEnd[sort_order]
 
     for span in enumerateSpans(refId, referenceWindows):
         _, spanStart, spanEnd = span
@@ -263,7 +271,7 @@ def enumerateIds(referenceWindows=()):
     """
     assert isLoaded()
     if referenceWindows == ():
-        for refId in byId:
+        for refId in byName:
             yield refId
     else:
         for refId in nub(refId for (refId, _, _) in referenceWindows):
@@ -272,7 +280,7 @@ def enumerateIds(referenceWindows=()):
 def enlargedReferenceWindow(refWin, overlap):
     assert isLoaded()
     refId, refStart, refEnd = refWin
-    contigLength = byId[refId].length
+    contigLength = byName[refId].length
     return (refId,
             max(0, refStart - overlap),
             min(refEnd + overlap, contigLength))

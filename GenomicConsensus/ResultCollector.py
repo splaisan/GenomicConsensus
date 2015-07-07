@@ -77,7 +77,7 @@ class ResultCollector(object):
 
     def onStart(self):
         self.referenceBasesProcessedById = OrderedDict()
-        for refId in reference.byId:
+        for refId in reference.byName:
             self.referenceBasesProcessedById[refId] = 0
         self.variantsByRefId             = defaultdict(list)
         self.consensusChunksByRefId      = defaultdict(list)
@@ -91,7 +91,7 @@ class ResultCollector(object):
         if options.gffOutputFilename:
             self.gffWriter = VariantsGffWriter(options.gffOutputFilename,
                                                vars(options),
-                                               reference.byId.values())
+                                               reference.byName.values())
 
     def onResult(self, result):
         window, cssAndVariants = result
@@ -114,7 +114,7 @@ class ResultCollector(object):
 
     def _flushContigIfCompleted(self, window):
         refId, _, _ = window
-        refEntry = reference.byId[refId]
+        refEntry = reference.byName[refId]
         refName = refEntry.fullName
         basesProcessed = self.referenceBasesProcessedById[refId]
         requiredBases = reference.numReferenceBases(refId, options.referenceWindows)
