@@ -1,11 +1,11 @@
 
-Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus.py
+Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus
 
   $ export DATA=/mnt/secondary/Share/Quiver/TestData/tinyLambda/
   $ export PATH=$TESTDIR/..:$PATH
   $ export VARIANTSGFF=$DATA/variants.gff.gz
   $ export ALIGNMENTSUMMARYGFF=$DATA/alignment_summary.gff
-  $ summarizeConsensus.py           \
+  $ summarizeConsensus              \
   >   --variantsGff $VARIANTSGFF    \
   >   $ALIGNMENTSUMMARYGFF          \
   >   -o alignment_summary.out.gff
