@@ -1,2 +1,2 @@
 #!/bin/sh
-variantCaller.py --algorithm=quiver $*
+variantCaller --algorithm=quiver $*

@@ -7,7 +7,7 @@ Some tests of a "fluidigm amplicons" dataset
 
 Set the QV threshold to 10.
 
-  $ variantCaller.py --algorithm=plurality -r $REFERENCE -q 10 -o variants.gff -o consensus.csv -o consensus.fastq $INPUT
+  $ variantCaller --algorithm=plurality -r $REFERENCE -q 10 -o variants.gff -o consensus.csv -o consensus.fastq $INPUT
 
 There are two true SNVs (and one diploid SNV that we miss right now).
 

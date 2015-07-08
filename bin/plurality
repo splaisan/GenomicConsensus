@@ -1,2 +1,2 @@
 #!/bin/sh
-variantCaller.py --algorithm=plurality $*
+variantCaller --algorithm=plurality $*

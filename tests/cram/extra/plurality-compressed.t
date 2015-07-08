@@ -4,7 +4,7 @@ output files are created correctly.
   $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/hcv/aligned_reads.cmp.h5
   $ export REFERENCE=$DATA/hcv/HCV_Ref_For_187140.fasta
-  $ variantCaller.py --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff.gz -o consensus.fq.gz $INPUT
+  $ variantCaller --algorithm=plurality -q 10 -r $REFERENCE -o variants.gff.gz -o consensus.fq.gz $INPUT
 
 I like to show the head of the output files inline here so that glaringly obvious changes will
 pop right out, but I verify that the files are exactly correct by looking at the md5 sums.

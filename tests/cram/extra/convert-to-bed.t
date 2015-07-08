@@ -4,8 +4,8 @@ Test conversion variants GFF -> BED.
   $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/converters/variants.gff.gz
 
-  $ gffToBed.py --name=variants \
-  >             --description="PacBio variant calls" \
+  $ gffToBed --name=variants \
+  >          --description="PacBio variant calls" \
   > variants $INPUT
   track name=variants description="PacBio variant calls" useScore=0
   gi|160367075|gb|CP000730.1| Staphylococcus aureus subsp. aureus USA300_TCH1516, complete genome\t701414\t701415\t701415del\t46.000\t. (esc)

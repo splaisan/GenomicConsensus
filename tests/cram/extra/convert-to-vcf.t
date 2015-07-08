@@ -4,7 +4,7 @@ Test conversion GFF -> VCF
   $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/converters/variants.gff.gz
 
-  $ gffToVcf.py --globalReference=Staphylococcus_aureus_USA300_TCH1516 $INPUT
+  $ gffToVcf --globalReference=Staphylococcus_aureus_USA300_TCH1516 $INPUT
   ##fileformat=VCFv3.3
   ##fileDate=* (glob)
   ##source=* (glob)

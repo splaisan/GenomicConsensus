@@ -3,8 +3,8 @@ Test conversion of alignment summary GFF to coverage BED.
   $ export DATA=$TESTDIR/../../data
   $ export INPUT=$DATA/fluidigm_amplicons/alignment_summary.gff
 
-  $ gffToBed.py --name=coverage \
-  >             --description="PacBio coverage" \
+  $ gffToBed --name=coverage \
+  >          --description="PacBio coverage" \
   > coverage $INPUT > coverage.bed
   $ head -20 coverage.bed
   track name=coverage description="PacBio coverage" useScore=0
