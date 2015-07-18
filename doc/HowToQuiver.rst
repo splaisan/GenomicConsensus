@@ -66,22 +66,8 @@ If you are using an older version than SMRTportal/SMRTanalysis 1.3.3,
 please upgrade.
 
 
-Automatic installation instructions
------------------------------------
-If your system meets the installation requirements, you can perform an
-automatic installation of the PacBio software for Quiver by
-executing::
-
-    $ curl -L http://git.io/JR7TnQ | bash
-
-
-Manual installation instructions
---------------------------------
-If your SWIG or BOOST installations are in non-standard locations or
-you encounter a problem with the automatic installation script, you
-can follow these steps to install Quiver manually.
-
-
+Installation instructions
+-------------------------
 
 Step 1: Set up your Python environment
 ``````````````````````````````````````
@@ -95,18 +81,13 @@ and activate the virtualenv using ::
 
     $ source ~/VE-QUIVER/bin/activate
 
-There are some additional Python libraries required (NumPy and h5py),
-which can be installed via ::
-
-    $ pip install numpy==1.6.1
-    $ pip install h5py==2.0.1
-
 
 Step 2: Install PacBio libraries
 ````````````````````````````````
 To install the PacBio software, execute ::
 
-    $ pip install git+https://github.com/PacificBiosciences/pbcore
+    $ pip install pbcore
+
     $ git clone https://github.com/PacificBiosciences/ConsensusCore
     $ cd ConsensusCore; python setup.py install --swig=$SWIG --boost=$BOOST
     $ pip install git+https://github.com/PacificBiosciences/GenomicConsensus
@@ -146,7 +127,7 @@ a single reference (`GenomicConsensus` >= 1.1.0).
 
 An example input FOFN::
 
-    $ cat aligned_reads.fofn \
+    $ cat aligned_reads.fofn
     /path/to/reads1.bam
     /path/to/reads2.bam
 
@@ -166,22 +147,6 @@ approaching or even exceeding Q60 (one error per million bases).  If
 you use the HGAP assembly protocol in SMRTportal 2.0 or later, Quiver
 runs automatically as the final "assembly polishing" step.
 
-If you want to use Quiver to *manually* polish an assembly, you need to:
-
-- upload your draft assembly to SMRTportal as a new reference,
-- run the Resequencing protocol to call the consensus of your PacBio
-  reads as oriented by the draft assembly.  The variants output will
-  show the "corrections" made by Quiver, while the consensus
-  FASTA/FASTQ output contain the sequence and quality of the polished
-  assembly.
-
-
-Known issues
-------------
-There is a bug in the `multiprocessing` module in Python 2.7.2 and
-lower that causes the interpreter to crash during shutdown.  Use
-Python 2.7.3 or newer.
-
 
 Resources
 ---------
@@ -193,4 +158,4 @@ Methods* `HGAP paper`_
 
 
 .. _`FAQ document`: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst
-.. _`HGAP paper`:
+.. _`HGAP paper`: http://www.nature.com/nmeth/journal/v10/n6/full/nmeth.2474.html
