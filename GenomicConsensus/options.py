@@ -61,7 +61,7 @@ def consensusCoreVersion():
     except:
         return None
 
-def parseOptions():
+def parseOptions(args=sys.argv[1:]):
     """
     Parse the options and perform some due diligence on them
     """
@@ -363,7 +363,7 @@ def parseOptions():
              "that has no aligned coverage.  Outputs emptyish files if there are no remaining "    \
              "non-degenerate windows.  Only intended for use by smrtpipe scatter/gather.")
 
-    parser.parse_args(namespace=options)
+    parser.parse_args(args=args, namespace=options)
 
     options.gffOutputFilename   = None
     options.fastaOutputFilename = None

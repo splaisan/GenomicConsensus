@@ -35,6 +35,7 @@ from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
+import sys
 
 from pbcore.io import AlignmentSet
 
@@ -54,7 +55,8 @@ class ToolRunner(object):
     """
     The main driver class for the GenomicConsensus tool.
     """
-    def __init__(self):
+    def __init__(self, args=sys.argv[1:]):
+        self._args = args
         self._inCmpH5 = None
         self._resultsQueue = None
         self._workQueue = None
@@ -257,7 +259,7 @@ class ToolRunner(object):
         # essentially harmless.
         gc.disable()
 
-        parseOptions()
+        parseOptions(args=self._args)
         self._algorithm = self._algorithmByName(options.algorithm)
         self._setupLogging()
         random.seed(42)
@@ -356,5 +358,5 @@ def monitorSlaves(driver):
         time.sleep(1)
 
 def main():
-    tr = ToolRunner()
+    tr = ToolRunner(args=sys.argv[1:])
     return tr.main()
