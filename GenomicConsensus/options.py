@@ -48,7 +48,13 @@
 #  and get the loaded options dictionary.
 #
 from __future__ import absolute_import
-import argparse, h5py, os, os.path, sys
+import argparse, h5py, os, os.path, sys, json
+
+from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.common_options import (add_resolved_tool_contract_option,
+                                      add_subcomponent_versions_option)
+from pbcommand.cli import get_default_argparser
+
 from .utils import fileFormat
 from . import __VERSION__
 
@@ -61,27 +67,35 @@ def consensusCoreVersion():
     except:
         return None
 
-def parseOptions(args=sys.argv[1:]):
+class Constants(object):
+    ALGORITHM_ID = "genomic_consensus.task_options.algorithm"
+    MIN_CONFIDENCE_ID = "genomic_consensus.task_options.min_confidence"
+    MIN_COVERAGE_ID = "genomic_consensus.task_options.min_coverage"
+    DIPLOID_MODE_ID = "genomic_consensus.task_options.diploid"
+    PARAMETER_SPEC_ID = "genomic_consensus.task_options.parameter_spec"
+
+    DEFAULT_ALGORITHM = "quiver"
+    DEFAULT_MIN_CONFIDENCE = 40
+    DEFAULT_MIN_COVERAGE = 5
+    DEFAULT_MAX_COVERAGE = 100
+    DEFAULT_MIN_MAPQV = 10
+
+def get_argument_parser():
     """
     Parse the options and perform some due diligence on them
     """
     desc = "Compute genomic consensus and call variants relative to the reference."
-    parser = argparse.ArgumentParser(description=desc, add_help=False)
+    parser = get_default_argparser(__VERSION__, desc)
+    add_subcomponent_versions_option(parser, [
+        ("GenomicConsensus", __VERSION__),
+        ("ConsensusCore",
+            (consensusCoreVersion() or "ConsensusCore unavailable")),
+        ("h5py", h5py.version.version),
+        ("hdf5", h5py.version.hdf5_version),
+    ])
 
     def canonicalizedFilePath(path):
         return os.path.abspath(os.path.expanduser(path))
-
-    def checkInputFile(path):
-        if not os.path.isfile(path):
-            parser.error("Input file %s not found." % (path,))
-
-    def checkOutputFile(path):
-        try:
-            f = open(path, "a")
-            f.close()
-        except:
-            parser.error("Output file %s cannot be written." % (path,))
-
 
     basics = parser.add_argument_group("Basic required options")
     basics.add_argument(
@@ -119,13 +133,13 @@ def parseOptions(args=sys.argv[1:]):
         action="store",
         dest="minConfidence",
         type=int,
-        default=40,
+        default=Constants.DEFAULT_MIN_CONFIDENCE,
         help="The minimum confidence for a variant call to be output to variants.gff")
     filtering.add_argument(
         "--minCoverage", "-x",
         action="store",
         dest="minCoverage",
-        default=5,
+        default=Constants.DEFAULT_MIN_COVERAGE,
         type=int,
         help="The minimum site coverage that must be achieved for variant calls and " + \
              "consensus to be calculated for a site.")
@@ -143,7 +157,7 @@ def parseOptions(args=sys.argv[1:]):
         action="store",
         dest="coverage",
         type=int,
-        default=100,
+        default=Constants.DEFAULT_MAX_COVERAGE,
         help="A designation of the maximum coverage level to be used for analysis." + \
              " Exact interpretation is algorithm-specific.")
     readSelection.add_argument(
@@ -151,7 +165,7 @@ def parseOptions(args=sys.argv[1:]):
         action="store",
         dest="minMapQV",
         type=float,
-        default=10,
+        default=Constants.DEFAULT_MIN_MAPQV,
         help="The minimum MapQV for reads that will be used for analysis.")
     # Since the reference isn't loaded at options processing time, we
     # can't grok the referenceWindow specified until later.  We store
@@ -235,21 +249,8 @@ def parseOptions(args=sys.argv[1:]):
              "which selects the best parameter set from the cmp.h5")
 
     debugging = parser.add_argument_group("Verbosity and debugging/profiling")
-    debugging.add_argument("--help", "-h",
-                           action="help")
-    class PrintVersionAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            print "  GenomicConsensus version: %s" % __VERSION__
-            print "  ConsensusCore version: %s" % \
-                (consensusCoreVersion() or "ConsensusCore unavailable")
-            print "  h5py version: %s" % h5py.version.version
-            print "  hdf5 version: %s" % h5py.version.hdf5_version
-            sys.exit(0)
-    debugging.add_argument("--version",
-                           nargs=0,
-                           action=PrintVersionAction)
     debugging.add_argument(
-        "--verbose", "-v",
+        "--verbose",
         dest="verbosity",
         action="count",
         help="Set the verbosity level.")
@@ -363,7 +364,33 @@ def parseOptions(args=sys.argv[1:]):
              "that has no aligned coverage.  Outputs emptyish files if there are no remaining "    \
              "non-degenerate windows.  Only intended for use by smrtpipe scatter/gather.")
 
-    parser.parse_args(args=args, namespace=options)
+    add_resolved_tool_contract_option(parser)
+    # FIXME temporary workaround for parser chaos
+    class EmitToolContractAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            parser2 = get_contract_parser()
+            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.exit(0)
+    parser.add_argument("--emit-tool-contract",
+                        nargs=0,
+                        action=EmitToolContractAction)
+    return parser
+
+def processOptions():
+    """
+    Various additions to the global 'options' object, assuming that the
+    command-line arguments have already been processed.
+    """
+    def checkInputFile(path):
+        if not os.path.isfile(path):
+            parser.error("Input file %s not found." % (path,))
+
+    def checkOutputFile(path):
+        try:
+            f = open(path, "a")
+            f.close()
+        except:
+            parser.error("Output file %s cannot be written." % (path,))
 
     options.gffOutputFilename   = None
     options.fastaOutputFilename = None
@@ -411,3 +438,69 @@ def resolveOptions(cmpH5):
         options.barcode = cmpH5.barcode[options._barcode]
     else:
         options.barcode = None
+
+def get_contract_parser():
+    """
+    Used to generate emitted tool contract, but not (yet) to actually process
+    command-line options.
+    """
+    nproc = 1
+    resources = ()
+    driver_exe = "variantCaller --resolved-tool-contract "
+    p = get_default_contract_parser(
+        "genomic_consensus.tasks.variantcaller",
+        __VERSION__,
+        "Compute genomic consensus and call variants relative to the reference.",
+        driver_exe,
+        TaskTypes.DISTRIBUTED,
+        nproc,
+        resources)
+    p.add_input_file_type(FileTypes.DS_BAM, "infile",
+        "Alignment DataSet", "BAM or Alignment DataSet")
+    p.add_input_file_type(FileTypes.DS_REF, "reference",
+        "Reference DataSet", "Fasta or Reference DataSet")
+    p.add_output_file_type(FileTypes.GFF, "variants",
+        name="Consensus GFF",
+        description="Consensus GFF",
+        default_name="variants.gff")
+    p.add_output_file_type(FileTypes.FASTA, "consensus",
+        name="Consensus Fasta",
+        description="Consensus sequence in Fasta format",
+        default_name="consensus.fasta")
+    p.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
+        name="Consensus fastq",
+        description="Consensus fastq",
+        default_name="consensus.fastq")
+    p.add_str(
+        option_id=Constants.ALGORITHM_ID,
+        option_str="algorithm",
+        default=Constants.DEFAULT_ALGORITHM,
+        name="Algorithm",
+        description="Algorithm name") # FIXME
+    p.add_int(
+        option_id=Constants.MIN_CONFIDENCE_ID,
+        option_str="minConfidence",
+        default=Constants.DEFAULT_MIN_CONFIDENCE,
+        name="Minimum confidence",
+        description="The minimum confidence for a variant call to be output "+\
+                    "to variants.gff")
+    p.add_int(
+        option_id=Constants.MIN_COVERAGE_ID,
+        option_str="minCoverage",
+        default=Constants.DEFAULT_MIN_COVERAGE,
+        name="Minimum coverage",
+        description="The minimum site coverage that must be achieved for " +\
+                    "variant calls and consensus to be calculated for a site.")
+    p.add_boolean(
+        option_id=Constants.DIPLOID_MODE_ID,
+        option_str="diploid",
+        default=False,
+        name="Diploid mode (experimental)",
+        description="Enable detection of heterozygous variants (experimental)")
+    p.add_str(
+        option_id=Constants.PARAMETER_SPEC_ID,
+        option_str="parametersSpec",
+        default="auto",
+        name="Parameter spec",
+        description="Parameter spec")
+    return p

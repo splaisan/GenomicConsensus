@@ -37,11 +37,13 @@ import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 import sys
 
+from pbcommand.cli import pacbio_args_or_contract_runner
 from pbcore.io import AlignmentSet
 
 from GenomicConsensus import reference
-from GenomicConsensus.options import (options,
-                                      parseOptions,
+from GenomicConsensus.options import (options, Constants,
+                                      get_argument_parser,
+                                      processOptions,
                                       resolveOptions,
                                       consensusCoreVersion)
 from GenomicConsensus.utils import (IncompatibleDataException,
@@ -53,10 +55,11 @@ from GenomicConsensus.plurality import plurality
 
 class ToolRunner(object):
     """
-    The main driver class for the GenomicConsensus tool.
+    The main driver class for the GenomicConsensus tool.  It is assumed that
+    arguments have already been parsed and used to populate the global
+    'options' namespace before instantiating this class.
     """
-    def __init__(self, args=sys.argv[1:]):
-        self._args = args
+    def __init__(self):
         self._inCmpH5 = None
         self._resultsQueue = None
         self._workQueue = None
@@ -259,7 +262,6 @@ class ToolRunner(object):
         # essentially harmless.
         gc.disable()
 
-        parseOptions(args=self._args)
         self._algorithm = self._algorithmByName(options.algorithm)
         self._setupLogging()
         random.seed(42)
@@ -357,6 +359,47 @@ def monitorSlaves(driver):
             return 0
         time.sleep(1)
 
-def main():
-    tr = ToolRunner(args=sys.argv[1:])
+def args_runner(args):
+    options.__dict__.update(args.__dict__)
+    processOptions()
+    tr = ToolRunner()
     return tr.main()
+
+def resolved_tool_contract_runner(resolved_contract):
+    rc = resolved_contract
+    alignment_path = rc.task.input_files[0]
+    reference_path = rc.task.input_files[1]
+    gff_path = rc.task.output_files[0]
+    fasta_path = rc.task.output_files[1]
+    fastq_path = rc.task.output_files[2]
+    args = [
+        alignment_path,
+        "--reference", reference_path,
+        "--outputFilename", gff_path,
+        "--outputFilename", fasta_path,
+        "--outputFilename", fastq_path,
+        "--numWorkers", str(rc.task.nproc),
+        "--minCoverage", str(rc.task.options[Constants.MIN_COVERAGE_ID]),
+        "--minConfidence", str(rc.task.options[Constants.MIN_CONFIDENCE_ID]),
+        "--algorithm", rc.task.options[Constants.ALGORITHM_ID],
+        "--parametersSpec", rc.task.options[Constants.PARAMETER_SPEC_ID],
+    ]
+    if rc.task.options[Constants.DIPLOID_MODE_ID]:
+        args.append("--diploid")
+    p = get_argument_parser()
+    args_ = p.parse_args(args)
+    return args_runner(args_)
+
+def main(argv=sys.argv):
+    mp = get_argument_parser()
+    logging.basicConfig()
+    log = logging.getLogger()
+    return pacbio_args_or_contract_runner(argv[1:],
+                                          mp,
+                                          args_runner,
+                                          resolved_tool_contract_runner,
+                                          log,
+                                          lambda *args: log)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
