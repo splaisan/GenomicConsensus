@@ -77,8 +77,8 @@ class ToolRunner(object):
             logLevel = logging.INFO
         else:
             logLevel = logging.WARNING
-        logFormat = '[%(levelname)s] %(message)s'
-        logging.basicConfig(level=logLevel, format=logFormat)
+        log = logging.getLogger()
+        log.setLevel(logLevel)
 
     def _makeTemporaryDirectory(self):
         """
@@ -392,7 +392,8 @@ def resolved_tool_contract_runner(resolved_contract):
 
 def main(argv=sys.argv):
     mp = get_argument_parser()
-    logging.basicConfig()
+    logFormat = '[%(levelname)s] %(message)s'
+    logging.basicConfig(level=logging.WARN, format=logFormat)
     log = logging.getLogger()
     return pacbio_args_or_contract_runner(argv[1:],
                                           mp,

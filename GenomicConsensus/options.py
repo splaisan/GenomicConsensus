@@ -51,8 +51,8 @@ from __future__ import absolute_import
 import argparse, h5py, os, os.path, sys, json
 
 from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
-from pbcommand.common_options import (add_resolved_tool_contract_option,
-                                      add_subcomponent_versions_option)
+from pbcommand.common_options import (add_resolved_tool_contract_option,)
+# FIXME                                     add_subcomponent_versions_option)
 from pbcommand.cli import get_default_argparser
 
 from .utils import fileFormat
@@ -86,13 +86,13 @@ def get_argument_parser():
     """
     desc = "Compute genomic consensus and call variants relative to the reference."
     parser = get_default_argparser(__VERSION__, desc)
-    add_subcomponent_versions_option(parser, [
-        ("GenomicConsensus", __VERSION__),
-        ("ConsensusCore",
-            (consensusCoreVersion() or "ConsensusCore unavailable")),
-        ("h5py", h5py.version.version),
-        ("hdf5", h5py.version.hdf5_version),
-    ])
+#    add_subcomponent_versions_option(parser, [
+#        ("GenomicConsensus", __VERSION__),
+#        ("ConsensusCore",
+#            (consensusCoreVersion() or "ConsensusCore unavailable")),
+#        ("h5py", h5py.version.version),
+#        ("hdf5", h5py.version.hdf5_version),
+#    ])
 
     def canonicalizedFilePath(path):
         return os.path.abspath(os.path.expanduser(path))
