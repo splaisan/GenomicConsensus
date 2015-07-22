@@ -2,9 +2,27 @@
 import sys
 import os
 import time
+import json
+import logging
+import argparse
 import traceback
-from optparse import OptionParser
+
+from pbcommand.cli import (pacbio_args_or_contract_runner,
+                           get_default_argparser)
+from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.utils import setup_log
+from pbcommand.common_options import add_resolved_tool_contract_option
 from pbcore.io import GffReader, WriterBase
+
+__version__ = "3.0"
+
+class Constants(object):
+    TASK_ID = "genomic_consensus.tasks.gff2bed"
+    PURPOSE_ID = "genomic_consensus.task_options.gff2bed_purpose"
+    TRACK_NAME_ID = "genomic_consensus.task_options.track_name"
+    DESCRIPTION_ID = 'genomic_consensus.task_options.track_description'
+    USE_SCORE_ID = "genomic_consensus.task_options.use_score"
+    DRIVER_EXE = "gffToBed --resolved-tool-contract "
 
 #
 # (Ported from pbpy)
@@ -94,48 +112,111 @@ class GffToBed:
     Utility for converting GFF3 to BED format. Currently supports
     regional coverage or variant .bed output.
     """
-    def __init__(self, argv):
-        self.__parseOptions(argv)
-
-    def __parseOptions(self, argv):
-        usage = 'Usage: %prog [--help] [options] purpose[coverage|variants] input.gff > output.bed'
-        parser = OptionParser(usage=usage, description=GffToBed.__doc__)
-
-        parser.add_option('--name', type="string",
-                          help="track name to display in header")
-        parser.add_option('--description', type="string",
-                          help="track description to display in header")
-        parser.add_option('--useScore', type="int", default=0,
-                          help="whether or not to use score for feature display")
-
-        self.options, self.args=parser.parse_args(argv)
-        if len(self.args)!=3:
-            parser.error('Expected 2 argument')
-
-        self.purpose = self.args[1]
+    def __init__(self, args):
+        self.purpose = args.purpose
+        self.gffFile = args.gff
+        self.args = args
 
         if self.purpose not in [ "variants", "coverage" ]:
-            print >> sys.stderr, \
-                "Purpose %s not supported. Must be one of: [variants|coverage]" % (self.purpose)
-            sys.exit(-1)
+            raise ValueError(
+                "Purpose %s not supported. Must be one of: [variants|coverage]" % (self.purpose))
 
-        self.gffFile = self.args[2]
 
     def run(self):
         with GffReader(self.gffFile) as reader, \
              BedWriter(sys.stdout)   as writer:
 
-            writer.writeHeader(self.options.name,
-                               self.options.description,
-                               self.options.useScore)
+            writer.writeHeader(self.args.name,
+                               self.args.description,
+                               self.args.useScore)
             for gff in reader:
                 if self.purpose == 'coverage':
                     bedRecord = CoverageBedRecord.fromAlignmentSummaryGffRecord(gff)
                 else:
                     bedRecord = VariantsBedRecord.fromVariantGffRecord(gff)
                 writer.writeRecord(bedRecord)
+        return 0
 
+def args_runner(args):
+    return GffToBed(args).run()
+
+def resolved_tool_contract_runner(resolved_tool_contract):
+    rtc = resolved_tool_contract
+    args = [
+        rtc.task.options[Constants.PURPOSE_ID],
+        rtc.task.input_files[0],
+        "--useScore", str(rtc.task.options[Constants.USE_SCORE_ID]),
+        "--name", str(rtc.task.options[Constants.TRACK_NAME_ID]),
+        "--description", str(rtc.task.options[Constants.DESCRIPTION_ID]),
+    ]
+    # XXX HACK
+    parser = get_argument_parser()
+    args_ = parser.parse_args(args)
+    return args_runner(args_)
+
+def get_argument_parser():
+    p = get_default_argparser(__version__, __doc__)
+    p.add_argument("purpose", choices=["variants","coverage"])
+    p.add_argument("gff")
+    p.add_argument("--name", action="store",
+        help="track name to display in header")
+    p.add_argument("--description", action="store",
+        help="track description to display in header")
+    p.add_argument("--useScore", type=int, action="store", default=0,
+        help="whether or not to use score for feature display")
+    # FIXME temporary workaround for parser chaos
+    class EmitToolContractAction(argparse.Action):
+        def __call__(self, parser_, namespace, values, option_string=None):
+            parser2 = get_contract_parser()
+            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.exit(0)
+    p.add_argument("--emit-tool-contract",
+                   nargs=0,
+                   action=EmitToolContractAction)
+    return p
+
+def get_contract_parser():
+    nproc = 1
+    resources = ()
+    driver_exe = "gffToBed --resolved-tool-contract "
+    p = get_default_contract_parser(
+        Constants.TASK_ID,
+        __version__,
+        __doc__,
+        Constants.DRIVER_EXE,
+        TaskTypes.DISTRIBUTED,
+        nproc,
+        resources)
+    p.add_input_file_type(FileTypes.GFF, "gff",
+        "GFF file", "GFF file")
+    p.add_str(Constants.PURPOSE_ID, "purpose",
+        default=None,
+        name="Purpose",
+        description="Run mode ('variants' or 'coverage')")
+    p.add_str(Constants.TRACK_NAME_ID, "name",
+        default=None,
+        name="Track name",
+        description="track name to display in header")
+    p.add_str(Constants.DESCRIPTION_ID, 'description',
+        default=None,
+        name="Track description",
+        description="track description to display in header")
+    p.add_int(Constants.USE_SCORE_ID, "useScore",
+        default=0,
+        name="Use score",
+        description="whether or not to use score for feature display")
+    return p
+
+def main(argv=sys.argv):
+    logging.basicConfig(level=logging.WARN)
+    log = logging.getLogger()
+    mp = get_argument_parser()
+    return pacbio_args_or_contract_runner(argv[1:],
+                                          mp,
+                                          args_runner,
+                                          resolved_tool_contract_runner,
+                                          log,
+                                          lambda *args: log)
 
 if __name__ == '__main__':
-    app = GffToBed(sys.argv)
-    sys.exit(app.run())
+    sys.exit(main())
