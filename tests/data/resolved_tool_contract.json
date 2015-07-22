@@ -15,7 +15,7 @@
       "genomic_consensus.task_options.diploid": false,
       "genomic_consensus.task_options.parameter_spec": "unknown"
     },
-    "nproc": 12,
+    "nproc": 8,
     "resources": []
   },
   "driver": {
