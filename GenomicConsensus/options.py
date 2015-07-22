@@ -471,12 +471,8 @@ def get_contract_parser():
         name="Consensus fastq",
         description="Consensus fastq",
         default_name="consensus.fastq")
-    p.add_str(
-        option_id=Constants.ALGORITHM_ID,
-        option_str="algorithm",
-        default=Constants.DEFAULT_ALGORITHM,
-        name="Algorithm",
-        description="Algorithm name") # FIXME
+    p.add_str(Constants.ALGORITHM_ID, "algorithm", Constants.DEFAULT_ALGORITHM,
+        "Algorithm", "Algorithm name") # FIXME
     p.add_int(
         option_id=Constants.MIN_CONFIDENCE_ID,
         option_str="minConfidence",
@@ -491,16 +487,15 @@ def get_contract_parser():
         name="Minimum coverage",
         description="The minimum site coverage that must be achieved for " +\
                     "variant calls and consensus to be calculated for a site.")
-    p.add_boolean(
-        option_id=Constants.DIPLOID_MODE_ID,
-        option_str="diploid",
-        default=False,
-        name="Diploid mode (experimental)",
-        description="Enable detection of heterozygous variants (experimental)")
+    p.add_boolean(Constants.DIPLOID_MODE_ID,
+        "diploid",
+        False,
+        "Diploid mode (experimental)",
+        "Enable detection of heterozygous variants (experimental)")
     p.add_str(
-        option_id=Constants.PARAMETER_SPEC_ID,
-        option_str="parametersSpec",
-        default="auto",
-        name="Parameter spec",
-        description="Parameter spec")
+        Constants.PARAMETER_SPEC_ID,
+        "parametersSpec",
+        "auto",
+        "Parameter spec",
+        "Parameter spec")
     return p
