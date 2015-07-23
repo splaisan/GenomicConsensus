@@ -383,6 +383,7 @@ def resolved_tool_contract_runner(resolved_contract):
         "--minConfidence", str(rc.task.options[Constants.MIN_CONFIDENCE_ID]),
         "--algorithm", rc.task.options[Constants.ALGORITHM_ID],
         "--parametersSpec", rc.task.options[Constants.PARAMETER_SPEC_ID],
+        "--alignmentSetRefWindows",
     ]
     if rc.task.options[Constants.DIPLOID_MODE_ID]:
         args.append("--diploid")

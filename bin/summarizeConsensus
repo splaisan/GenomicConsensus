@@ -1,9 +1,23 @@
 #!/usr/bin/env python
 
-import argparse, gzip, numpy as np, sys
-from collections import namedtuple
+"""
+Augment the alignment_summary.gff file with consensus and variants information.
+"""
 
+from collections import namedtuple
+import argparse
+import logging
+import json
+import gzip
+import sys
+
+import numpy as np
+
+from pbcommand.cli import pacbio_args_or_contract_runner, get_default_argparser
+from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.common_options import add_resolved_tool_contract_option
 from pbcore.io import GffReader, GffWriter, Gff3Record
+
 from GenomicConsensus.utils import error_probability_to_qv
 from GenomicConsensus import __VERSION__
 
@@ -12,15 +26,16 @@ from GenomicConsensus import __VERSION__
 #
 Region = namedtuple("Region", ("seqid", "start", "end"))
 
-def main():
-    headers = [
-        ("source", "GenomicConsensus %s" % __VERSION__),
-        ("pacbio-alignment-summary-version", "0.6"),
-        ("source-commandline", " ".join(sys.argv)),
-        ]
+class Constants(object):
+    TOOL_ID = "genomic_consensus.tasks.summarize_consensus"
+    DRIVER_EXE = "summarizeConsensus --resolved-tool-contract "
 
-    desc = "Augment the alignment_summary.gff file with consensus and variants information."
-    parser = argparse.ArgumentParser(description=desc)
+def get_argument_parser():
+    parser = get_default_argparser(__VERSION__, __doc__)
+    parser.add_argument("inputAlignmentSummaryGff",
+                        type=str,
+                        help="Input alignment_summary.gff filename")
+    # FIXME not optional, should be positional
     parser.add_argument("--variantsGff",
                         type=str,
                         help="Input variants.gff or variants.gff.gz filename",
@@ -29,11 +44,60 @@ def main():
                         "-o",
                         type=str,
                         help="Output alignment_summary.gff filename")
-    parser.add_argument("inputAlignmentSummaryGff",
-                        type=str,
-                        help="Input alignment_summary.gff filename")
+    add_resolved_tool_contract_option(parser)
+    # FIXME temporary workaround for parser chaos
+    class EmitToolContractAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            parser2 = get_contract_parser()
+            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.exit(0)
+    parser.add_argument("--emit-tool-contract",
+                        nargs=0,
+                        action=EmitToolContractAction)
+    return parser
 
-    options = parser.parse_args()
+def get_contract_parser():
+    """
+    Used to generate emitted tool contract, but not (yet) to actually process
+    command-line options.
+    """
+    nproc = 1
+    resources = ()
+    driver_exe = "variantCaller --resolved-tool-contract "
+    p = get_default_contract_parser(
+        "genomic_consensus.tasks.summarize_consensus",
+        __VERSION__,
+        __doc__,
+        Constants.DRIVER_EXE,
+        TaskTypes.DISTRIBUTED,
+        nproc,
+        resources)
+    p.add_input_file_type(FileTypes.GFF, "alignment_summary",
+        "Alignment summary GFF", "Alignment summary GFF file")
+    p.add_input_file_type(FileTypes.GFF, "variants",
+        "Variants GFF", "Variants GFF file")
+    p.add_output_file_type(FileTypes.GFF, "output",
+        name="Output GFF file",
+        description="New alignment summary GFF file",
+        default_name="alignment_summary.gff")
+    return p
+
+def get_args_from_resolved_tool_contract(resolved_tool_contract):
+    rtc = resolved_tool_contract
+    p = get_argument_parser()
+    args = [
+        rtc.task.input_files[0],
+        "--variantsGff", rtc.task.input_files[1],
+        "--output", rtc.task.output_files[0],
+    ]
+    return p.parse_args(args)
+
+def run(options):
+    headers = [
+        ("source", "GenomicConsensus %s" % __VERSION__),
+        ("pacbio-alignment-summary-version", "0.6"),
+        ("source-commandline", " ".join(sys.argv)),
+        ]
 
     inputVariantsGff = GffReader(options.variantsGff)
     inputAlignmentSummaryGff = GffReader(options.inputAlignmentSummaryGff)
@@ -94,6 +158,26 @@ def main():
                 if counterName in summary:
                     line += ";%s=%d" % (counterName, summary[counterName])
             print >>outputAlignmentSummaryGff, line
+    return 0
+
+def args_runner(args):
+    return run(options=args)
+
+def resolved_tool_contract_runner(resolved_tool_contract):
+    args = get_args_from_resolved_tool_contract(resolved_tool_contract)
+    return run(options=args)
+
+def main(argv=sys.argv):
+    mp = get_argument_parser()
+    logFormat = '[%(levelname)s] %(message)s'
+    logging.basicConfig(level=logging.WARN, format=logFormat)
+    log = logging.getLogger()
+    return pacbio_args_or_contract_runner(argv[1:],
+                                          mp,
+                                          args_runner,
+                                          resolved_tool_contract_runner,
+                                          log,
+                                          lambda *args: log)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

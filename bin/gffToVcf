@@ -1,14 +1,32 @@
 #!/usr/bin/env python
+
+"""Utility for converting variant GFF3 files to 1000 Genomes VCF"""
+
 import sys
 import os
 import time
+import json
+import logging
+import argparse
 import traceback
-from optparse import OptionParser
+
+from pbcommand.cli import pacbio_args_or_contract_runner, \
+    get_default_argparser
+from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.common_options import add_resolved_tool_contract_option
+from pbcommand.utils import setup_log
 from pbcore.io import GffReader, WriterBase
 
 #
 # (Ported from pbpy)
 #
+
+__version__ = "3.0"
+
+class Constants(object):
+    TASK_ID = "genomic_consensus.tasks.gff2vcf"
+    DRIVER_EXE = "gffToVcf --resolved-tool-contract "
+    GLOBAL_REFERENCE_ID = "genomic_consensus.task_options.global_reference"
 
 class VcfRecord:
     """Models a record in a VCF3.3 file."""
@@ -90,23 +108,50 @@ class VcfWriter(WriterBase):
     def writeRecord( self, record ):
         print >> self._outfile, str(record)
 
+# FIXME we are very close to being able to use a single parser, but the old
+# behavior of writing to stdout screws this up
+def get_argument_parser():
+    p = get_default_argparser(__version__, __doc__)
+    p.add_argument("gffFile")
+    p.add_argument("--globalReference", action="store", default=None,
+        help="Name of global reference to put in Meta field")
+    add_resolved_tool_contract_option(p)
+    class EmitToolContractAction(argparse.Action):
+        def __call__(self, parser_, namespace, values, option_string=None):
+            parser2 = get_contract_parser()
+            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.exit(0)
+    p.add_argument("--emit-tool-contract",
+                   nargs=0,
+                   action=EmitToolContractAction)
+    return p
+
+def get_contract_parser():
+    nproc = 1
+    resources = ()
+    p = get_default_contract_parser(
+        Constants.TASK_ID,
+        __version__,
+        __doc__,
+        Constants.DRIVER_EXE,
+        TaskTypes.DISTRIBUTED,
+        nproc,
+        resources)
+    p.add_input_file_type(FileTypes.GFF, "gffFile",
+        "GFF file", "GFF file")
+    p.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
+        default_name="output.vcf")
+    p.add_str(Constants.GLOBAL_REFERENCE_ID, 'globalReference',
+        default=None,
+        name="Global reference name",
+        description="Name of global reference to put in Meta field")
+    return p
+
 class GffToVcf(object):
     """Utility for converting variant GFF3 files to 1000 Genomes VCF"""
-    def __init__(self, argv):
-        self.__parseOptions(argv)
-
-    def __parseOptions(self, argv):
-        usage = 'Usage: %prog [--help] [options] variants.gff > variants.vcf'
-        parser = OptionParser(usage=usage, description=GffToVcf.__doc__)
-        parser.add_option('--globalReference', type="string",
-                          help="Name of global reference to put in Meta field")
-        parser.set_defaults(globalReference=None)
-
-        self.options, self.args=parser.parse_args(argv)
-        if len(self.args)!=2:
-            parser.error('Expected 1 argument')
-
-        self.gffFile = self.args[1]
+    def __init__(self, gffFile, globalReference=None):
+        self.gffFile = gffFile
+        self.globalReference = globalReference
 
     def _writeMetaData(self, writer):
         currentTime = time.localtime()
@@ -115,22 +160,46 @@ class GffToVcf(object):
         writer.writeMetaData('fileDate', '%d%d%d' % \
                              (currentTime[0], currentTime[1], currentTime[2]))
         writer.writeMetaData('source', cmdLine)
-        if self.options.globalReference is not None:
-            writer.writeMetaData('reference', self.options.globalReference)
+        if self.globalReference is not None:
+            writer.writeMetaData('reference', self.globalReference)
         writer.writeMetaData('INFO', 'NS,1,Integer,"Number of Samples with Data"')
         writer.writeMetaData('INFO', 'DP,1,Integer,"Total Depth of Coverage"')
 
         writer.writeHeader()
 
-    def run(self):
+    def run(self, out=sys.stdout):
         with GffReader(self.gffFile) as reader, \
-             VcfWriter(sys.stdout) as writer:
+             VcfWriter(out) as writer:
             self._writeMetaData(writer)
             for gff in reader:
                 vcf = VcfRecord.fromVariantGffRecord(gff)
                 writer.writeRecord(vcf)
+        return 0
 
+def args_runner(args, out=sys.stdout):
+    return GffToVcf(
+        gffFile=args.gffFile,
+        globalReference=args.globalReference).run(out=out)
+
+def resolved_tool_contract_runner(resolved_tool_contract):
+    rtc = resolved_tool_contract
+    with open(rtc.task.output_files[0], "w") as f:
+        gr = rtc.task.options[Constants.GLOBAL_REFERENCE_ID]
+        return GffToVcf(
+            gffFile=rtc.task.input_files[0],
+            globalReference=gr).run(out=f)
+
+def main(argv=sys.argv):
+    logging.basicConfig(level=logging.WARN)
+    log = logging.getLogger()
+    #p = get_contract_parser()
+    p = get_argument_parser()
+    return pacbio_args_or_contract_runner(argv[1:],
+                                          p,
+                                          args_runner,
+                                          resolved_tool_contract_runner,
+                                          log,
+                                          lambda *args: log)
 
 if __name__ == '__main__':
-    app = GffToVcf(sys.argv)
-    sys.exit(app.run())
+    sys.exit(main())
