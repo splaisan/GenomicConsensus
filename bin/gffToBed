@@ -142,12 +142,13 @@ def args_runner(args, out=sys.stdout):
 
 def resolved_tool_contract_runner(resolved_tool_contract):
     rtc = resolved_tool_contract
+    assert rtc.task.options[Constants.PURPOSE_ID] in ["coverage", "variants"]
     args = [
         rtc.task.options[Constants.PURPOSE_ID],
         rtc.task.input_files[0],
         "--useScore", str(rtc.task.options[Constants.USE_SCORE_ID]),
-        "--name", str(rtc.task.options[Constants.TRACK_NAME_ID]),
-        "--description", str(rtc.task.options[Constants.DESCRIPTION_ID]),
+   #     "--name", str(rtc.task.options[Constants.TRACK_NAME_ID]),
+   #     "--description", str(rtc.task.options[Constants.DESCRIPTION_ID]),
     ]
     # XXX HACK
     parser = get_argument_parser()
@@ -194,15 +195,15 @@ def get_contract_parser():
     p.add_output_file_type(FileTypes.BED, "bed",
         "BED file", "BED file", "output.bed")
     p.add_str(Constants.PURPOSE_ID, "purpose",
-        default=None,
+        default="",
         name="Purpose",
         description="Run mode ('variants' or 'coverage')")
     p.add_str(Constants.TRACK_NAME_ID, "name",
-        default=None,
+        default="variants",
         name="Track name",
         description="track name to display in header")
     p.add_str(Constants.DESCRIPTION_ID, 'description',
-        default=None,
+        default="PacBio: snps, insertions, and deletions derived from consensus calls against reference",
         name="Track description",
         description="track description to display in header")
     p.add_int(Constants.USE_SCORE_ID, "useScore",

@@ -141,10 +141,10 @@ def get_contract_parser():
         "GFF file", "GFF file")
     p.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
         default_name="output.vcf")
-    p.add_str(Constants.GLOBAL_REFERENCE_ID, 'globalReference',
-        default=None,
-        name="Global reference name",
-        description="Name of global reference to put in Meta field")
+    #p.add_str(Constants.GLOBAL_REFERENCE_ID, 'globalReference',
+    #    default=None,
+    #    name="Global reference name",
+    #    description="Name of global reference to put in Meta field")
     return p
 
 class GffToVcf(object):
@@ -184,7 +184,7 @@ def args_runner(args, out=sys.stdout):
 def resolved_tool_contract_runner(resolved_tool_contract):
     rtc = resolved_tool_contract
     with open(rtc.task.output_files[0], "w") as f:
-        gr = rtc.task.options[Constants.GLOBAL_REFERENCE_ID]
+        gr = None #rtc.task.options[Constants.GLOBAL_REFERENCE_ID]
         return GffToVcf(
             gffFile=rtc.task.input_files[0],
             globalReference=gr).run(out=f)
