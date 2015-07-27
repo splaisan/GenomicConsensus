@@ -70,10 +70,6 @@ class TestSummarizeConsensus(pbcommand.testkit.PbTestApp):
     ]
     TASK_OPTIONS = {}
 
-    def run_after(self, rtc, output_dir):
-        # FIXME using default file name
-        self.assertTrue(os.path.isfile(os.path.join(output_dir, "file.gff")))
-
 
 if __name__ == "__main__":
     unittest.main()
