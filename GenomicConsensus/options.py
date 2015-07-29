@@ -50,7 +50,8 @@
 from __future__ import absolute_import
 import argparse, h5py, os, os.path, sys, json
 
-from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.models import TaskTypes, FileTypes, SymbolTypes, \
+    get_default_contract_parser
 from pbcommand.common_options import (add_resolved_tool_contract_option,)
 # FIXME                                     add_subcomponent_versions_option)
 from pbcommand.cli import get_default_argparser
@@ -444,7 +445,6 @@ def get_contract_parser():
     Used to generate emitted tool contract, but not (yet) to actually process
     command-line options.
     """
-    nproc = 1
     resources = ()
     driver_exe = "variantCaller --resolved-tool-contract "
     p = get_default_contract_parser(
@@ -453,7 +453,7 @@ def get_contract_parser():
         "Compute genomic consensus and call variants relative to the reference.",
         driver_exe,
         TaskTypes.DISTRIBUTED,
-        nproc,
+        SymbolTypes.MAX_NPROC,
         resources)
     p.add_input_file_type(FileTypes.DS_BAM, "infile",
         "Alignment DataSet", "BAM or Alignment DataSet")
