@@ -382,6 +382,7 @@ def processOptions():
     Various additions to the global 'options' object, assuming that the
     command-line arguments have already been processed.
     """
+    parser = get_argument_parser()
     def checkInputFile(path):
         if not os.path.isfile(path):
             parser.error("Input file %s not found." % (path,))
