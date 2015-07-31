@@ -165,14 +165,17 @@ def resolved_tool_contract_runner(resolved_tool_contract):
     return run(options=args)
 
 def main(argv=sys.argv):
+    logging.basicConfig(level=logging.WARN)
     mp = get_argument_parser()
     log = logging.getLogger()
+    def dummy_log(*args, **kwargs):
+        pass
     return pacbio_args_or_contract_runner(argv[1:],
                                           mp,
                                           args_runner,
                                           resolved_tool_contract_runner,
                                           log,
-                                          setup_log)
+                                          dummy_log)
 
 if __name__ == "__main__":
     sys.exit(main())
