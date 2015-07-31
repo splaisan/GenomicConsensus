@@ -81,7 +81,7 @@ class Worker(object):
 
 
     def run(self):
-        if options.doDebugging:
+        if options.debug:
             import ipdb
             with ipdb.launch_ipdb_on_exception():
                 self._run()

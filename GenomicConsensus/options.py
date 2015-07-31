@@ -68,6 +68,8 @@ def consensusCoreVersion():
         return None
 
 class Constants(object):
+    TOOL_ID = "genomic_consensus.tasks.variantcaller"
+    DRIVER_EXE = "variantCaller --resolved-tool-contract "
     ALGORITHM_ID = "genomic_consensus.task_options.algorithm"
     MIN_CONFIDENCE_ID = "genomic_consensus.task_options.min_confidence"
     MIN_COVERAGE_ID = "genomic_consensus.task_options.min_coverage"
@@ -80,19 +82,73 @@ class Constants(object):
     DEFAULT_MAX_COVERAGE = 100
     DEFAULT_MIN_MAPQV = 10
 
-def get_argument_parser():
+def get_parser():
     """
-    Parse the options and perform some due diligence on them
+    Construct a hybrid PbParser with most tool contract parameters defined
+    separately from argparser parameters.
     """
-    desc = "Compute genomic consensus and call variants relative to the reference."
-    parser = get_default_argparser(__VERSION__, desc)
-#    add_subcomponent_versions_option(parser, [
-#        ("GenomicConsensus", __VERSION__),
-#        ("ConsensusCore",
-#            (consensusCoreVersion() or "ConsensusCore unavailable")),
-#        ("h5py", h5py.version.version),
-#        ("hdf5", h5py.version.hdf5_version),
-#    ])
+    p = get_pbparser(
+        tool_id=Constants.TOOL_ID,
+        version=__VERSION__,
+        name="variantCaller",
+        description="Compute genomic consensus and call variants relative to the reference.",
+        driver_exe=Constants.DRIVER_EXE,
+        nproc=SymbolTypes.MAX_NPROC,
+        resource_types=())
+    tcp = p.tool_contract_parser
+    tcp.add_input_file_type(FileTypes.DS_ALIGN, "infile",
+        "Alignment DataSet", "BAM or Alignment DataSet")
+    tcp.add_input_file_type(FileTypes.DS_REF, "reference",
+        "Reference DataSet", "Fasta or Reference DataSet")
+    tcp.add_output_file_type(FileTypes.GFF, "variants",
+        name="Consensus GFF",
+        description="Consensus GFF",
+        default_name="variants.gff")
+    tcp.add_output_file_type(FileTypes.FASTA, "consensus",
+        name="Consensus Fasta",
+        description="Consensus sequence in Fasta format",
+        default_name="consensus.fasta")
+    tcp.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
+        name="Consensus fastq",
+        description="Consensus fastq",
+        default_name="consensus.fastq")
+    tcp.add_str(
+        option_id=Constants.ALGORITHM_ID,
+        option_str="algorithm",
+        default=Constants.DEFAULT_ALGORITHM,
+        name="Algorithm",
+        description="Algorithm name") # FIXME
+    tcp.add_int(
+        option_id=Constants.MIN_CONFIDENCE_ID,
+        option_str="minConfidence",
+        default=Constants.DEFAULT_MIN_CONFIDENCE,
+        name="Minimum confidence",
+        description="The minimum confidence for a variant call to be output "+\
+                    "to variants.gff")
+    tcp.add_int(
+        option_id=Constants.MIN_COVERAGE_ID,
+        option_str="minCoverage",
+        default=Constants.DEFAULT_MIN_COVERAGE,
+        name="Minimum coverage",
+        description="The minimum site coverage that must be achieved for " +\
+                    "variant calls and consensus to be calculated for a site.")
+
+    tcp.add_boolean(
+        option_id=Constants.DIPLOID_MODE_ID,
+        option_str="diploid",
+        default=True, # XXX i.e. --diploid=True, not the actual default!
+        name="Diploid mode (experimental)",
+        description="Enable detection of heterozygous variants (experimental)")
+    tcp.add_str(
+        option_id=Constants.PARAMETER_SPEC_ID,
+        option_str="parametersSpec",
+        default="auto",
+        name="Parameter spec",
+        description="Parameter spec")
+    add_options_to_argument_parser(p.arg_parser.parser)
+    return p
+
+def add_options_to_argument_parser(parser):
 
     def canonicalizedFilePath(path):
         return os.path.abspath(os.path.expanduser(path))
@@ -260,12 +316,6 @@ def get_argument_parser():
         action="store_true",
         help="Turn off all logging, including warnings")
     debugging.add_argument(
-        "--debug",
-        action="store_true",
-        dest="doDebugging",
-        default=False,
-        help="Enable Python-level debugging (using pdb).")
-    debugging.add_argument(
         "--profile",
         action="store_true",
         dest="doProfiling",
@@ -364,16 +414,6 @@ def get_argument_parser():
              "that has no aligned coverage.  Outputs emptyish files if there are no remaining "    \
              "non-degenerate windows.  Only intended for use by smrtpipe scatter/gather.")
 
-    add_resolved_tool_contract_option(parser)
-    # FIXME temporary workaround for parser chaos
-    class EmitToolContractAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
-            sys.exit(0)
-    parser.add_argument("--emit-tool-contract",
-                        nargs=0,
-                        action=EmitToolContractAction)
     return parser
 
 def processOptions():
@@ -381,7 +421,7 @@ def processOptions():
     Various additions to the global 'options' object, assuming that the
     command-line arguments have already been processed.
     """
-    parser = get_argument_parser()
+    parser = get_parser().arg_parser.parser
     def checkInputFile(path):
         if not os.path.isfile(path):
             parser.error("Input file %s not found." % (path,))
@@ -439,63 +479,3 @@ def resolveOptions(cmpH5):
         options.barcode = cmpH5.barcode[options._barcode]
     else:
         options.barcode = None
-
-def get_contract_parser():
-    """
-    Used to generate emitted tool contract, but not (yet) to actually process
-    command-line options.
-    """
-    resources = ()
-    driver_exe = "variantCaller --resolved-tool-contract "
-    p = get_pbparser(
-        "genomic_consensus.tasks.variantcaller",
-        __VERSION__,
-        "variantCaller",
-        "Compute genomic consensus and call variants relative to the reference.",
-        driver_exe,
-        nproc=SymbolTypes.MAX_NPROC,
-        resource_types=resources)
-    p.add_input_file_type(FileTypes.DS_ALIGN, "infile",
-        "Alignment DataSet", "BAM or Alignment DataSet")
-    p.add_input_file_type(FileTypes.DS_REF, "reference",
-        "Reference DataSet", "Fasta or Reference DataSet")
-    p.add_output_file_type(FileTypes.GFF, "variants",
-        name="Consensus GFF",
-        description="Consensus GFF",
-        default_name="variants.gff")
-    p.add_output_file_type(FileTypes.FASTA, "consensus",
-        name="Consensus Fasta",
-        description="Consensus sequence in Fasta format",
-        default_name="consensus.fasta")
-    p.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
-        name="Consensus fastq",
-        description="Consensus fastq",
-        default_name="consensus.fastq")
-    p.add_str(Constants.ALGORITHM_ID, "algorithm", Constants.DEFAULT_ALGORITHM,
-        "Algorithm", "Algorithm name") # FIXME
-    p.add_int(
-        option_id=Constants.MIN_CONFIDENCE_ID,
-        option_str="minConfidence",
-        default=Constants.DEFAULT_MIN_CONFIDENCE,
-        name="Minimum confidence",
-        description="The minimum confidence for a variant call to be output "+\
-                    "to variants.gff")
-    p.add_int(
-        option_id=Constants.MIN_COVERAGE_ID,
-        option_str="minCoverage",
-        default=Constants.DEFAULT_MIN_COVERAGE,
-        name="Minimum coverage",
-        description="The minimum site coverage that must be achieved for " +\
-                    "variant calls and consensus to be calculated for a site.")
-    p.add_boolean(Constants.DIPLOID_MODE_ID,
-        "diploid",
-        False,
-        "Diploid mode (experimental)",
-        "Enable detection of heterozygous variants (experimental)")
-    p.add_str(
-        Constants.PARAMETER_SPEC_ID,
-        "parametersSpec",
-        "auto",
-        "Parameter spec",
-        "Parameter spec")
-    return p

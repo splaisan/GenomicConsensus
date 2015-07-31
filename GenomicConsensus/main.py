@@ -38,12 +38,12 @@ import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 import sys
 
 from pbcommand.utils import setup_log
-from pbcommand.cli import pacbio_args_or_contract_runner
+from pbcommand.cli import pbparser_runner
 from pbcore.io import AlignmentSet
 
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options, Constants,
-                                      get_argument_parser,
+                                      get_parser,
                                       processOptions,
                                       resolveOptions,
                                       consensusCoreVersion)
@@ -312,7 +312,7 @@ class ToolRunner(object):
                                 filename=os.path.join(options.temporaryDirectory,
                                                       "profile-main.out"))
 
-            elif options.doDebugging:
+            elif options.debug:
                 if not options.threaded:
                     die("Debugging only works with -T (threaded) mode")
                 logging.info("PID: %d", os.getpid())
@@ -388,23 +388,22 @@ def resolved_tool_contract_runner(resolved_contract):
     ]
     if rc.task.options[Constants.DIPLOID_MODE_ID]:
         args.append("--diploid")
-    p = get_argument_parser()
-    args_ = p.parse_args(args)
+    args_ = get_parser().arg_parser.parser.parse_args(args)
     return args_runner(args_)
 
 def main(argv=sys.argv):
-    mp = get_argument_parser()
     logFormat = '[%(levelname)s] %(message)s'
     logging.basicConfig(level=logging.WARN, format=logFormat)
     log = logging.getLogger()
     def dummy_setup(*args, **kwargs):
         pass
-    return pacbio_args_or_contract_runner(argv[1:],
-                                          mp,
-                                          args_runner,
-                                          resolved_tool_contract_runner,
-                                          log,
-                                          dummy_setup)
+    return pbparser_runner(
+        argv=argv[1:],
+        parser=get_parser(),
+        args_runner_func=args_runner,
+        contract_runner_func=resolved_tool_contract_runner,
+        alog=log,
+        setup_log_func=dummy_setup)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
