@@ -45,6 +45,5 @@ def loadCmpH5(filename, referenceFname, disableChunkCache=False):
 
 def loadBam(filename, referenceFname):
     filename = os.path.abspath(os.path.expanduser(filename))
-    aln = AlignmentSet(filename)
-    aln.addReference(referenceFname)
+    aln = AlignmentSet(filename, referenceFastaFname=referenceFname)
     return aln

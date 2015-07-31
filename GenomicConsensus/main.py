@@ -37,6 +37,7 @@ import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
 import sys
 
+from pbcommand.utils import setup_log
 from pbcommand.cli import pacbio_args_or_contract_runner
 from pbcore.io import AlignmentSet
 
@@ -396,12 +397,14 @@ def main(argv=sys.argv):
     logFormat = '[%(levelname)s] %(message)s'
     logging.basicConfig(level=logging.WARN, format=logFormat)
     log = logging.getLogger()
+    def dummy_setup(*args, **kwargs):
+        pass
     return pacbio_args_or_contract_runner(argv[1:],
                                           mp,
                                           args_runner,
                                           resolved_tool_contract_runner,
                                           log,
-                                          lambda *args: log)
+                                          dummy_setup)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

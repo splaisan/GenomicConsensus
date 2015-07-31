@@ -50,8 +50,7 @@
 from __future__ import absolute_import
 import argparse, h5py, os, os.path, sys, json
 
-from pbcommand.models import TaskTypes, FileTypes, SymbolTypes, \
-    get_default_contract_parser
+from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
 from pbcommand.common_options import (add_resolved_tool_contract_option,)
 # FIXME                                     add_subcomponent_versions_option)
 from pbcommand.cli import get_default_argparser
@@ -370,7 +369,7 @@ def get_argument_parser():
     class EmitToolContractAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
             sys.exit(0)
     parser.add_argument("--emit-tool-contract",
                         nargs=0,
@@ -448,15 +447,15 @@ def get_contract_parser():
     """
     resources = ()
     driver_exe = "variantCaller --resolved-tool-contract "
-    p = get_default_contract_parser(
+    p = get_pbparser(
         "genomic_consensus.tasks.variantcaller",
         __VERSION__,
+        "variantCaller",
         "Compute genomic consensus and call variants relative to the reference.",
         driver_exe,
-        TaskTypes.DISTRIBUTED,
-        SymbolTypes.MAX_NPROC,
-        resources)
-    p.add_input_file_type(FileTypes.DS_BAM, "infile",
+        nproc=SymbolTypes.MAX_NPROC,
+        resource_types=resources)
+    p.add_input_file_type(FileTypes.DS_ALIGN, "infile",
         "Alignment DataSet", "BAM or Alignment DataSet")
     p.add_input_file_type(FileTypes.DS_REF, "reference",
         "Reference DataSet", "Fasta or Reference DataSet")

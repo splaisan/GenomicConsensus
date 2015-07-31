@@ -13,8 +13,9 @@ import sys
 
 import numpy as np
 
+from pbcommand.utils import setup_log
 from pbcommand.cli import pacbio_args_or_contract_runner, get_default_argparser
-from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.models import FileTypes, get_pbparser
 from pbcommand.common_options import add_resolved_tool_contract_option
 from pbcore.io import GffReader, GffWriter, Gff3Record
 
@@ -49,7 +50,7 @@ def get_argument_parser():
     class EmitToolContractAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
             sys.exit(0)
     parser.add_argument("--emit-tool-contract",
                         nargs=0,
@@ -61,17 +62,13 @@ def get_contract_parser():
     Used to generate emitted tool contract, but not (yet) to actually process
     command-line options.
     """
-    nproc = 1
-    resources = ()
     driver_exe = "variantCaller --resolved-tool-contract "
-    p = get_default_contract_parser(
+    p = get_pbparser(
         "genomic_consensus.tasks.summarize_consensus",
         __VERSION__,
+        "Summarize Consensus",
         __doc__,
-        Constants.DRIVER_EXE,
-        TaskTypes.DISTRIBUTED,
-        nproc,
-        resources)
+        Constants.DRIVER_EXE)
     p.add_input_file_type(FileTypes.GFF, "alignment_summary",
         "Alignment summary GFF", "Alignment summary GFF file")
     p.add_input_file_type(FileTypes.GFF, "variants",
@@ -169,15 +166,13 @@ def resolved_tool_contract_runner(resolved_tool_contract):
 
 def main(argv=sys.argv):
     mp = get_argument_parser()
-    logFormat = '[%(levelname)s] %(message)s'
-    logging.basicConfig(level=logging.WARN, format=logFormat)
     log = logging.getLogger()
     return pacbio_args_or_contract_runner(argv[1:],
                                           mp,
                                           args_runner,
                                           resolved_tool_contract_runner,
                                           log,
-                                          lambda *args: log)
+                                          setup_log)
 
 if __name__ == "__main__":
     sys.exit(main())

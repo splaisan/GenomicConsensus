@@ -10,9 +10,8 @@ import logging
 import argparse
 import traceback
 
-from pbcommand.cli import pacbio_args_or_contract_runner, \
-    get_default_argparser
-from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.cli import pacbio_args_or_contract_runner, get_default_argparser
+from pbcommand.models import FileTypes, get_pbparser
 from pbcommand.common_options import add_resolved_tool_contract_option
 from pbcommand.utils import setup_log
 from pbcore.io import GffReader, WriterBase
@@ -119,7 +118,7 @@ def get_argument_parser():
     class EmitToolContractAction(argparse.Action):
         def __call__(self, parser_, namespace, values, option_string=None):
             parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
             sys.exit(0)
     p.add_argument("--emit-tool-contract",
                    nargs=0,
@@ -129,14 +128,14 @@ def get_argument_parser():
 def get_contract_parser():
     nproc = 1
     resources = ()
-    p = get_default_contract_parser(
+    p = get_pbparser(
         Constants.TASK_ID,
         __version__,
+        "gffToVcf",
         __doc__,
         Constants.DRIVER_EXE,
-        TaskTypes.DISTRIBUTED,
-        nproc,
-        resources)
+        nproc=nproc,
+        resource_types=resources)
     p.add_input_file_type(FileTypes.GFF, "gffFile",
         "GFF file", "GFF file")
     p.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
@@ -194,12 +193,14 @@ def main(argv=sys.argv):
     log = logging.getLogger()
     #p = get_contract_parser()
     p = get_argument_parser()
+    def dummy_log(*args, **kwargs):
+        pass
     return pacbio_args_or_contract_runner(argv[1:],
                                           p,
                                           args_runner,
                                           resolved_tool_contract_runner,
                                           log,
-                                          lambda *args: log)
+                                          dummy_log)
 
 if __name__ == '__main__':
     sys.exit(main())
