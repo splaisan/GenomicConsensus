@@ -10,9 +10,8 @@ import logging
 import argparse
 import traceback
 
-from pbcommand.cli import pacbio_args_or_contract_runner, get_default_argparser
 from pbcommand.models import FileTypes, get_pbparser
-from pbcommand.common_options import add_resolved_tool_contract_option
+from pbcommand.cli import pbparser_runner
 from pbcommand.utils import setup_log
 from pbcore.io import GffReader, WriterBase
 
@@ -107,44 +106,6 @@ class VcfWriter(WriterBase):
     def writeRecord( self, record ):
         print >> self._outfile, str(record)
 
-# FIXME we are very close to being able to use a single parser, but the old
-# behavior of writing to stdout screws this up
-def get_argument_parser():
-    p = get_default_argparser(__version__, __doc__)
-    p.add_argument("gffFile")
-    p.add_argument("--globalReference", action="store", default=None,
-        help="Name of global reference to put in Meta field")
-    add_resolved_tool_contract_option(p)
-    class EmitToolContractAction(argparse.Action):
-        def __call__(self, parser_, namespace, values, option_string=None):
-            parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
-            sys.exit(0)
-    p.add_argument("--emit-tool-contract",
-                   nargs=0,
-                   action=EmitToolContractAction)
-    return p
-
-def get_contract_parser():
-    nproc = 1
-    resources = ()
-    p = get_pbparser(
-        Constants.TASK_ID,
-        __version__,
-        "gffToVcf",
-        __doc__,
-        Constants.DRIVER_EXE,
-        nproc=nproc,
-        resource_types=resources)
-    p.add_input_file_type(FileTypes.GFF, "gffFile",
-        "GFF file", "GFF file")
-    p.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
-        default_name="output.vcf")
-    #p.add_str(Constants.GLOBAL_REFERENCE_ID, 'globalReference',
-    #    default=None,
-    #    name="Global reference name",
-    #    description="Name of global reference to put in Meta field")
-    return p
 
 class GffToVcf(object):
     """Utility for converting variant GFF3 files to 1000 Genomes VCF"""
@@ -188,19 +149,36 @@ def resolved_tool_contract_runner(resolved_tool_contract):
             gffFile=rtc.task.input_files[0],
             globalReference=gr).run(out=f)
 
+def get_contract_parser():
+    p = get_pbparser(
+        tool_id=Constants.TASK_ID,
+        version=__version__,
+        name="gffToVcf",
+        description=__doc__,
+        driver_exe=Constants.DRIVER_EXE)
+    ap = p.arg_parser.parser
+    tcp = p.tool_contract_parser
+    p.add_input_file_type(FileTypes.GFF, "gffFile",
+        "GFF file", "GFF file")
+    tcp.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
+        default_name="output.vcf")
+    ap.add_argument("--globalReference", action="store", default=None,
+        help="Name of global reference to put in Meta field")
+    return p
+
 def main(argv=sys.argv):
     logging.basicConfig(level=logging.WARN)
     log = logging.getLogger()
-    #p = get_contract_parser()
-    p = get_argument_parser()
+    p = get_contract_parser()
     def dummy_log(*args, **kwargs):
         pass
-    return pacbio_args_or_contract_runner(argv[1:],
-                                          p,
-                                          args_runner,
-                                          resolved_tool_contract_runner,
-                                          log,
-                                          dummy_log)
+    return pbparser_runner(
+        argv=argv[1:],
+        parser=p,
+        args_runner_func=args_runner,
+        contract_runner_func=resolved_tool_contract_runner,
+        alog=log,
+        setup_log_func=dummy_log)
 
 if __name__ == '__main__':
     sys.exit(main())
