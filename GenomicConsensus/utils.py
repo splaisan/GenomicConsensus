@@ -144,7 +144,7 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         for sample in stream:
             if weightFunc(sample) == optimal:
                 optimalSamples += 1
-                if optimalSamples < sampleSize:
+                if optimalSamples <= sampleSize:
                     optimalReservoir.append(sample)
                 else:
                     j = np.random.randint(0, optimalSamples+1) # np is excl.
@@ -153,7 +153,7 @@ def readsInWindow(cmpH5, window, depthLimit=None,
             # only bother with suboptimal samples if optimal res. is not full
             elif len(optimalReservoir) < sampleSize:
                 suboptimalSamples += 1
-                if suboptimalSamples < sampleSize:
+                if suboptimalSamples <= sampleSize:
                     suboptimalReservoir.append(sample)
                 else:
                     j = np.random.randint(0, suboptimalSamples+1) # np is excl.
