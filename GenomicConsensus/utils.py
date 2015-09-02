@@ -122,14 +122,64 @@ def readsInWindow(cmpH5, window, depthLimit=None,
     def lengthInWindow(hit):
         return min(hit.tEnd, winEnd) - max(hit.tStart, winStart)
 
+    def reservoirBestSample(stream, sampleSize, weightFunc, optimal,
+                            endCondition=lambda x: False):
+        """Sample the stream randomly without knowing its size.
+
+        Fairly standard reservoir sampling: with a certain probability replace
+        an element in the reservoir with the current sample from stream. This
+        probability decreases as the number of samples encountered increases.
+
+        Here there are two reservoirs, one for 'optimal' samples and one for
+        sub optimal samples. These are two independent, simultaneous reseroir
+        samplings of a stream that can emit either type of sample.
+
+        The optimal reservoir is preferentially returned, and the suboptimal
+        reservoir is used only as needed.
+        """
+        optimalReservoir = []
+        suboptimalReservoir = []
+        optimalSamples = 0
+        suboptimalSamples = 0
+        for sample in stream:
+            if weightFunc(sample) == optimal:
+                optimalSamples += 1
+                if optimalSamples < sampleSize:
+                    optimalReservoir.append(sample)
+                else:
+                    j = np.random.randint(0, optimalSamples+1) # np is excl.
+                    if j < sampleSize:
+                        optimalReservoir[j] = sample
+            # only bother with suboptimal samples if optimal res. is not full
+            elif len(optimalReservoir) < sampleSize:
+                suboptimalSamples += 1
+                if suboptimalSamples < sampleSize:
+                    suboptimalReservoir.append(sample)
+                else:
+                    j = np.random.randint(0, suboptimalSamples+1) # np is excl.
+                    if j < sampleSize:
+                        suboptimalReservoir[j] = sample
+            elif endCondition(sample):
+                # Requires some ordering: this sample (e.g. read) is non-
+                # optimal, the optimal reservoir is full, and this and all
+                # subsequent samples will be non-optimal (e.g. reads that start
+                # after the opening of the window, precluding further optimal
+                # reads).
+                break
+        fill = sampleSize - len(optimalReservoir)
+        if fill:
+            optimalReservoir.extend(suboptimalReservoir[:fill])
+        return optimalReservoir
+
     winId, winStart, winEnd = window
+    source = cmpH5.readsInRange(winId, winStart, winEnd)
+    if cmpH5.hasPbi and depthLimit and strategy == "longest":
+        source = cmpH5.readsInRange(winId, winStart, winEnd, longest=True)
     if barcode == None:
-        alnHits = ( hit
-                    for hit in cmpH5.readsInRange(winId, winStart, winEnd)
+        alnHits = ( hit for hit in source
                     if hit.MapQV >= minMapQV )
     else:
-        alnHits = ( hit
-                    for hit in cmpH5.readsInRange(winId, winStart, winEnd)
+        alnHits = ( hit for hit in source
                     if ((hit.MapQV >= minMapQV) and
                         (hit.barcode == barcode)) )
 
@@ -140,8 +190,16 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         return depthCap( hit for hit in alnHits
                          if lengthInWindow(hit) == winLen )
     elif strategy == "longest":
-        # Well, this defeats the iterable/laziness, performs poorly if
-        # deep coverage.  sorted is stable.
+        # if hasPbi, should already be sorted using pbi. Else:
+        if depthLimit and cmpH5.hasPbi:
+            return depthCap(alnHits)
+        elif depthLimit and not cmpH5.hasPbi:
+            winLen = winEnd - winStart
+            # 40x was experimentally found to be fast, require < 4GB per slot
+            # and not affect the tests (resulting coverage 'cap' = 4000x)
+            alnHits = reservoirBestSample(
+                alnHits, 40*depthLimit, lengthInWindow, winLen,
+                lambda x, s=winStart: x.tStart > s)
         return depthCap(sorted(alnHits, key=lengthInWindow, reverse=True))
 
 
