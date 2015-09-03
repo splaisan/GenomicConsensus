@@ -66,6 +66,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         # 1) identify the intervals with adequate coverage for quiver
         #    consensus; restrict to intervals of length > 10
         alnHits = U.readsInWindow(cmpH5, refWindow,
+                                  depthLimit=20000,
                                   minMapQV=quiverConfig.minMapQV,
                                   strategy="longest",
                                   stratum=options.readStratum,
