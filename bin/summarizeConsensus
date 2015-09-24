@@ -76,7 +76,7 @@ def get_contract_parser():
     p.add_output_file_type(FileTypes.GFF, "output",
         name="Output GFF file",
         description="New alignment summary GFF file",
-        default_name="alignment_summary.gff")
+        default_name="alignment_summary_variants.gff")
     return p
 
 def get_args_from_resolved_tool_contract(resolved_tool_contract):
