@@ -104,10 +104,10 @@ def get_parser():
         name="Consensus GFF",
         description="Consensus GFF",
         default_name="variants.gff")
-    tcp.add_output_file_type(FileTypes.FASTA, "consensus",
-        name="Consensus Fasta",
+    tcp.add_output_file_type(FileTypes.DS_CONTIG, "consensus",
+        name="Consensus ContigSet",
         description="Consensus sequence in Fasta format",
-        default_name="consensus.fasta")
+        default_name="consensus.contigset.xml")
     tcp.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
         name="Consensus fastq",
         description="Consensus fastq",

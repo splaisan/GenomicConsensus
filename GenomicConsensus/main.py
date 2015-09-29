@@ -35,11 +35,14 @@ from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
+import re
 import sys
+
+import pysam
 
 from pbcommand.utils import setup_log
 from pbcommand.cli import pbparser_runner
-from pbcore.io import AlignmentSet
+from pbcore.io import AlignmentSet, ContigSet
 
 from GenomicConsensus import reference
 from GenomicConsensus.options import (options, Constants,
@@ -371,7 +374,8 @@ def resolved_tool_contract_runner(resolved_contract):
     alignment_path = rc.task.input_files[0]
     reference_path = rc.task.input_files[1]
     gff_path = rc.task.output_files[0]
-    fasta_path = rc.task.output_files[1]
+    dataset_path = rc.task.output_files[1]
+    fasta_path = re.sub(".contigset.xml", ".fasta", dataset_path)
     fastq_path = rc.task.output_files[2]
     args = [
         alignment_path,
@@ -389,7 +393,12 @@ def resolved_tool_contract_runner(resolved_contract):
     if rc.task.options[Constants.DIPLOID_MODE_ID]:
         args.append("--diploid")
     args_ = get_parser().arg_parser.parser.parse_args(args)
-    return args_runner(args_)
+    rc = args_runner(args_)
+    if rc == 0:
+        pysam.faidx(fasta_path)
+        ds = ContigSet(fasta_path, strict=True)
+        ds.write(dataset_path)
+    return rc
 
 def main(argv=sys.argv):
     logFormat = '[%(levelname)s] %(message)s'

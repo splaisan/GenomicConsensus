@@ -2,6 +2,7 @@
 import unittest
 import os.path
 
+from pbcore.io import openDataSet, ContigSet
 import pbcommand.testkit
 
 # XXX local data directory, absolutely required
@@ -27,6 +28,11 @@ class TestQuiver(pbcommand.testkit.PbTestApp):
       "genomic_consensus.task_options.diploid": False,
       "genomic_consensus.task_options.parameter_spec": "unknown"
     }
+
+    def run_after(self, rtc, output_dir):
+        contigs_file = rtc.task.output_files[1]
+        with openDataSet(contigs_file, strict=True) as ds:
+            self.assertTrue(isinstance(ds, ContigSet))
 
 
 class TestGffToBed(pbcommand.testkit.PbTestApp):
