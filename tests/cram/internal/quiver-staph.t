@@ -3,7 +3,7 @@ pysiv_jobs/jobs/BAMMapping/saureus_p6c4
 
 # FIXME this file needs updating to the new BAM spec -Nat 2015-09-30
 #  $ export BAM=/mnt/secondary/Share/Quiver/TestData/staph/m140911_084715_42139_c100702390480000001823141103261514_s1_p0.aligned_subreads.bam
-  $ export BAM=/mnt/secondary-siv/testdata/genomic-consensus/Quiver/staph/m140911_084715_42139_c100702390480000001823141103261514_s1_p0.aligned_subreads.bam
+  $ export BAM=/pbi/dept/secondary/siv/testdata/genomic_consensus-unittest/Quiver/staph/m140911_084715_42139_c100702390480000001823141103261514_s1_p0.aligned_subreads.bam
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/staph/S_aureus_USA300_TCH1516.fasta
   $ export MASK=/mnt/secondary/Share/Quiver/GenomeMasks/S_aureus_USA300_TCH1516-mask.gff 
 
