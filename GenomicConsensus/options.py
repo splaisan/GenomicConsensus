@@ -74,7 +74,6 @@ class Constants(object):
     MIN_CONFIDENCE_ID = "genomic_consensus.task_options.min_confidence"
     MIN_COVERAGE_ID = "genomic_consensus.task_options.min_coverage"
     DIPLOID_MODE_ID = "genomic_consensus.task_options.diploid"
-    PARAMETER_SPEC_ID = "genomic_consensus.task_options.parameter_spec"
 
     DEFAULT_ALGORITHM = "quiver"
     DEFAULT_MIN_CONFIDENCE = 40
@@ -139,12 +138,6 @@ def get_parser():
         default=True, # XXX i.e. --diploid=True, not the actual default!
         name="Diploid mode (experimental)",
         description="Enable detection of heterozygous variants (experimental)")
-    tcp.add_str(
-        option_id=Constants.PARAMETER_SPEC_ID,
-        option_str="parametersSpec",
-        default="auto",
-        name="Parameter spec",
-        description="Parameter spec")
     add_options_to_argument_parser(p.arg_parser.parser)
     return p
 

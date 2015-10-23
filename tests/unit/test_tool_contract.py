@@ -12,21 +12,22 @@ assert os.path.isdir(DATA_DIR)
 # optional (but required for TestSummarizeConsensus)
 DATA_DIR_2 = "/mnt/secondary/Share/Quiver/TestData/tinyLambda/"
 
+@unittest.skipUnless(os.path.isdir("/pbi/dept/secondary/siv/testdata"),
+                     "Missing /pbi/dept/secondary/siv/testdata")
 class TestQuiver(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "variantCaller "
     DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
     REQUIRES_PBCORE = True
     INPUT_FILES = [
-        os.path.join(DATA_DIR, "hcv", "aligned_reads.cmp.h5"),
-        os.path.join(DATA_DIR, "hcv", "HCV_Ref_For_187140.fasta"),
+        "/pbi/dept/secondary/siv/testdata/SA3-DS/lambda/2372215/0007_tiny/Alignment_Results/m150404_101626_42267_c100807920800000001823174110291514_s1_p0.1.alignmentset.xml",
+        "/pbi/dept/secondary/siv/references/lambdaNEB/sequence/lambdaNEB.fasta"
     ]
     TASK_OPTIONS = {
       "genomic_consensus.task_options.min_coverage": 0,
       "genomic_consensus.task_options.min_confidence": 0,
       "genomic_consensus.task_options.algorithm": "quiver",
       "genomic_consensus.task_options.diploid": False,
-      "genomic_consensus.task_options.parameter_spec": "unknown"
     }
 
     def run_after(self, rtc, output_dir):
