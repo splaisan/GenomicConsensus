@@ -63,17 +63,17 @@ class Consensus(object):
         length = len(referenceSequence)
         seq = np.empty(length, dtype="S1")
         seq.fill("N")
-        conf = np.zeros(length, dtype=np.uint)
+        conf = np.zeros(length, dtype=np.uint8)
         return cls(refWin, seq.tostring(), conf)
 
     @classmethod
     def referenceAsConsensus(cls, refWin, referenceSequence):
-        conf = np.zeros(len(referenceSequence), dtype=np.uint)
+        conf = np.zeros(len(referenceSequence), dtype=np.uint8)
         return cls(refWin, referenceSequence, conf)
 
     @classmethod
     def lowercaseReferenceAsConsensus(cls, refWin, referenceSequence):
-        conf = np.zeros(len(referenceSequence), dtype=np.uint)
+        conf = np.zeros(len(referenceSequence), dtype=np.uint8)
         return cls(refWin, referenceSequence.lower(), conf)
 
     @classmethod
