@@ -282,10 +282,8 @@ class ToolRunner(object):
 
         with AlignmentSet(options.inputFilename) as peekFile:
             if not peekFile.isCmpH5 and not peekFile.hasPbi:
-                logging.warn("'fancyChunking' not yet available for BAM "
-                             "files without accompanying .pbi files, "
-                             "disabling")
-                options.fancyChunking = False
+                die("Genomic Consensus only works with cmp.h5 files and BAM "
+                    "files with accompanying .pbi files")
             logging.info("Peeking at file %s" % options.inputFilename)
             logging.info("Input data: numAlnHits=%d" % len(peekFile))
             resolveOptions(peekFile)

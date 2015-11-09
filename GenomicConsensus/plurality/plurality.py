@@ -388,7 +388,7 @@ class PluralityWorker(object):
         alnHits = readsInWindow(self._inCmpH5, referenceWindow,
                                    depthLimit=options.coverage,
                                    minMapQV=options.minMapQV,
-                                   strategy="longest",
+                                   strategy="long-and-strand-balanced",
                                    stratum=options.readStratum,
                                    barcode=options.barcode)
         return (referenceWindow,

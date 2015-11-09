@@ -31,6 +31,7 @@
 # Author: David Alexander
 
 from __future__ import absolute_import
+import ast
 import math, numpy as np, os.path, sys, itertools
 
 def die(msg):
@@ -108,80 +109,40 @@ def readsInWindow(cmpH5, window, depthLimit=None,
       - "spanning" --- get only the reads spanning the window
       - "fileorder" --- get the reads in file order
     """
-    assert strategy in {"longest", "spanning", "fileorder"}
+    assert strategy in {"longest", "spanning", "fileorder",
+                        "long-and-strand-balanced"}
 
     if stratum is not None:
         raise ValueError, "stratum needs to be reimplemented"
 
     def depthCap(iter):
         if depthLimit is not None:
-            return list(itertools.islice(iter, 0, depthLimit))
+            return cmpH5[list(itertools.islice(iter, 0, depthLimit))]
         else:
-            return list(iter)
+            return cmpH5[list(iter)]
 
     def lengthInWindow(hit):
-        return min(hit.tEnd, winEnd) - max(hit.tStart, winStart)
-
-    def reservoirBestSample(stream, sampleSize, weightFunc, optimal,
-                            endCondition=lambda x: False):
-        """Sample the stream randomly without knowing its size.
-
-        Fairly standard reservoir sampling: with a certain probability replace
-        an element in the reservoir with the current sample from stream. This
-        probability decreases as the number of samples encountered increases.
-
-        Here there are two reservoirs, one for 'optimal' samples and one for
-        sub optimal samples. These are two independent, simultaneous reseroir
-        samplings of a stream that can emit either type of sample.
-
-        The optimal reservoir is preferentially returned, and the suboptimal
-        reservoir is used only as needed.
-        """
-        optimalReservoir = []
-        suboptimalReservoir = []
-        optimalSamples = 0
-        suboptimalSamples = 0
-        for sample in stream:
-            if weightFunc(sample) == optimal:
-                optimalSamples += 1
-                if optimalSamples <= sampleSize:
-                    optimalReservoir.append(sample)
-                else:
-                    j = np.random.randint(0, optimalSamples+1) # np is excl.
-                    if j < sampleSize:
-                        optimalReservoir[j] = sample
-            # only bother with suboptimal samples if optimal res. is not full
-            elif len(optimalReservoir) < sampleSize:
-                suboptimalSamples += 1
-                if suboptimalSamples <= sampleSize:
-                    suboptimalReservoir.append(sample)
-                else:
-                    j = np.random.randint(0, suboptimalSamples+1) # np is excl.
-                    if j < sampleSize:
-                        suboptimalReservoir[j] = sample
-            elif endCondition(sample):
-                # Requires some ordering: this sample (e.g. read) is non-
-                # optimal, the optimal reservoir is full, and this and all
-                # subsequent samples will be non-optimal (e.g. reads that start
-                # after the opening of the window, precluding further optimal
-                # reads).
-                break
-        fill = sampleSize - len(optimalReservoir)
-        if fill:
-            optimalReservoir.extend(suboptimalReservoir[:fill])
-        return optimalReservoir
+        return (min(cmpH5.index.tEnd[hit], winEnd) -
+                max(cmpH5.index.tStart[hit], winStart))
 
     winId, winStart, winEnd = window
-    source = cmpH5.readsInRange(winId, winStart, winEnd)
-    if cmpH5.hasPbi and depthLimit and strategy == "longest":
-        source = cmpH5.readsInRange(winId, winStart, winEnd, longest=True)
+    alnHits = np.array(list(cmpH5.readsInRange(winId, winStart, winEnd,
+                                               justIndices=True)))
+    if len(alnHits) == 0:
+        return []
+
+    # Different naming between cmpH5 and pbi
+    mapQV = lambda x: x.mapQV
+    if cmpH5.isCmpH5:
+        mapQV = lambda x: x.MapQV
     if barcode == None:
-        alnHits = ( hit for hit in source
-                    if hit.MapQV >= minMapQV )
+        alnHits = alnHits[mapQV(cmpH5.index)[alnHits] >= minMapQV]
     else:
-        alnHits = ( hit for hit in source
-                    if ((hit.MapQV >= minMapQV) and
-                        (hit.barcode == barcode)) )
+        # this wont work with cmpH5 (no bc in index):
+        barcode = ast.literal_eval(barcode)
+        alnHits = alnHits[(mapQV(cmpH5.index)[alnHits] >= minMapQV) &
+                          (cmpH5.index.bcLeft[alnHits] == barcode[0]) &
+                          (cmpH5.index.bcRight[alnHits] == barcode[1])]
 
     if strategy == "fileorder":
         return depthCap(alnHits)
@@ -190,17 +151,33 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         return depthCap( hit for hit in alnHits
                          if lengthInWindow(hit) == winLen )
     elif strategy == "longest":
-        # if hasPbi, should already be sorted using pbi. Else:
-        if depthLimit and cmpH5.hasPbi:
-            return depthCap(alnHits)
-        elif depthLimit and not cmpH5.hasPbi:
-            winLen = winEnd - winStart
-            # 40x was experimentally found to be fast, require < 4GB per slot
-            # and not affect the tests (resulting coverage 'cap' = 4000x)
-            alnHits = reservoirBestSample(
-                alnHits, 40*depthLimit, lengthInWindow, winLen,
-                lambda x, s=winStart: x.tStart > s)
         return depthCap(sorted(alnHits, key=lengthInWindow, reverse=True))
+    elif strategy == "long-and-strand-balanced":
+        # Longest (in window) is great, but bam sorts by tStart then strand.
+        # With high coverage, this bias resulted in variants. Here we lexsort
+        # by tStart and tEnd. Longest in window is the final criteria in
+        # either case.
+
+        # lexical sort:
+        ends = cmpH5.index.tEnd[alnHits]
+        starts = cmpH5.index.tStart[alnHits]
+        lex_sort = np.lexsort((ends, starts))
+
+        # reorder based on sort:
+        sorted_ends = ends[lex_sort]
+        sorted_starts = starts[lex_sort]
+        sorted_alnHits = alnHits[lex_sort]
+
+        # get lengths in window:
+        post = sorted_ends > winEnd
+        sorted_ends[post] = winEnd
+        pre = sorted_starts < winStart
+        sorted_starts[pre] = winStart
+        lens = sorted_ends - sorted_starts
+
+        # coerce a descending sort:
+        win_sort = ((winEnd - winStart) - lens).argsort(kind="mergesort")
+        return depthCap(sorted_alnHits[win_sort])
 
 
 def datasetCountExceedsThreshold(cmpH5, threshold):

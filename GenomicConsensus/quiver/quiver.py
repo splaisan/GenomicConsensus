@@ -68,7 +68,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         alnHits = U.readsInWindow(cmpH5, refWindow,
                                   depthLimit=20000,
                                   minMapQV=quiverConfig.minMapQV,
-                                  strategy="longest",
+                                  strategy="long-and-strand-balanced",
                                   stratum=options.readStratum,
                                   barcode=options.barcode)
         starts = np.fromiter((hit.tStart for hit in alnHits), np.int)
@@ -98,7 +98,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         alns = U.readsInWindow(cmpH5, subWin,
                                depthLimit=depthLimit,
                                minMapQV=quiverConfig.minMapQV,
-                               strategy="longest",
+                               strategy="long-and-strand-balanced",
                                stratum=options.readStratum,
                                barcode=options.barcode)
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
