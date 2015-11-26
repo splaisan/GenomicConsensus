@@ -42,6 +42,9 @@ import numpy as np, math
 from pbcore.io.rangeQueries import projectIntoRange
 from ConsensusCore import CoveredIntervals
 
+# TODO(lhepler): replace the above with the following:
+# from ConsensusCore2 import CoveredIntervals
+
 def intervalToPair(v):
     return (v.Begin, v.End)
 

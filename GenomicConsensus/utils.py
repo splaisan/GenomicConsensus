@@ -96,7 +96,7 @@ def rowNumberIsInReadStratum(readStratum, rowNumber):
     n, N = readStratum
     return (rowNumber % N) == n
 
-def readsInWindow(cmpH5, window, depthLimit=None,
+def readsInWindow(alnFile, window, depthLimit=None,
                   minMapQV=0, strategy="fileorder",
                   stratum=None, barcode=None):
     """
@@ -117,32 +117,32 @@ def readsInWindow(cmpH5, window, depthLimit=None,
 
     def depthCap(iter):
         if depthLimit is not None:
-            return cmpH5[list(itertools.islice(iter, 0, depthLimit))]
+            return alnFile[list(itertools.islice(iter, 0, depthLimit))]
         else:
-            return cmpH5[list(iter)]
+            return alnFile[list(iter)]
 
     def lengthInWindow(hit):
-        return (min(cmpH5.index.tEnd[hit], winEnd) -
-                max(cmpH5.index.tStart[hit], winStart))
+        return (min(alnFile.index.tEnd[hit], winEnd) -
+                max(alnFile.index.tStart[hit], winStart))
 
     winId, winStart, winEnd = window
-    alnHits = np.array(list(cmpH5.readsInRange(winId, winStart, winEnd,
-                                               justIndices=True)))
+    alnHits = np.array(list(alnFile.readsInRange(winId, winStart, winEnd,
+                                                 justIndices=True)))
     if len(alnHits) == 0:
         return []
 
-    # Different naming between cmpH5 and pbi
+    # Different naming between alnFile and pbi
     mapQV = lambda x: x.mapQV
-    if cmpH5.isCmpH5:
+    if alnFile.isCmpH5:
         mapQV = lambda x: x.MapQV
     if barcode == None:
-        alnHits = alnHits[mapQV(cmpH5.index)[alnHits] >= minMapQV]
+        alnHits = alnHits[mapQV(alnFile.index)[alnHits] >= minMapQV]
     else:
-        # this wont work with cmpH5 (no bc in index):
+        # this wont work with alnFile (no bc in index):
         barcode = ast.literal_eval(barcode)
-        alnHits = alnHits[(mapQV(cmpH5.index)[alnHits] >= minMapQV) &
-                          (cmpH5.index.bcLeft[alnHits] == barcode[0]) &
-                          (cmpH5.index.bcRight[alnHits] == barcode[1])]
+        alnHits = alnHits[(mapQV(alnFile.index)[alnHits] >= minMapQV) &
+                          (alnFile.index.bcLeft[alnHits] == barcode[0]) &
+                          (alnFile.index.bcRight[alnHits] == barcode[1])]
 
     if strategy == "fileorder":
         return depthCap(alnHits)
@@ -159,8 +159,8 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         # either case.
 
         # lexical sort:
-        ends = cmpH5.index.tEnd[alnHits]
-        starts = cmpH5.index.tStart[alnHits]
+        ends = alnFile.index.tEnd[alnHits]
+        starts = alnFile.index.tStart[alnHits]
         lex_sort = np.lexsort((ends, starts))
 
         # reorder based on sort:
@@ -180,14 +180,14 @@ def readsInWindow(cmpH5, window, depthLimit=None,
         return depthCap(sorted_alnHits[win_sort])
 
 
-def datasetCountExceedsThreshold(cmpH5, threshold):
+def datasetCountExceedsThreshold(alnFile, threshold):
     """
     Does the file contain more than `threshold` datasets?  This
     impacts whether or not we should disable the chunk cache.
     """
     total = 0
-    for i in np.unique(cmpH5.AlnGroupID):
-        total += len(cmpH5._alignmentGroup(i))
+    for i in np.unique(alnFile.AlnGroupID):
+        total += len(alnFile._alignmentGroup(i))
         if total > threshold:
             return True
     return False

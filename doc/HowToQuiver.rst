@@ -26,6 +26,8 @@ software is required.
 - ``GenomicConsensus``, containing ``quiver``
 - ``ConsensusCore``, a C++ library containing the core computational
   routines for Quiver
+- ``ConsensusCore2``, a C++ library containing the core computational
+  routines for Arrow
 - ``pbcore``, a package providing access to PacBio data files
 
 
@@ -90,6 +92,9 @@ To install the PacBio software, execute ::
 
     $ git clone https://github.com/PacificBiosciences/ConsensusCore
     $ cd ConsensusCore; python setup.py install --swig=$SWIG --boost=$BOOST
+
+    $ pip install git+https://github.com/PacificBiosciences/ConsensusCore2
+
     $ pip install git+https://github.com/PacificBiosciences/GenomicConsensus
 
 where you replace ``$SWIG`` with the path to your ``swig`` executable

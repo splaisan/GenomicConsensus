@@ -20,16 +20,18 @@ setup(
                'bin/gffToVcf',
                'bin/gffToBed',
                'bin/plurality',
-               'bin/quiver'],
+               'bin/quiver',
+               'bin/arrow'],
     packages = find_packages(),
     package_data={'GenomicConsensus.quiver': ['resources/*/GenomicConsensus/*.ini']},
     include_package_data=True,
     zip_safe = False,
     install_requires=[
-        'pbcore >= 1.2.2',
+        'pbcore >= 1.2.6',
         'pbcommand >= 0.2.0',
         'numpy >= 1.6.0',
         'h5py >= 2.0.1',
         'ConsensusCore >= 1.0.1',
+        'ConsensusCore2 >= 0.9',
         ]
     )

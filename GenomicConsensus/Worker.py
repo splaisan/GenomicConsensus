@@ -54,10 +54,10 @@ class Worker(object):
 
     def _run(self):
         if options.usingBam:
-            self._inCmpH5 = loadBam(options.inputFilename, options.referenceFilename)
+            self._inAlnFile = loadBam(options.inputFilename, options.referenceFilename)
         else:
-            self._inCmpH5 = loadCmpH5(options.inputFilename, options.referenceFilename,
-                                      disableChunkCache=options.disableHdf5ChunkCache)
+            self._inAlnFile = loadCmpH5(options.inputFilename, options.referenceFilename,
+                                        disableChunkCache=options.disableHdf5ChunkCache)
         self.onStart()
 
         while True:

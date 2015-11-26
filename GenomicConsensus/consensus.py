@@ -34,6 +34,7 @@ import numpy as np
 
 __all__ = [ "Consensus",
             "QuiverConsensus",
+            "ArrowConsensus",
             "totalLength",
             "areContiguous",
             "join" ]
@@ -94,6 +95,17 @@ class QuiverConsensus(Consensus):
     def __init__(self, refWindow, sequence, confidence, mms=None):
         super(QuiverConsensus, self).__init__(refWindow, sequence, confidence)
         self.mms = mms
+
+
+class ArrowConsensus(Consensus):
+    """
+    An ArrowConsensus object carries an additional field, `ai`, which
+    is the ConsensusCore2 abstract integrator object, which can be used
+    to perform some post-hoc analyses (diploid, sample mixture, etc)
+    """
+    def __init__(self, refWindow, sequence, confidence, ai=None):
+        super(ArrowConsensus, self).__init__(refWindow, sequence, confidence)
+        self.ai = ai
 
 
 def totalLength(consensi):

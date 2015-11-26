@@ -4,11 +4,11 @@ Quiver FAQ
 What are EviCons? GenomicConsensus? Quiver? Plurality?  
 ------------------------------------------------------------
 **GenomicConsensus** is the current PacBio consensus and variant calling suite.  It contains a main program, ``variantCaller.py``,
-which provides two consensus / variant calling algorithms: **Plurality** and **Quiver**.  These algorithms can be run by calling ``variantCaller.py --algorithm=[quiver|plurality]`` or by going through the convenience wrapper scripes ``quiver`` and ``plurality``.
+which provides two consensus / variant calling algorithms: **Plurality** and **Quiver**.  These algorithms can be run by calling ``variantCaller.py --algorithm=[arrow|quiver|plurality]`` or by going through the convenience wrapper scripes ``quiver`` and ``plurality``.
 
 **EviCons** was the previous generation PacBio variant caller (removed in software release v1.3.1).
 
-A separate package called **ConsensusCore** is a C++ library where all the computation behind Quiver is done (and is transparent to the user after installation).
+Separate packages called **ConsensusCore** and **ConsensusCore2** are C++ libraries where all the computation behind Quiver and Arrow are done, respectively (and is transparent to the user after installation).
 
 
 What is Plurality?

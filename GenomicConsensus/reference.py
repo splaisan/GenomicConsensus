@@ -103,7 +103,7 @@ filename = None
 def isLoaded():
     return filename != None
 
-def loadFromFile(filename_, cmpH5):
+def loadFromFile(filename_, alnFile):
     """
     Reads reference from FASTA file, loading
     lookup tables that can be used any time later.
@@ -130,15 +130,15 @@ def loadFromFile(filename_, cmpH5):
     except IOError as e:
         die(e)
 
-    cmpContigNames = set(cmpH5.refNames)
+    cmpContigNames = set(alnFile.refNames)
 
     for fastaRecord in f.contigs:
         refName = fastaRecord.id
         if refName in cmpContigNames:
-            cmpH5RefEntry   = cmpH5.referenceInfo(refName)
-            refId           = cmpH5RefEntry.ID
-            pacBioName      = cmpH5RefEntry.Name
-            refFullName     = cmpH5RefEntry.FullName
+            refEntry        = alnFile.referenceInfo(refName)
+            refId           = refEntry.ID
+            pacBioName      = refEntry.Name
+            refFullName     = refEntry.FullName
             sequence        = UppercasingMmappedFastaSequence(fastaRecord.sequence)
             length          = len(fastaRecord.sequence)
             contig          = ReferenceContig(refId, refName, refFullName, sequence, length)
@@ -207,7 +207,7 @@ def enumerateChunks(refId, referenceStride, referenceWindows=()):
         for (s, e) in enumerateIntervals(span[1:], referenceStride):
             yield WorkChunk((refId, s, e), True)
 
-def fancyEnumerateChunks(cmpH5, refId, referenceStride,
+def fancyEnumerateChunks(alnFile, refId, referenceStride,
                          minCoverage, minMapQV, referenceWindows=()):
     """
     Enumerate chunks, creating chunks with hasCoverage=False for
@@ -219,8 +219,8 @@ def fancyEnumerateChunks(cmpH5, refId, referenceStride,
     # of standard accessors is probably ok:
     tStart = []
     tEnd = []
-    for reader in cmpH5.resourceReaders(refId):
-        if cmpH5.isCmpH5:
+    for reader in alnFile.resourceReaders(refId):
+        if alnFile.isCmpH5:
             startRow = reader.referenceInfo(refId).StartRow
             endRow = reader.referenceInfo(refId).EndRow
             rows = slice(startRow, endRow)

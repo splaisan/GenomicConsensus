@@ -28,27 +28,27 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-# Author: David Alexander
+# Authors: David Alexander, Lance Hepler
 
 import logging
-import ConsensusCore as cc, numpy as np
+import ConsensusCore2 as cc, numpy as np
 
 from .. import reference
 from ..options import options
 from ..Worker import WorkerProcess, WorkerThread
 from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 
-from GenomicConsensus.consensus import Consensus, QuiverConsensus, join
+from GenomicConsensus.consensus import Consensus, ArrowConsensus, join
 from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
-from GenomicConsensus.quiver.evidence import dumpEvidence
-from GenomicConsensus.quiver import diploid
+from GenomicConsensus.arrow.evidence import dumpEvidence
+from GenomicConsensus.arrow import diploid
 
-import GenomicConsensus.quiver.model as M
-import GenomicConsensus.quiver.utils as U
+import GenomicConsensus.arrow.model as M
+import GenomicConsensus.arrow.utils as U
 
-def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
-                                  depthLimit, quiverConfig):
+def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
+                                  depthLimit, arrowConfig):
     """
     High-level routine for calling the consensus for a
     window of the genome given a cmp.h5.
@@ -59,21 +59,21 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     inadequate coverage.
     """
     winId, winStart, winEnd = refWindow
-    logging.info("Quiver operating on %s" %
+    logging.info("Arrow operating on %s" %
                  reference.windowToString(refWindow))
 
     if options.fancyChunking:
-        # 1) identify the intervals with adequate coverage for quiver
+        # 1) identify the intervals with adequate coverage for arrow
         #    consensus; restrict to intervals of length > 10
-        alnHits = U.readsInWindow(cmpH5, refWindow,
+        alnHits = U.readsInWindow(alnFile, refWindow,
                                   depthLimit=20000,
-                                  minMapQV=quiverConfig.minMapQV,
-                                  strategy="long-and-strand-balanced",
+                                  minMapQV=arrowConfig.minMapQV,
+                                  strategy="longest",
                                   stratum=options.readStratum,
                                   barcode=options.barcode)
         starts = np.fromiter((hit.tStart for hit in alnHits), np.int)
         ends   = np.fromiter((hit.tEnd   for hit in alnHits), np.int)
-        intervals = kSpannedIntervals(refWindow, quiverConfig.minPoaCoverage,
+        intervals = kSpannedIntervals(refWindow, arrowConfig.minPoaCoverage,
                                       starts, ends, minLength=10)
         coverageGaps = holes(refWindow, intervals)
         allIntervals = sorted(intervals + coverageGaps)
@@ -95,17 +95,17 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
         subWin = subWindow(refWindow, interval)
 
         windowRefSeq = referenceContig[intStart:intEnd]
-        alns = U.readsInWindow(cmpH5, subWin,
+        alns = U.readsInWindow(alnFile, subWin,
                                depthLimit=depthLimit,
-                               minMapQV=quiverConfig.minMapQV,
-                               strategy="long-and-strand-balanced",
+                               minMapQV=arrowConfig.minMapQV,
+                               strategy="longest",
                                stratum=options.readStratum,
                                barcode=options.barcode)
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
-        clippedAlns = U.filterAlns(subWin, clippedAlns_, quiverConfig)
+        clippedAlns = U.filterAlns(subWin, clippedAlns_, arrowConfig)
 
         if len([ a for a in clippedAlns
-                 if a.spansReferenceRange(*interval) ]) >= quiverConfig.minPoaCoverage:
+                 if a.spansReferenceRange(*interval) ]) >= arrowConfig.minPoaCoverage:
 
             logging.debug("%s: Reads being used: %s" %
                           (reference.windowToString(subWin),
@@ -114,20 +114,14 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
             css = U.consensusForAlignments(subWin,
                                            intRefSeq,
                                            clippedAlns,
-                                           quiverConfig)
+                                           arrowConfig)
 
             siteCoverage = U.coverageInWindow(subWin, alns)
 
-            if options.diploid:
-                variants_ = diploid.variantsFromConsensus(subWin, windowRefSeq,
-                                                          css.sequence, css.confidence, siteCoverage,
-                                                          options.aligner,
-                                                          css.mms)
-            else:
-                variants_ = U.variantsFromConsensus(subWin, windowRefSeq,
-                                                    css.sequence, css.confidence, siteCoverage,
-                                                    options.aligner,
-                                                    mms=None)
+            variants_ = U.variantsFromConsensus(subWin, windowRefSeq,
+                                                css.sequence, css.confidence, siteCoverage,
+                                                options.aligner,
+                                                ai=None)
 
             filteredVars =  filterVariants(options.minCoverage,
                                            options.minConfidence,
@@ -143,12 +137,13 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                 ((options.dumpEvidence == "all") or
                  (options.dumpEvidence == "variants") and (len(variants) > 0))
             if shouldDumpEvidence:
-                dumpEvidence(options.evidenceDirectory,
-                             subWin, windowRefSeq,
-                             clippedAlns, css)
+                logging.info("Arrow does not yet support --dumpEvidence")
+#                 dumpEvidence(options.evidenceDirectory,
+#                              subWin, windowRefSeq,
+#                              clippedAlns, css)
         else:
-            css = QuiverConsensus.noCallConsensus(quiverConfig.noEvidenceConsensus,
-                                                  subWin, intRefSeq)
+            css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                                 subWin, intRefSeq)
         subConsensi.append(css)
 
     # 4) glue the subwindow consensus objects together to form the
@@ -159,10 +154,10 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
     return css, variants
 
 
-class QuiverWorker(object):
+class ArrowWorker(object):
 
     @property
-    def quiverConfig(self):
+    def arrowConfig(self):
         return self._algorithmConfig
 
     def onChunk(self, workChunk):
@@ -173,8 +168,8 @@ class QuiverWorker(object):
 
         # Quick cutout for no-coverage case
         if not workChunk.hasCoverage:
-            noCallCss = QuiverConsensus.noCallConsensus(self.quiverConfig.noEvidenceConsensus,
-                                                        referenceWindow, refSeqInWindow)
+            noCallCss = ArrowConsensus.noCallConsensus(self.arrowConfig.noEvidenceConsensus,
+                                                       referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
         # General case
@@ -194,7 +189,7 @@ class QuiverWorker(object):
         #
         css_, variants_ = \
             consensusAndVariantsForWindow(self._inAlnFile, eWindow,
-                                          refContig, options.coverage, self.quiverConfig)
+                                          refContig, options.coverage, self.arrowConfig)
 
         #
         # Restrict the consensus and variants to the reference window.
@@ -220,8 +215,8 @@ class QuiverWorker(object):
 #
 # Slave process/thread classes
 #
-class QuiverWorkerProcess(QuiverWorker, WorkerProcess): pass
-class QuiverWorkerThread(QuiverWorker, WorkerThread): pass
+class ArrowWorkerProcess(ArrowWorker, WorkerProcess): pass
+class ArrowWorkerThread(ArrowWorker, WorkerThread): pass
 
 
 #
@@ -232,52 +227,24 @@ __all__ = [ "name",
             "configure",
             "slaveFactories" ]
 
-name = "Quiver"
+name = "Arrow"
 availability = (True, "OK")
 
-def configure(options, cmpH5):
-    if options.verbosity > 1:
-        cc.Logging.EnableDiagnosticLogging()
-
-    if cmpH5.readType != "standard":
+def configure(options, alnFile):
+    if alnFile.readType != "standard":
         raise U.IncompatibleDataException(
-            "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
+            "The Arrow algorithm requires a BAM file containing standard (non-CCS) reads." )
 
-    if options.parametersSpec == "auto":
-        if options.diploid:
-            logging.info("Diploid analysis--resorting to unknown.NoQVsModel until other " +
-                         "parameter sets can be recalibrated.")
-            params = M.loadParameterSets(options.parametersFile, spec="unknown.NoQVsModel")
-        else:
-            params = M.loadParameterSets(options.parametersFile, cmpH5=cmpH5)
-            qvMsg = "This .cmp.h5 file lacks some of the QV data tracks that are required " + \
-                    "for optimal performance of the Quiver algorithm.  For optimal results" + \
-                    " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    + \
-                    "from an instrument using software version 1.3.1 or later, or the "     + \
-                    "--forQuiver option to pbalign."
-            if not M.enoughQVsLoaded(cmpH5):
-                raise U.IncompatibleDataException(qvMsg)
-            elif not M.allQVsLoaded(cmpH5):
-                logging.warn(qvMsg)
-    else:
-        params = M.loadParameterSets(options.parametersFile,
-                                    spec=options.parametersSpec,
-                                    cmpH5=cmpH5)
-        if not all(ps.model.isCompatibleWithCmpH5(cmpH5) for ps in params.values()):
-            raise U.IncompatibleDataException(
-                "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
-                "due to missing data tracks.")
+    if options.diploid:
+        logging.warn("Diploid analysis not yet supported under Arrow model.")
 
-    logging.info("Using Quiver parameter set(s): %s" % (", ".join(ps.name for ps in params.values())))
-    return M.QuiverConfig(minMapQV=options.minMapQV,
-                          noEvidenceConsensus=options.noEvidenceConsensusCall,
-                          refineDinucleotideRepeats=(not options.fastMode) and options.refineDinucleotideRepeats,
-                          computeConfidence=(not options.fastMode),
-                          parameterSets=params)
+    return M.ArrowConfig(minMapQV=options.minMapQV,
+                         noEvidenceConsensus=options.noEvidenceConsensusCall,
+                         computeConfidence=(not options.fastMode))
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
     if threaded:
-        return (QuiverWorkerThread,  ResultCollectorThread)
+        return (ArrowWorkerThread,  ResultCollectorThread)
     else:
-        return (QuiverWorkerProcess, ResultCollectorProcess)
+        return (ArrowWorkerProcess, ResultCollectorProcess)

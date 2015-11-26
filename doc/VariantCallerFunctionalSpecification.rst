@@ -138,9 +138,10 @@ reports deviations from the reference as potential variants.
 developed for CCS.  Quiver leverages the quality values (QVs) provided by
 upstream processing tools, which provide insight into whether
 insertions/deletions/substitutions were deemed likely at a given read
-position.  Use of **quiver** requires the ``ConsensusCore`` library as well as
-trained parameter set, which will be loaded from a standard location (TBD).
-Quiver can be thought of as a QV-aware local-realignment procedure.
+position.  Use of **quiver** requires the ``ConsensusCore`` and ``ConsensusCore2``
+libraries as well as trained parameter set, which will be loaded from a
+standard location (TBD). Arrow and Quiver can be thought of as
+local-realignment procedures (QV-aware in the case of Quiver).
 
 Both algorithms are expected to converge to *zero* errors (miscalled variants)
 as coverage increases; however **quiver** should converge much faster (i.e.,
@@ -154,6 +155,8 @@ The ``GenomicConsensus`` module has two essential dependencies:
 
 1. **pbcore**, the PacBio Python bioinformatics library
 2. **ConsensusCore**, a C++ library with SWIG bindings that provides access to
+   the same algorithms used in circular consensus sequencing.
+3. **ConsensusCore2**, a C++ library with SWIG bindings that provides access to
    the same algorithms used in circular consensus sequencing.
 
 Both of these modules are easily installed using their ``setup.py`` scripts,

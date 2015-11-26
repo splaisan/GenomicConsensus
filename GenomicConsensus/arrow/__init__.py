@@ -28,6 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-# Author: David Alexander
+# Authors: David Alexander, Lance Hepler
 
-__VERSION__ = "2.0.0"
+import utils
+import model
+# import evidence

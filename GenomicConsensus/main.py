@@ -49,11 +49,13 @@ from GenomicConsensus.options import (options, Constants,
                                       get_parser,
                                       processOptions,
                                       resolveOptions,
-                                      consensusCoreVersion)
+                                      consensusCoreVersion,
+                                      consensusCore2Version)
 from GenomicConsensus.utils import (IncompatibleDataException,
                                     datasetCountExceedsThreshold,
                                     die)
 
+from GenomicConsensus.arrow import arrow
 from GenomicConsensus.quiver import quiver
 from GenomicConsensus.plurality import plurality
 
@@ -64,7 +66,7 @@ class ToolRunner(object):
     'options' namespace before instantiating this class.
     """
     def __init__(self):
-        self._inCmpH5 = None
+        self._inAlnFile = None
         self._resultsQueue = None
         self._workQueue = None
         self._slaves = None
@@ -92,10 +94,12 @@ class ToolRunner(object):
         logging.info("Created temporary directory %s" % (options.temporaryDirectory,) )
 
     def _algorithmByName(self, name):
-        if name=="plurality":
+        if name == "plurality":
             algo = plurality
-        elif name=="quiver":
+        elif name == "quiver":
             algo = quiver
+        elif name == "arrow":
+            algo = arrow
         else:
             die("Failure: unrecognized algorithm %s" % name)
         isOK, msg = algo.availability
@@ -143,17 +147,17 @@ class ToolRunner(object):
             self._workQueue = multiprocessing.Queue(options.queueSize)
             self._resultsQueue = multiprocessing.Queue(options.queueSize)
 
-    def _readCmpH5Input(self):
+    def _readAlignmentInput(self):
         """
-        Read the CmpH5 input file into a CmpH5 object and
-        store it as self._inCmpH5.
+        Read the AlignmentSet input file and
+        store it as self._inAlnFile.
         """
         fname = options.inputFilename
-        self._inCmpH5 = AlignmentSet(fname)
+        self._inAlnFile = AlignmentSet(fname)
 
-    def _loadReference(self, cmpH5):
+    def _loadReference(self, alnFile):
         logging.info("Loading reference")
-        err = reference.loadFromFile(options.referenceFilename, cmpH5)
+        err = reference.loadFromFile(options.referenceFilename, alnFile)
         if err:
             die("Error loading reference")
         # Grok the referenceWindow spec, if any.
@@ -172,27 +176,27 @@ class ToolRunner(object):
             options.referenceWindows = map(reference.stringToWindow,
                                            options.referenceWindowsAsString.split(","))
         if options.referenceWindowsFromAlignment:
-            options.referenceWindows = cmpH5.refWindows
+            options.referenceWindows = alnFile.refWindows
 
-    def _checkFileCompatibility(self, cmpH5):
-        if not cmpH5.isSorted:
-            die("Input CmpH5 file must be sorted.")
-        if cmpH5.isEmpty:
-            die("Input CmpH5 file must be nonempty.")
+    def _checkFileCompatibility(self, alnFile):
+        if not alnFile.isSorted:
+            die("Input Alignment file must be sorted.")
+        if alnFile.isEmpty:
+            die("Input Alignment file must be nonempty.")
 
-    def _shouldDisableChunkCache(self, cmpH5):
-        #if isinstance(cmpH5, CmpH5Reader):
-        #if cmpH5.isCmpH5:
+    def _shouldDisableChunkCache(self, alnFile):
+        #if isinstance(alnFile, CmpH5Reader):
+        #if alnFile.isCmpH5:
         #    threshold = options.autoDisableHdf5ChunkCache
-        #    return datasetCountExceedsThreshold(cmpH5, threshold)
+        #    return datasetCountExceedsThreshold(alnFile, threshold)
         #else:
         #    return False
         return True
 
-    def _configureAlgorithm(self, options, cmpH5):
+    def _configureAlgorithm(self, options, alnFile):
         assert self._algorithm != None
         try:
-            self._algorithmConfiguration = self._algorithm.configure(options, cmpH5)
+            self._algorithmConfiguration = self._algorithm.configure(options, alnFile)
         except IncompatibleDataException as e:
             die("Failure: %s" % e.message)
 
@@ -203,7 +207,7 @@ class ToolRunner(object):
         ids = reference.enumerateIds(options.referenceWindows)
         for _id in ids:
             if options.fancyChunking:
-                chunks = reference.fancyEnumerateChunks(self._inCmpH5,
+                chunks = reference.fancyEnumerateChunks(self._inAlnFile,
                                                         _id,
                                                         options.referenceChunkSize,
                                                         options.minCoverage,
@@ -274,6 +278,8 @@ class ToolRunner(object):
         logging.info("hdf5 version: %s" % h5py.version.hdf5_version)
         logging.info("ConsensusCore version: %s" %
                      (consensusCoreVersion() or "ConsensusCore unavailable"))
+        logging.info("ConsensusCore2 version: %s" %
+                     (consensusCore2Version() or "ConsensusCore2 unavailable"))
         logging.info("Starting.")
 
         atexit.register(self._cleanup)
@@ -281,7 +287,9 @@ class ToolRunner(object):
             self._makeTemporaryDirectory()
 
         with AlignmentSet(options.inputFilename) as peekFile:
-            if not peekFile.isCmpH5 and not peekFile.hasPbi:
+            if options.algorithm == "arrow" and peekFile.isCmpH5:
+                die("Arrow does not support CmpH5 files")
+            if not peekFile.hasPbi:
                 die("Genomic Consensus only works with cmp.h5 files and BAM "
                     "files with accompanying .pbi files")
             logging.info("Peeking at file %s" % options.inputFilename)
@@ -300,7 +308,7 @@ class ToolRunner(object):
             self._setupEvidenceDumpDirectory(options.evidenceDirectory)
 
         self._launchSlaves()
-        self._readCmpH5Input()
+        self._readAlignmentInput()
 
         monitoringThread = threading.Thread(target=monitorSlaves, args=(self,))
         monitoringThread.start()
@@ -339,7 +347,7 @@ class ToolRunner(object):
             self._printProfiles()
 
         # close h5 file.
-        self._inCmpH5.close()
+        self._inAlnFile.close()
         return 0
 
 def monitorSlaves(driver):

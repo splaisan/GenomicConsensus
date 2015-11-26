@@ -3,15 +3,15 @@ GenomicConsensus (quiver)
 
 The ``GenomicConsensus`` package provides the ``quiver`` tool,
 PacBio's flagship consensus and variant caller.  The backend logic is
-provided by the ``ConsensusCore`` library, which you must install
-first.
+provided by the ``ConsensusCore`` and ``ConsensusCore2`` libraries,
+which you must install first.
 
 
 Installing
 ----------
 Make sure you have set up and activated your virtualenv, and installed
-``pbcore`` and ``ConsensusCore`` (which cannot be installed
-automatically by pip or setuptools at this time).  Then:
+``pbcore``, ``ConsensusCore``, and ``ConsensusCore2`` (which cannot be
+installed automatically by pip or setuptools at this time).  Then:
 
 ```sh
 % python setup.py install

@@ -67,6 +67,13 @@ def consensusCoreVersion():
     except:
         return None
 
+def consensusCore2Version():
+    try:
+        import ConsensusCore2
+        return ConsensusCore2.__version__
+    except:
+        return None
+
 class Constants(object):
     TOOL_ID = "genomic_consensus.tasks.variantcaller"
     DRIVER_EXE = "variantCaller --resolved-tool-contract "
@@ -455,7 +462,7 @@ def processOptions():
     options.shellCommand = " ".join(sys.argv)
 
 
-def resolveOptions(cmpH5):
+def resolveOptions(alnFile):
     """
     Some of the options are provided as strings by the user, but need
     to be translated into internal identifiers.  These options are
@@ -465,10 +472,10 @@ def resolveOptions(cmpH5):
     This is essentially just an order-of-initialization issue.
     """
     if options._barcode != None:
-        if not cmpH5.isBarcoded:
-            raise Exception("cmp.h5 file is not barcoded!")
-        if options._barcode not in cmpH5.barcode:
-            raise Exception("Barcode with given name not present in cmp.h5 file!")
-        options.barcode = cmpH5.barcode[options._barcode]
+        if not alnFile.isBarcoded:
+            raise Exception("input file is not barcoded!")
+        if options._barcode not in alnFile.barcode:
+            raise Exception("Barcode with given name not present in input file!")
+        options.barcode = alnFile.barcode[options._barcode]
     else:
         options.barcode = None
