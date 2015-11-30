@@ -55,10 +55,6 @@ from GenomicConsensus.utils import (IncompatibleDataException,
                                     datasetCountExceedsThreshold,
                                     die)
 
-from GenomicConsensus.arrow import arrow
-from GenomicConsensus.quiver import quiver
-from GenomicConsensus.plurality import plurality
-
 class ToolRunner(object):
     """
     The main driver class for the GenomicConsensus tool.  It is assumed that
@@ -95,10 +91,13 @@ class ToolRunner(object):
 
     def _algorithmByName(self, name):
         if name == "plurality":
+            from GenomicConsensus.plurality import plurality
             algo = plurality
         elif name == "quiver":
+            from GenomicConsensus.quiver import quiver
             algo = quiver
         elif name == "arrow":
+            from GenomicConsensus.arrow import arrow
             algo = arrow
         else:
             die("Failure: unrecognized algorithm %s" % name)
