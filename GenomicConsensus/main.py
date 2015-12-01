@@ -288,7 +288,7 @@ class ToolRunner(object):
         with AlignmentSet(options.inputFilename) as peekFile:
             if options.algorithm == "arrow" and peekFile.isCmpH5:
                 die("Arrow does not support CmpH5 files")
-            if not peekFile.hasPbi:
+            if not peekFile.isCmpH5 and not peekFile.hasPbi:
                 die("Genomic Consensus only works with cmp.h5 files and BAM "
                     "files with accompanying .pbi files")
             logging.info("Peeking at file %s" % options.inputFilename)
