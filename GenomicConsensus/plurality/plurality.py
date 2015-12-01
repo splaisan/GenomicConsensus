@@ -385,7 +385,7 @@ class PluralityWorker(object):
                                                   referenceWindow, refSeqInWindow)
             return (referenceWindow, (noCallCss, []))
 
-        alnHits = readsInWindow(self._inCmpH5, referenceWindow,
+        alnHits = readsInWindow(self._inAlnFile, referenceWindow,
                                    depthLimit=options.coverage,
                                    minMapQV=options.minMapQV,
                                    strategy="long-and-strand-balanced",
