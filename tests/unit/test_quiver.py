@@ -22,6 +22,39 @@ class TestVariantsFromAlignment(object):
         vs = utils.variantsFromAlignment(a, (1, 1000, 2000))
         assert_equal([ Variant(1, 1002, 1004, "TT", "GG") ], vs)
 
+    def testVariantsFromAlignment4(self):
+        a = PairwiseAlignment("GA-TACA", "GATTACA")
+        qvs = [0, 0, 1, 0, 0, 0, 0]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1002, 1002, "", "T", confidence=1) ], vs)
+
+    def testVariantsFromAlignment5(self):
+        a = PairwiseAlignment("-ATTACA", "GATTACA")
+        qvs = [1, 0, 0, 0, 0, 0, 0]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1000, 1000, "", "G", confidence=1) ], vs)
+
+    def testVariantsFromAlignment6(self):
+        a = PairwiseAlignment("GATTAC-", "GATTACA")
+        qvs = [0, 0, 0, 0, 0, 0, 1]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1006, 1006, "", "A", confidence=1) ], vs)
+
+    # this test is completely nonsensical, deletion events have no meaningful
+    # confidence represented in the QV track. But this is the expected behavior
+    def testVariantsFromAlignment7(self):
+        a = PairwiseAlignment("GATTACA", "GATTAC-")
+        qvs = [0, 0, 0, 0, 0, 1]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1006, 1007, "A", "", confidence=1) ], vs)
+
+    # also totally bogus for similar reasons
+    def testVariantsFromAlignment8(self):
+        a = PairwiseAlignment("GATTACA", "-ATTACA")
+        qvs = [1, 0, 0, 0, 0, 0]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1000, 1001, "G", "", confidence=1) ], vs)
+
     def testNoCallBasesInReference1(self):
         a = PairwiseAlignment("GATTNGATT", "GAGGATATT")
         vs = utils.variantsFromAlignment(a, (1, 1000, 2000))

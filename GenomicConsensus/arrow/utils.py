@@ -144,7 +144,7 @@ def consensusConfidence(ai, positions=None):
     """
     return np.array(np.clip(cc.ConsensusQVs(ai), 0, 93), dtype=np.uint8)
 
-def variantsFromAlignment(a, refWindow):
+def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None):
     """
     Extract the variants implied by a pairwise alignment to the
     reference.
@@ -152,6 +152,7 @@ def variantsFromAlignment(a, refWindow):
     variants = []
     refId, refStart, _ = refWindow
     refPos = refStart
+    cssPos = 0
     tbl = zip(a.Transcript(),
               a.Target(),
               a.Query())
@@ -165,19 +166,33 @@ def variantsFromAlignment(a, refWindow):
         run = list(run)
         ref = "".join(map(snd, run))
         refLen = len(ref) - Counter(ref)["-"]
-        read = "".join(map(third, run))
+        css = "".join(map(third, run))
+        cssLen = len(css) - Counter(css)["-"]
+        variant = None
 
         if code == "M" or code == "N":
             pass
         elif code == "R":
-            assert len(read)==len(ref)
-            variants.append(Variant(refId, refPos, refPos+len(read), ref, read))
+            assert len(css)==len(ref)
+            variant = Variant(refId, refPos, refPos+len(css), ref, css)
         elif code == "I":
-            variants.append(Variant(refId, refPos, refPos, "", read))
+            variant = Variant(refId, refPos, refPos, "", css)
         elif code == "D":
-            variants.append(Variant(refId, refPos, refPos + len(ref), ref, ""))
+            variant = Variant(refId, refPos, refPos + len(ref), ref, "")
+
+        if variant is not None:
+            # HACK ALERT: variants at the first and last position
+            # are not handled correctly
+            if siteCoverage is not None:
+                refPos_ = min(refPos, len(siteCoverage)-1)
+                variant.coverage = siteCoverage[refPos_]
+            if cssQvInWindow is not None:
+                cssPos_ = min(cssPos, len(cssQvInWindow)-1)
+                variant.confidence = cssQvInWindow[cssPos_]
+            variants.append(variant)
 
         refPos += refLen
+        cssPos += cssLen
 
     return variants
 
@@ -266,24 +281,9 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
         align = cc.Align
 
     ga = align(refSequenceInWindow, cssSequenceInWindow)
-    cssPosition = cc.TargetToQueryPositions(ga)
 
-    vars = variantsFromAlignment(ga, refWindow)
-    for v in vars:
-        # HACK ALERT: we are not really handling the confidence or
-        # coverage for variants at last position of the window
-        # correctly here.
-        refPos_ = min(v.refStart-refStart, len(siteCoverage)-1)
-        cssPos_ = min(cssPosition[v.refStart-refStart], len(cssQvInWindow)-1)
+    return variantsFromAlignment(ga, refWindow, cssQvInWindow, siteCoverage)
 
-        # make sure the arrays are non-empty before indexing into them
-        if siteCoverage is not None and np.size(siteCoverage) > 0:
-            v.coverage = siteCoverage[refPos_]
-
-        if cssQvInWindow is not None and np.size(cssQvInWindow) > 0:
-            v.confidence = cssQvInWindow[cssPos_]
-
-    return vars
 
 def filterAlns(refWindow, alns, arrowConfig):
     """
