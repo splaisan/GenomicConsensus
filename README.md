@@ -1,4 +1,4 @@
-GenomicConsensus (quiver)
+GenomicConsensus (quiver) [![Circle CI](https://circleci.com/gh/PacificBiosciences/GenomicConsensus.svg?style=svg)](https://circleci.com/gh/PacificBiosciences/GenomicConsensus)
 -------------------------
 
 The ``GenomicConsensus`` package provides the ``quiver`` tool,
