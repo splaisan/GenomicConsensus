@@ -212,7 +212,7 @@ def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None):
             # HACK ALERT: variants at the first and last position
             # are not handled correctly
             if siteCoverage is not None:
-                refPos_ = min(refPos, len(siteCoverage)-1)
+                refPos_ = min(refPos-refStart, len(siteCoverage)-1)
                 variant.coverage = siteCoverage[refPos_]
             if cssQvInWindow is not None:
                 cssPos_ = min(cssPos, len(cssQvInWindow)-1)
