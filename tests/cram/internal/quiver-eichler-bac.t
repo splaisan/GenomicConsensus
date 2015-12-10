@@ -20,7 +20,7 @@ MuMMer at the end are compared to the Sanger reference.
   CH17-157L1 . deletion 805 805 . . . reference=T;variantSeq=.;coverage=100;confidence=47
   CH17-157L1 . deletion 26174 26175 . . . reference=AC;variantSeq=.;coverage=100;confidence=48
   CH17-157L1 . deletion 93356 93357 . . . reference=CG;variantSeq=.;coverage=100;confidence=49
-  CH17-157L1 . insertion 230679 230679 . . . reference=.;variantSeq=A;coverage=100;confidence=49
+  CH17-157L1 . insertion 230679 230679 . . . reference=.;variantSeq=A;coverage=100;confidence=48
   CH17-157L1 . insertion 230681 230681 . . . reference=.;variantSeq=CA;coverage=100;confidence=48
   CH17-157L1 . insertion 230684 230684 . . . reference=.;variantSeq=C;coverage=100;confidence=48
 

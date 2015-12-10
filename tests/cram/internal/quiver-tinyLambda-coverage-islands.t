@@ -15,9 +15,7 @@ These variant calls actually look reasonable given the reads, but the
 confidences are too high.  Fix this.
 
   $ grep -v '#' variants.gff
-  lambda_NEB3011\t.\tinsertion\t24781\t24781\t.\t.\t.\treference=.;variantSeq=T;coverage=6;confidence=57 (esc)
   lambda_NEB3011\t.\tdeletion\t24878\t24878\t.\t.\t.\treference=A;variantSeq=.;coverage=16;confidence=43 (esc)
-  lambda_NEB3011\t.\tinsertion\t30882\t30882\t.\t.\t.\treference=.;variantSeq=C;coverage=5;confidence=44 (esc)
 
   $ fastacomposition css.fa
   css.fa A 282 C 266 G 305 N 47361 T 281
