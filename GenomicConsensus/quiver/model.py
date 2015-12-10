@@ -388,7 +388,7 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
         chemistryName, modelName = spec.split(".")
     else:
         chemistryName, modelName = spec, None
-    assert cmpH5 or (chemistryName and modelName)
+    assert (cmpH5 is not None) or (chemistryName and modelName)
 
     parametersFile = _findParametersFile(parametersFile)
     logging.info("Using Quiver parameters file %s" % parametersFile)
