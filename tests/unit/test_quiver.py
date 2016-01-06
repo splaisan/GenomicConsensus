@@ -40,20 +40,6 @@ class TestVariantsFromAlignment(object):
         vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
         assert_equal([ Variant(1, 1006, 1006, "", "A", confidence=1) ], vs)
 
-    # this test is completely nonsensical, deletion events have no meaningful
-    # confidence represented in the QV track. But this is the expected behavior
-    def testVariantsFromAlignment7(self):
-        a = PairwiseAlignment("GATTACA", "GATTAC-")
-        qvs = [0, 0, 0, 0, 0, 1]
-        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
-        assert_equal([ Variant(1, 1006, 1007, "A", "", confidence=1) ], vs)
-
-    # also totally bogus for similar reasons
-    def testVariantsFromAlignment8(self):
-        a = PairwiseAlignment("GATTACA", "-ATTACA")
-        qvs = [1, 0, 0, 0, 0, 0]
-        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
-        assert_equal([ Variant(1, 1000, 1001, "G", "", confidence=1) ], vs)
 
     def testNoCallBasesInReference1(self):
         a = PairwiseAlignment("GATTNGATT", "GAGGATATT")
@@ -76,3 +62,32 @@ class TestVariantsFromAlignment(object):
         vs = utils.variantsFromAlignment(a, (1, 1000, 2000))
         assert_equal([ Variant(1, 1002, 1003, "T", "G"),
                        Variant(1, 1005, 1006, "C", "G") ], vs)
+
+
+    # Deletions expose that the way we calculate confidences for
+    # deletion variants is *broken*.  In the current setup, we have no
+    # choice but to pull a confidence out of thin air, or pull it from
+    # a nearby base---both incorrect!  The *right* way to do it is to
+    # properly compare the two hypotheses, which is possible since we
+    # retain the mss/ai.
+
+    # ... here, for now, we are primarily just testing that we don't
+    # crash.
+
+    def testDeletionConfidence1(self):
+        a = PairwiseAlignment("GATTACA", "GATTAC-")
+        qvs = [0, 0, 0, 0, 0, 1]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1006, 1007, "A", "", confidence=1) ], vs)
+
+    def testDeletionConfidence2(self):
+        a = PairwiseAlignment("GATTACA", "-ATTACA")
+        qvs = [1, 0, 0, 0, 0, 0]
+        vs = utils.variantsFromAlignment(a, (1, 1000, 2000), qvs)
+        assert_equal([ Variant(1, 1000, 1001, "G", "", confidence=1) ], vs)
+
+    def testDeletionConfidence3(self):
+        a = PairwiseAlignment("AT", "--")
+        qvs = []
+        vs =  utils.variantsFromAlignment(a, (1, 1000, 1002), qvs)
+        assert_equal([ Variant(1, 1000, 1002, "AT", "") ], vs)
