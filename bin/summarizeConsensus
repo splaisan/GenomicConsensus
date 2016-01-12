@@ -129,7 +129,7 @@ def run(options):
                 variantLength = max(len(variantGffRecord.reference),
                                     len(variantGffRecord.variantSeq))
                 summary[counterName] += variantLength
-            elif region.start > variantGffRecord.start:
+            elif region.start > variantGffRecord.end:
                 break
         i += 1
         if i % 1000 == 0:
