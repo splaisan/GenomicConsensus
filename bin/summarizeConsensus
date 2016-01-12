@@ -4,7 +4,7 @@
 Augment the alignment_summary.gff file with consensus and variants information.
 """
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import argparse
 import logging
 import json
@@ -105,24 +105,36 @@ def run(options):
         summaries[region] = { "ins" : 0,
                               "del" : 0,
                               "sub" : 0,
-                              "cQv" : (0, 0, 0)
+                              # TODO: base consensusQV on effective coverage
+                              "cQv" : (20, 20, 20)
                              }
     inputAlignmentSummaryGff.close()
 
     counterNames = { "insertion"    : "ins",
                      "deletion"     : "del",
                      "substitution" : "sub" }
+    regions_by_contig = defaultdict(list)
+    for region in summaries:
+        regions_by_contig[region.seqid].append(region)
+    logging.info("Processing variant records")
+    i = 0
     for variantGffRecord in inputVariantsGff:
-        for region in summaries:
+        regions = regions_by_contig[variantGffRecord.seqid]
+        regions.sort(lambda a,b: cmp(a.start, b.start))
+        for region in regions:
+            assert region.seqid == variantGffRecord.seqid
             summary = summaries[region]
-            if (region.seqid == variantGffRecord.seqid and
-                region.start <= variantGffRecord.start <= region.end):
+            if region.start <= variantGffRecord.start <= region.end:
                 counterName = counterNames[variantGffRecord.type]
                 variantLength = max(len(variantGffRecord.reference),
                                     len(variantGffRecord.variantSeq))
                 summary[counterName] += variantLength
-            # TODO: base consensusQV on effective coverage
-            summary["cQv"] = (20, 20, 20)
+            elif region.start > variantGffRecord.start:
+                break
+        i += 1
+        if i % 1000 == 0:
+            logging.info("{i} records...".format(i=i))
+
 
     inputAlignmentSummaryGff = open(options.inputAlignmentSummaryGff)
     outputAlignmentSummaryGff = open(options.output, "w")
