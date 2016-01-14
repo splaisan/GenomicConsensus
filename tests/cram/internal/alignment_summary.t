@@ -8,7 +8,7 @@ Test the (augmentation) of the alignment_summary.gff file by summarizeConsensus
   $ summarizeConsensus              \
   >   --variantsGff $VARIANTSGFF    \
   >   $ALIGNMENTSUMMARYGFF          \
-  >   -o alignment_summary.out.gff > /dev/null
+  >   -o alignment_summary.out.gff
 
   $ head -20 alignment_summary.out.gff
   ##gff-version 3
