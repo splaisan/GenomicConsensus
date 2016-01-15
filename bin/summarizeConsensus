@@ -7,6 +7,7 @@ Augment the alignment_summary.gff file with consensus and variants information.
 from collections import namedtuple, defaultdict
 import argparse
 import logging
+import bisect
 import json
 import gzip
 import sys
@@ -116,21 +117,22 @@ def run(options):
     regions_by_contig = defaultdict(list)
     for region in summaries:
         regions_by_contig[region.seqid].append(region)
+    for seqid in regions_by_contig.keys():
+        r = regions_by_contig[seqid]
+        regions_by_contig[seqid] = sorted(r, lambda a,b: cmp(a.start, b.start))
     logging.info("Processing variant records")
     i = 0
     for variantGffRecord in inputVariantsGff:
-        regions = regions_by_contig[variantGffRecord.seqid]
-        regions.sort(lambda a,b: cmp(a.start, b.start))
-        for region in regions:
-            assert region.seqid == variantGffRecord.seqid
-            summary = summaries[region]
-            if region.start <= variantGffRecord.start <= region.end:
-                counterName = counterNames[variantGffRecord.type]
-                variantLength = max(len(variantGffRecord.reference),
-                                    len(variantGffRecord.variantSeq))
-                summary[counterName] += variantLength
-            elif region.start > variantGffRecord.end:
-                break
+        positions = [r.start for r in regions_by_contig[variantGffRecord.seqid]]
+        idx = bisect.bisect_right(positions, variantGffRecord.start) - 1
+        region = regions_by_contig[variantGffRecord.seqid][idx]
+        assert region.start <= variantGffRecord.start <= region.end, \
+            (region.start, variantGffRecord.start, region.end, idx)
+        summary = summaries[region]
+        counterName = counterNames[variantGffRecord.type]
+        variantLength = max(len(variantGffRecord.reference),
+                            len(variantGffRecord.variantSeq))
+        summary[counterName] += variantLength
         i += 1
         if i % 1000 == 0:
             logging.info("{i} records...".format(i=i))
