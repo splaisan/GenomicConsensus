@@ -3,6 +3,7 @@ import unittest
 import os.path
 
 from pbcore.io import openDataSet, ContigSet
+import pbcore.data
 import pbcommand.testkit
 
 # XXX local data directory, absolutely required
@@ -12,16 +13,15 @@ assert os.path.isdir(DATA_DIR)
 # optional (but required for TestSummarizeConsensus)
 DATA_DIR_2 = "/mnt/secondary/Share/Quiver/TestData/tinyLambda/"
 
-@unittest.skipUnless(os.path.isdir("/pbi/dept/secondary/siv/testdata"),
-                     "Missing /pbi/dept/secondary/siv/testdata")
 class TestQuiver(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "variantCaller "
     DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
     REQUIRES_PBCORE = True
     INPUT_FILES = [
-        "/pbi/dept/secondary/siv/testdata/SA3-DS/lambda/2372215/0007_tiny/Alignment_Results/m150404_101626_42267_c100807920800000001823174110291514_s1_p0.1.alignmentset.xml",
-        "/pbi/dept/secondary/siv/references/lambdaNEB/sequence/lambdaNEB.fasta"
+        pbcore.data.getBamAndCmpH5()[0],
+#        "/pbi/dept/secondary/siv/testdata/SA3-DS/lambda/2372215/0007_tiny/Alignment_Results/m150404_101626_42267_c100807920800000001823174110291514_s1_p0.1.alignmentset.xml",
+        pbcore.data.getLambdaFasta()
     ]
     TASK_OPTIONS = {
       "genomic_consensus.task_options.min_coverage": 0,

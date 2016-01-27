@@ -104,6 +104,7 @@ class ToolRunner(object):
         isOK, msg = algo.availability
         if not isOK:
             die("Failure: %s" % msg)
+        logging.info("Will use {a} algorithm".format(a=name))
         return algo
 
     def _launchSlaves(self):
@@ -384,6 +385,7 @@ def resolved_tool_contract_runner(resolved_contract):
     fastq_path = rc.task.output_files[2]
     args = [
         alignment_path,
+        "--log-level=INFO",
         "--reference", reference_path,
         "--outputFilename", gff_path,
         "--outputFilename", fasta_path,
