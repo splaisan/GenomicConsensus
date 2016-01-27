@@ -61,7 +61,9 @@ class ArrowConfig(object):
                  maxIterations=40,
                  noEvidenceConsensus="nocall",
                  computeConfidence=True,
-                 readStumpinessThreshold=0.1):
+                 readStumpinessThreshold=0.1,
+                 minReadScore=0.75,
+                 minHqRegionSnr=3.75):
 
         self.minMapQV                   = minMapQV
         self.minPoaCoverage             = minPoaCoverage
@@ -72,8 +74,8 @@ class ArrowConfig(object):
         self.noEvidenceConsensus        = noEvidenceConsensus
         self.computeConfidence          = computeConfidence
         self.readStumpinessThreshold    = readStumpinessThreshold
-        self.minReadScore               = 0.75
-        self.minHqRegionSnr             = 3.75
+        self.minReadScore               = minReadScore
+        self.minHqRegionSnr             = minHqRegionSnr
 
     @staticmethod
     def extractFeatures(aln):
