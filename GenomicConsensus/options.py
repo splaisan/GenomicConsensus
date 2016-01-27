@@ -87,6 +87,8 @@ class Constants(object):
     DEFAULT_MIN_COVERAGE = 5
     DEFAULT_MAX_COVERAGE = 100
     DEFAULT_MIN_MAPQV = 10
+    DEFAULT_MIN_READSCORE = 0.0
+    DEFAULT_MIN_HQREGIONSNR = 0.0
 
 def get_parser():
     """
@@ -275,7 +277,20 @@ def add_options_to_argument_parser(parser):
         dest="readStratum",
         default=None,
         type=parseReadStratum)
-
+    readSelection.add_argument(
+        "--minReadScore",
+        action="store",
+        dest="minReadScore",
+        type=float,
+        default=Constants.DEFAULT_MIN_READSCORE,
+        help="The minimum ReadScore for reads that will be used for analysis (arrow-only).")
+    readSelection.add_argument(
+        "--minSnr",
+        action="store",
+        dest="minHqRegionSnr",
+        type=float,
+        default=Constants.DEFAULT_MIN_HQREGIONSNR,
+        help="The minimum acceptable signal-to-noise over all channels for reads that will be used for analysis (arrow-only).")
 
     algorithm = parser.add_argument_group("Algorithm and parameter settings")
     algorithm.add_argument(

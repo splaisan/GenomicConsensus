@@ -240,7 +240,9 @@ def configure(options, alnFile):
 
     return M.ArrowConfig(minMapQV=options.minMapQV,
                          noEvidenceConsensus=options.noEvidenceConsensusCall,
-                         computeConfidence=(not options.fastMode))
+                         computeConfidence=(not options.fastMode),
+                         minReadScore=options.minReadScore,
+                         minHqRegionSnr=options.minHqRegionSnr)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
