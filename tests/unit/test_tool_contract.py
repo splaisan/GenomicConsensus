@@ -45,7 +45,6 @@ class TestGffToBed(pbcommand.testkit.PbTestApp):
         os.path.join(DATA_DIR, "converters", "variants.gff.gz"),
     ]
     TASK_OPTIONS = {
-        "genomic_consensus.task_options.gff2bed_purpose": "variants",
         "genomic_consensus.task_options.track_name": "None",
         "genomic_consensus.task_options.track_description": "None",
         "genomic_consensus.task_options.use_score": 0,
