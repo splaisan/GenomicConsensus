@@ -13,7 +13,7 @@ assert os.path.isdir(DATA_DIR)
 # optional (but required for TestSummarizeConsensus)
 DATA_DIR_2 = "/mnt/secondary/Share/Quiver/TestData/tinyLambda/"
 
-class TestQuiver(pbcommand.testkit.PbTestApp):
+class TestVariantCaller(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "variantCaller "
     DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
@@ -34,6 +34,12 @@ class TestQuiver(pbcommand.testkit.PbTestApp):
         contigs_file = rtc.task.output_files[1]
         with openDataSet(contigs_file, strict=True) as ds:
             self.assertTrue(isinstance(ds, ContigSet))
+
+
+class TestVariantCallerArrow(TestVariantCaller):
+    TASK_OPTIONS = {
+      "genomic_consensus.task_options.algorithm": "arrow",
+    }
 
 
 class TestGffToBed(pbcommand.testkit.PbTestApp):
