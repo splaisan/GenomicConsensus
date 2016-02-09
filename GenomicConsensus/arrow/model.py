@@ -63,7 +63,8 @@ class ArrowConfig(object):
                  computeConfidence=True,
                  readStumpinessThreshold=0.1,
                  minReadScore=0.75,
-                 minHqRegionSnr=3.75):
+                 minHqRegionSnr=3.75,
+                 minZScore=-3.5):
 
         self.minMapQV                   = minMapQV
         self.minPoaCoverage             = minPoaCoverage
@@ -76,6 +77,7 @@ class ArrowConfig(object):
         self.readStumpinessThreshold    = readStumpinessThreshold
         self.minReadScore               = minReadScore
         self.minHqRegionSnr             = minHqRegionSnr
+        self.minZScore                  = minZScore
 
     @staticmethod
     def extractFeatures(aln):
