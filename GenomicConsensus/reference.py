@@ -213,32 +213,18 @@ def fancyEnumerateChunks(alnFile, refId, referenceStride,
     Enumerate chunks, creating chunks with hasCoverage=False for
     coverage cutouts.
     """
+    # Pull out rows with this refId and good enough MapQV
+    rows = alnFile.index[
+        ((alnFile.tId == alnFile.referenceInfo(refId).ID) &
+         (alnFile.mapQV >= minMapQV))]
 
-    # The abstraction frays here, unless we want to push all of this into
-    # pbdataset. With the fairly specific nature of this query, a composition
-    # of standard accessors is probably ok:
-    tStart = []
-    tEnd = []
-    for reader in alnFile.resourceReaders(refId):
-        if alnFile.isCmpH5:
-            startRow = reader.referenceInfo(refId).StartRow
-            endRow = reader.referenceInfo(refId).EndRow
-            rows = slice(startRow, endRow)
-        else:
-            refLen = reader.referenceInfo(refId).Length
-            rows = reader.readsInRange(refId, 0, refLen, justIndices=True)
-        goodMapQVs = (reader.mapQV[rows] >= minMapQV)
-        tStart.extend(reader.tStart[rows][goodMapQVs].view(np.int32))
-        tEnd.extend(reader.tEnd[rows][goodMapQVs].view(np.int32))
+    unsorted_tStart = rows.tStart
+    unsorted_tEnd = rows.tEnd
 
-    # Sort the intervals (not sure if it matters, but might as well be
-    # consistent with the inputs:
-    if tStart and tEnd:
-        tStart = np.array(tStart)
-        tEnd = np.array(tEnd)
-        sort_order = tStart.argsort()
-        tStart = tStart[sort_order]
-        tEnd = tEnd[sort_order]
+    # Sort (expected by CoveredIntervals)
+    sort_order = np.lexsort((unsorted_tEnd, unsorted_tStart))
+    tStart = unsorted_tStart[sort_order].tolist()
+    tEnd = unsorted_tEnd[sort_order].tolist()
 
     for span in enumerateSpans(refId, referenceWindows):
         _, spanStart, spanEnd = span
