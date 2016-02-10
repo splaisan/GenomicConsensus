@@ -174,7 +174,7 @@ def get_contract_parser():
     tcp.add_output_file_type(FileTypes.BED, "bed",
         "BED file", "BED file", "output.bed")
     tcp.add_str(Constants.PURPOSE_ID, "purpose",
-        default="",
+        default="variants",
         name="Purpose",
         description="Run mode ('variants' or 'coverage')")
     p.add_str(Constants.TRACK_NAME_ID, "name",
