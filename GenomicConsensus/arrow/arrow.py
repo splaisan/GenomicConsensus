@@ -242,7 +242,8 @@ def configure(options, alnFile):
                          noEvidenceConsensus=options.noEvidenceConsensusCall,
                          computeConfidence=(not options.fastMode),
                          minReadScore=options.minReadScore,
-                         minHqRegionSnr=options.minHqRegionSnr)
+                         minHqRegionSnr=options.minHqRegionSnr,
+                         minZScore=options.minZScore)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.

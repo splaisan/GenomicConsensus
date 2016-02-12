@@ -345,13 +345,23 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
-    ai = cc.MultiMolecularIntegrator(poaCss, cc.IntegratorConfig())
+    ai = cc.MultiMolecularIntegrator(poaCss, cc.IntegratorConfig(arrowConfig.minZScore))
+    coverage = 0
     for (mr, snr) in mappedReads:
-        # TODO (dalexander, lhepler): check for success to compute coverage accurately
-        ai.AddRead(mr, snr)
+        if (mr.TemplateEnd <= mr.TemplateStart or
+            mr.TemplateEnd - mr.TemplateStart < 2 or
+            mr.Length() < 2):
+            continue
+        coverage += 1 if ai.AddRead(mr, snr) == cc.AddReadResult_SUCCESS else 0
+
+    # TODO(lhepler, dalexander): propagate coverage around somehow
 
     # Iterate until covergence
     try:
+        assert coverage >= arrowConfig.minPoaCoverage, \
+            "Insufficient coverage (%d) to call consensus (%d)" \
+            % (coverage, arrowConfig.minPoaCoverage)
+
         _, converged = refineConsensus(ai, arrowConfig)
         assert converged, "Arrow did not converge to MLE"
         arrowCss = str(ai)
