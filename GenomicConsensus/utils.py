@@ -131,10 +131,7 @@ def readsInWindow(alnFile, window, depthLimit=None,
     if len(alnHits) == 0:
         return []
 
-    # Different naming between alnFile and pbi
     mapQV = lambda x: x.mapQV
-    if alnFile.isCmpH5:
-        mapQV = lambda x: x.MapQV
     if barcode == None:
         alnHits = alnHits[mapQV(alnFile.index)[alnHits] >= minMapQV]
     else:
