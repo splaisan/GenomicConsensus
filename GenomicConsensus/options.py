@@ -145,7 +145,7 @@ def get_parser():
     tcp.add_boolean(
         option_id=Constants.DIPLOID_MODE_ID,
         option_str="diploid",
-        default=True, # XXX i.e. --diploid=True, not the actual default!
+        default=False,
         name="Diploid mode (experimental)",
         description="Enable detection of heterozygous variants (experimental)")
     add_options_to_argument_parser(p.arg_parser.parser)
