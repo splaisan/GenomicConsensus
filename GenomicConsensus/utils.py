@@ -131,13 +131,12 @@ def readsInWindow(alnFile, window, depthLimit=None,
     if len(alnHits) == 0:
         return []
 
-    mapQV = lambda x: x.mapQV
     if barcode == None:
-        alnHits = alnHits[mapQV(alnFile.index)[alnHits] >= minMapQV]
+        alnHits = alnHits[alnFile.mapQV[alnHits] >= minMapQV]
     else:
-        # this wont work with alnFile (no bc in index):
+        # this wont work with CmpH5 (no bc in index):
         barcode = ast.literal_eval(barcode)
-        alnHits = alnHits[(mapQV(alnFile.index)[alnHits] >= minMapQV) &
+        alnHits = alnHits[(alnFile.mapQV[alnHits] >= minMapQV) &
                           (alnFile.index.bcLeft[alnHits] == barcode[0]) &
                           (alnFile.index.bcRight[alnHits] == barcode[1])]
 
