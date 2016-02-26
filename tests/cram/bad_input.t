@@ -9,5 +9,3 @@ Test that it doesn't crash when one BAM file in an otherwise valid AlignmentSet 
   $ DATA=$TESTDIR/../data/sanity
   $ REF="`python -c 'import pbcore.data ; print pbcore.data.getLambdaFasta()'`"
   $ variantCaller --reference $REF -o contig.fasta $DATA/mixed.alignmentset.xml
-  [WARNING] */empty.subreads.bam contains no reads! (glob)
-  [WARNING] */empty.subreads.bam contains no reads! (glob)
