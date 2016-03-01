@@ -26,8 +26,6 @@ software is required.
 - ``GenomicConsensus``, containing ``quiver``
 - ``ConsensusCore``, a C++ library containing the core computational
   routines for Quiver
-- ``ConsensusCore2``, a C++ library containing the core computational
-  routines for Arrow
 - ``pbcore``, a package providing access to PacBio data files
 
 
