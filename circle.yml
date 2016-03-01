@@ -14,8 +14,8 @@ dependencies:
         - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore2.git
         - pip install Cython # work around issue where h5py won't list Cython in setup_requires..
         - pip install h5py
-        - pip install git+https://github.com/PacificBiosciences/pbcommand.git
-        - pip install git+https://github.com/PacificBiosciences/pbcore.git
+        - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
+        - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcore.git
         - pip install cram nose
     override:
         - pushd _deps/ConsensusCore ; python setup.py install --boost=$(readlink -f ../boost_1_58_0) --swig=$(which swig3.0)
