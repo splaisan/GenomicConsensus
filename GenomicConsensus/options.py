@@ -51,9 +51,9 @@ from __future__ import absolute_import
 import argparse, h5py, os, os.path, sys, json
 
 from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
-from pbcommand.common_options import (add_resolved_tool_contract_option,)
-# FIXME                                     add_subcomponent_versions_option)
-from pbcommand.cli import get_default_argparser
+from pbcommand.common_options import (add_resolved_tool_contract_option,
+                                      add_debug_option)
+# FIXME                               add_subcomponent_versions_option)
 
 from .utils import fileFormat
 from . import __VERSION__
@@ -103,7 +103,8 @@ def get_parser():
         description="Compute genomic consensus and call variants relative to the reference.",
         driver_exe=Constants.DRIVER_EXE,
         nproc=SymbolTypes.MAX_NPROC,
-        resource_types=())
+        resource_types=(),
+        default_level="WARN")
     tcp = p.tool_contract_parser
     tcp.add_input_file_type(FileTypes.DS_ALIGN, "infile",
         "Alignment DataSet", "BAM or Alignment DataSet")
@@ -328,16 +329,7 @@ def add_options_to_argument_parser(parser):
              "which selects the best parameter set from the cmp.h5")
 
     debugging = parser.add_argument_group("Verbosity and debugging/profiling")
-    debugging.add_argument(
-        "--verbose",
-        dest="verbosity",
-        action="count",
-        help="Set the verbosity level.")
-    debugging.add_argument(
-        "--quiet",
-        dest="quiet",
-        action="store_true",
-        help="Turn off all logging, including warnings")
+    add_debug_option(debugging)
     debugging.add_argument(
         "--profile",
         action="store_true",
