@@ -373,7 +373,7 @@ def resolved_tool_contract_runner(resolved_contract):
     fastq_path = rc.task.output_files[2]
     args = [
         alignment_path,
-        "--log-level=INFO",
+        "--verbose",
         "--reference", reference_path,
         "--outputFilename", gff_path,
         "--outputFilename", fasta_path,
