@@ -394,7 +394,6 @@ def resolved_tool_contract_runner(resolved_contract):
     return rc
 
 def main(argv=sys.argv):
-    logging.basicConfig(level=logging.WARN)
     return pbparser_runner(
         argv=argv[1:],
         parser=get_parser(),
