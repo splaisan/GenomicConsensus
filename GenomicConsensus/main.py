@@ -35,12 +35,13 @@ from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
+import functools
 import re
 import sys
 
 import pysam
 
-from pbcommand.utils import setup_log
+from pbcommand.utils import setup_log, Constants as LogFormats
 from pbcommand.cli import pbparser_runner
 from pbcore.io import AlignmentSet, ContigSet
 
@@ -394,13 +395,15 @@ def resolved_tool_contract_runner(resolved_contract):
     return rc
 
 def main(argv=sys.argv):
+    setup_log_ = functools.partial(setup_log,
+        str_formatter=LogFormats.LOG_FMT_LVL)
     return pbparser_runner(
         argv=argv[1:],
         parser=get_parser(),
         args_runner_func=args_runner,
         contract_runner_func=resolved_tool_contract_runner,
         alog=logging.getLogger(),
-        setup_log_func=setup_log)
+        setup_log_func=setup_log_)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
