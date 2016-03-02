@@ -35,12 +35,13 @@ from __future__ import absolute_import
 
 import argparse, atexit, cProfile, gc, glob, h5py, logging, multiprocessing
 import os, pstats, random, shutil, tempfile, time, threading, Queue, traceback
+import functools
 import re
 import sys
 
 import pysam
 
-from pbcommand.utils import setup_log
+from pbcommand.utils import setup_log, Constants as LogFormats
 from pbcommand.cli import pbparser_runner
 from pbcore.io import AlignmentSet, ContigSet
 
@@ -69,18 +70,6 @@ class ToolRunner(object):
         self._algorithm = None
         self._algorithmConfiguration = None
         self._aborting = False
-
-    def _setupLogging(self):
-        if options.quiet:
-            logLevel = logging.ERROR
-        elif options.verbosity >= 2:
-            logLevel = logging.DEBUG
-        elif options.verbosity == 1:
-            logLevel = logging.INFO
-        else:
-            logLevel = logging.WARNING
-        log = logging.getLogger()
-        log.setLevel(logLevel)
 
     def _makeTemporaryDirectory(self):
         """
@@ -271,7 +260,6 @@ class ToolRunner(object):
         gc.disable()
 
         self._algorithm = self._algorithmByName(options.algorithm)
-        self._setupLogging()
         random.seed(42)
 
         logging.info("h5py version: %s" % h5py.version.version)
@@ -321,7 +309,7 @@ class ToolRunner(object):
                                 filename=os.path.join(options.temporaryDirectory,
                                                       "profile-main.out"))
 
-            elif options.debug:
+            elif options.pdb:
                 if not options.threaded:
                     die("Debugging only works with -T (threaded) mode")
                 logging.info("PID: %d", os.getpid())
@@ -407,18 +395,15 @@ def resolved_tool_contract_runner(resolved_contract):
     return rc
 
 def main(argv=sys.argv):
-    logFormat = '[%(levelname)s] %(message)s'
-    logging.basicConfig(level=logging.WARN, format=logFormat)
-    log = logging.getLogger()
-    def dummy_setup(*args, **kwargs):
-        pass
+    setup_log_ = functools.partial(setup_log,
+        str_formatter=LogFormats.LOG_FMT_LVL)
     return pbparser_runner(
         argv=argv[1:],
         parser=get_parser(),
         args_runner_func=args_runner,
         contract_runner_func=resolved_tool_contract_runner,
-        alog=log,
-        setup_log_func=dummy_setup)
+        alog=logging.getLogger(),
+        setup_log_func=setup_log_)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
