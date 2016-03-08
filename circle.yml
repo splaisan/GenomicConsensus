@@ -13,9 +13,11 @@ dependencies:
         - pushd _deps ; if [ ! -f swig-3.0.8/bin/swig ] ; then rm -fr swig-3.0.8* ; mkdir dl ; pushd dl ; wget http://downloads.sourceforge.net/project/swig/swig/swig-3.0.8/swig-3.0.8.tar.gz ; tar xzf swig-3.0.8.tar.gz ; pushd swig-3.0.8 ; ./configure --prefix $(readlink -f ../../swig-3.0.8) ; make ; make install ; fi
         - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore.git
         - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore2.git
-        - pip install Cython # work around issue where h5py won't list Cython in setup_requires..
-        - pip install numpy # another work around where h5py won't list numpy in setup_requires..
+        - pip install --upgrade pip
+        - pip install numpy
+        - pip install cython
         - pip install h5py
+        - pip install pysam
         - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
         - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcore.git
         - pip install cram nose
