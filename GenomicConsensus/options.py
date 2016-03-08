@@ -113,15 +113,15 @@ def get_parser():
     tcp.add_output_file_type(FileTypes.GFF, "variants",
         name="Consensus GFF",
         description="Consensus GFF",
-        default_name="variants.gff")
+        default_name="variants")
     tcp.add_output_file_type(FileTypes.DS_CONTIG, "consensus",
         name="Consensus ContigSet",
         description="Consensus sequence in Fasta format",
-        default_name="consensus.contigset.xml")
+        default_name="consensus")
     tcp.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
         name="Consensus fastq",
         description="Consensus fastq",
-        default_name="consensus.fastq")
+        default_name="consensus")
     tcp.add_str(
         option_id=Constants.ALGORITHM_ID,
         option_str="algorithm",
