@@ -15,7 +15,7 @@ import sys
 import numpy as np
 
 from pbcommand.utils import setup_log
-from pbcommand.cli import pacbio_args_or_contract_runner, get_default_argparser
+from pbcommand.cli import pbparser_runner, get_default_argparser
 from pbcommand.models import FileTypes, get_pbparser
 from pbcommand.common_options import add_resolved_tool_contract_option
 from pbcore.io import GffReader, GffWriter, Gff3Record
@@ -28,61 +28,41 @@ from GenomicConsensus import __VERSION__
 #
 Region = namedtuple("Region", ("seqid", "start", "end"))
 
+log = logging.getLogger(__name__)
+
 class Constants(object):
     TOOL_ID = "genomic_consensus.tasks.summarize_consensus"
     DRIVER_EXE = "summarizeConsensus --resolved-tool-contract "
 
-def get_argument_parser():
-    parser = get_default_argparser(__VERSION__, __doc__)
-    parser.add_argument("inputAlignmentSummaryGff",
-                        type=str,
-                        help="Input alignment_summary.gff filename")
-    # FIXME not optional, should be positional
-    parser.add_argument("--variantsGff",
-                        type=str,
-                        help="Input variants.gff or variants.gff.gz filename",
-                        required=True)
-    parser.add_argument("--output",
-                        "-o",
-                        type=str,
-                        help="Output alignment_summary.gff filename")
-    add_resolved_tool_contract_option(parser)
-    # FIXME temporary workaround for parser chaos
-    class EmitToolContractAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(), indent=4)+'\n')
-            sys.exit(0)
-    parser.add_argument("--emit-tool-contract",
-                        nargs=0,
-                        action=EmitToolContractAction)
-    return parser
 
 def get_contract_parser():
-    """
-    Used to generate emitted tool contract, but not (yet) to actually process
-    command-line options.
-    """
-    driver_exe = "variantCaller --resolved-tool-contract "
     p = get_pbparser(
-        "genomic_consensus.tasks.summarize_consensus",
+        Constants.TOOL_ID,
         __VERSION__,
         "Summarize Consensus",
         __doc__,
-        Constants.DRIVER_EXE)
+        Constants.DRIVER_EXE,
+        default_level="ERROR")
     p.add_input_file_type(FileTypes.GFF, "alignment_summary",
         "Alignment summary GFF", "Alignment summary GFF file")
-    p.add_input_file_type(FileTypes.GFF, "variants",
+    p.tool_contract_parser.add_input_file_type(FileTypes.GFF, "variants",
         "Variants GFF", "Variants GFF file")
-    p.add_output_file_type(FileTypes.GFF, "output",
+    p.arg_parser.parser.add_argument("--variantsGff",
+        type=str,
+        help="Input variants.gff or variants.gff.gz filename",
+        required=True)
+    p.tool_contract_parser.add_output_file_type(FileTypes.GFF, "output",
         name="Output GFF file",
         description="New alignment summary GFF file",
-        default_name="alignment_summary_variants.gff")
+        default_name="alignment_summary_variants")
+    p.arg_parser.parser.add_argument("-o", "--output",
+        type=str,
+        help="Output alignment_summary.gff filename")
     return p
 
 def get_args_from_resolved_tool_contract(resolved_tool_contract):
     rtc = resolved_tool_contract
-    p = get_argument_parser()
+    p = get_contract_parser().arg_parser.parser
     args = [
         rtc.task.input_files[0],
         "--variantsGff", rtc.task.input_files[1],
@@ -98,7 +78,7 @@ def run(options):
         ]
 
     inputVariantsGff = GffReader(options.variantsGff)
-    inputAlignmentSummaryGff = GffReader(options.inputAlignmentSummaryGff)
+    inputAlignmentSummaryGff = GffReader(options.alignment_summary)
 
     summaries = {}
     for gffRecord in inputAlignmentSummaryGff:
@@ -138,7 +118,7 @@ def run(options):
             logging.info("{i} records...".format(i=i))
 
 
-    inputAlignmentSummaryGff = open(options.inputAlignmentSummaryGff)
+    inputAlignmentSummaryGff = open(options.alignment_summary)
     outputAlignmentSummaryGff = open(options.output, "w")
 
     inHeader = True
@@ -171,25 +151,23 @@ def run(options):
             print >>outputAlignmentSummaryGff, line
     return 0
 
+
 def args_runner(args):
     return run(options=args)
+
 
 def resolved_tool_contract_runner(resolved_tool_contract):
     args = get_args_from_resolved_tool_contract(resolved_tool_contract)
     return run(options=args)
 
+
 def main(argv=sys.argv):
-    logging.basicConfig(level=logging.WARN)
-    mp = get_argument_parser()
-    log = logging.getLogger()
-    def dummy_log(*args, **kwargs):
-        pass
-    return pacbio_args_or_contract_runner(argv[1:],
-                                          mp,
-                                          args_runner,
-                                          resolved_tool_contract_runner,
-                                          log,
-                                          dummy_log)
+    return pbparser_runner(argv[1:],
+                           get_contract_parser(),
+                           args_runner,
+                           resolved_tool_contract_runner,
+                           log,
+                           setup_log)
 
 if __name__ == "__main__":
     sys.exit(main())

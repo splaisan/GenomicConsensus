@@ -19,6 +19,8 @@ from pbcore.io import GffReader, WriterBase
 
 __version__ = "3.0"
 
+log = logging.getLogger(__name__)
+
 class Constants(object):
     TASK_ID = "genomic_consensus.tasks.gff2bed"
     PURPOSE_ID = "genomic_consensus.task_options.gff2bed_purpose"
@@ -164,7 +166,8 @@ def get_contract_parser():
         version=__version__,
         name="gffToBed",
         description=__doc__,
-        driver_exe=Constants.DRIVER_EXE)
+        driver_exe=Constants.DRIVER_EXE,
+        default_level="ERROR")
     ap = p.arg_parser.parser
     tcp = p.tool_contract_parser
     ap.add_argument("purpose", choices=["variants","coverage"],
@@ -172,7 +175,7 @@ def get_contract_parser():
     p.add_input_file_type(FileTypes.GFF, "gff",
         "GFF file", "GFF file")
     tcp.add_output_file_type(FileTypes.BED, "bed",
-        "BED file", "BED file", "output.bed")
+        "BED file", "BED file", "output")
     tcp.add_str(Constants.PURPOSE_ID, "purpose",
         default="variants",
         name="Purpose",
@@ -192,18 +195,14 @@ def get_contract_parser():
     return p
 
 def main(argv=sys.argv):
-    logging.basicConfig(level=logging.WARN)
-    log = logging.getLogger()
     mp = get_contract_parser()
-    def dummy_log(*args, **kwargs):
-        pass
     return pbparser_runner(
         argv=argv[1:],
         parser=mp,
         args_runner_func=args_runner,
         contract_runner_func=resolved_tool_contract_runner,
         alog=log,
-        setup_log_func=dummy_log)
+        setup_log_func=setup_log)
 
 if __name__ == '__main__':
     sys.exit(main())
