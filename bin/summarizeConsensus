@@ -105,9 +105,16 @@ def run(options):
     for variantGffRecord in inputVariantsGff:
         positions = [r.start for r in regions_by_contig[variantGffRecord.seqid]]
         idx = bisect.bisect_right(positions, variantGffRecord.start) - 1
+        # XXX we have to be a little careful here - an insertion at the start
+        # of a contig will have start=0 versus start=1 for the first region
+        if idx < 0:
+            idx = 0
         region = regions_by_contig[variantGffRecord.seqid][idx]
-        assert region.start <= variantGffRecord.start <= region.end, \
-            (region.start, variantGffRecord.start, region.end, idx)
+        assert ((region.start <= variantGffRecord.start <= region.end) or
+                (region.start == 1 and variantGffRecord.start == 0 and
+                 variantGffRecord.type == "insertion")), \
+            (variantGffRecord.seqid, region.start, variantGffRecord.start,
+             region.end, variantGffRecord.type, idx)
         summary = summaries[region]
         counterName = counterNames[variantGffRecord.type]
         variantLength = max(len(variantGffRecord.reference),
