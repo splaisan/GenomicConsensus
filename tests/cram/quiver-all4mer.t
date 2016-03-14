@@ -8,15 +8,17 @@ Run quiver.
 
   $ quiver $INPUT -r $REFERENCE -o v.gff -o css.fa
 
-Perfect consensus!
-
-  $ fastadiff -c FALSE css.fa $REFERENCE
 
 No variants!
 
   $ egrep -v '^#' v.gff | cat
 
-No no-calls.
+Perfect consensus, no no-calls.
 
-  $ fastacomposition css.fa
-  css.fa A 65 C 66 G 64 T 65
+  $ cat css.fa
+  >All4mer.V2.01_Insert|quiver
+  CATCAGGTAAGAAAGTACGATGCTACAGCTTGTGACTGGTGCGGCACTTTTGGCTGAGTT
+  TCCTGTCCACCTCATGTATTCTGCCCTAACGTCGGTCTTCACGCCATTACTAGACCGACA
+  AAATGGAAGCCGGGGCCTTAAACCCCGTTCGAGGCGTAGCAAGGAGATAGGGTTATGAAC
+  TCTCCCAGTCAATATACCAACACATCGTGGGACGGATTGCAGAGCGAATCTATCCGCGCT
+  CGCATAATTTAGTGTTGATC
