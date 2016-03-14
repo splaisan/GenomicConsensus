@@ -18,6 +18,7 @@ chr1\t.\tinsertion\t12000\t12000\t.\t.\t.\treference=.;variantSeq=G;coverage=38;
 chr1\t.\tdeletion\t15001\t15001\t.\t.\t.\treference=T;variantSeq=.;coverage=38;confidence=49
 chr2\t.\tdeletion\t20000\t20000\t.\t.\t.\treference=T;variantSeq=.;coverage=38;confidence=49
 chr2\t.\tsubstitution\t23469\t23469\t.\t.\t.\treference=T;variantSeq=A;coverage=38;confidence=47
+chr3\t.\tinsertion\t0\t0\t.\t.\t.\treference=.;variantSeq=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;coverage=23;confidence=93
 chr3\t.\tsubstitution\t3469\t3469\t.\t.\t.\treference=C;variantSeq=A;coverage=32;confidence=40"""
 
 SUMMARY = """\
@@ -39,7 +40,7 @@ chr1\t.\tregion\t10001\t15000\t0.00\t+\t.\tcov=17,25,29;cov2=24.182,2.596;gaps=0
 chr1\t.\tregion\t15001\t20000\t0.00\t+\t.\tcov=20,34,49;cov2=33.714,7.143;gaps=0,0;cQv=20,20,20;del=1;ins=0;sub=0
 chr2\t.\tregion\t1\t5000\t0.00\t+\t.\tcov=18,49,80;cov2=49.018,10.125;gaps=0,0;cQv=20,20,20;del=0;ins=0;sub=0
 chr2\t.\tregion\t10000\t23469\t0.00\t+\t.\tcov=0,48,89;cov2=47.303,12.036;gaps=1,24;cQv=20,20,20;del=1;ins=0;sub=1
-chr3\t.\tregion\t1\t7000\t0.00\t+\t.\tcov=0,48,89;cov2=47.303,12.036;gaps=1,24;cQv=20,20,20;del=0;ins=0;sub=1"""
+chr3\t.\tregion\t1\t7000\t0.00\t+\t.\tcov=0,48,89;cov2=47.303,12.036;gaps=1,24;cQv=20,20,20;del=0;ins=33;sub=1"""
 
 class TestSummarizeConsensus(unittest.TestCase):
 
