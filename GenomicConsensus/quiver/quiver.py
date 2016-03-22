@@ -232,7 +232,7 @@ __all__ = [ "name",
             "configure",
             "slaveFactories" ]
 
-name = "Quiver"
+name = "quiver"
 availability = (True, "OK")
 
 def configure(options, cmpH5):

@@ -78,7 +78,7 @@ class ToolRunner(object):
         options.temporaryDirectory = tempfile.mkdtemp(prefix="GenomicConsensus-", dir="/tmp")
         logging.info("Created temporary directory %s" % (options.temporaryDirectory,) )
 
-    def _algorithmByName(self, name):
+    def _algorithmByName(self, name, cmpH5):
         if name == "plurality":
             from GenomicConsensus.plurality import plurality
             algo = plurality
@@ -88,6 +88,13 @@ class ToolRunner(object):
         elif name == "arrow":
             from GenomicConsensus.arrow import arrow
             algo = arrow
+        elif name == "poa":
+            raise NotImplementedError
+        elif name == "best":
+            logging.info("Identifying best algorithm based on input data")
+            from GenomicConsensus import algorithmSelection
+            algoName = algorithmSelection.bestAlgorithm(cmpH5.sequencingChemistry)
+            return self._algorithmByName(algoName, cmpH5)
         else:
             die("Failure: unrecognized algorithm %s" % name)
         isOK, msg = algo.availability
@@ -123,7 +130,7 @@ class ToolRunner(object):
             p.start()
         logging.info("Launched compute slaves.")
 
-        rcp = ResultCollectorType(self._resultsQueue, self._algorithmConfiguration)
+        rcp = ResultCollectorType(self._resultsQueue, self._algorithm.name, self._algorithmConfiguration)
         rcp.start()
         self._slaves.append(rcp)
         logging.info("Launched collector slave.")
@@ -259,7 +266,6 @@ class ToolRunner(object):
         # essentially harmless.
         gc.disable()
 
-        self._algorithm = self._algorithmByName(options.algorithm)
         random.seed(42)
 
         logging.info("h5py version: %s" % h5py.version.version)
@@ -285,6 +291,7 @@ class ToolRunner(object):
             resolveOptions(peekFile)
             self._loadReference(peekFile)
             self._checkFileCompatibility(peekFile)
+            self._algorithm = self._algorithmByName(options.algorithm, peekFile)
             self._configureAlgorithm(options, peekFile)
             options.disableHdf5ChunkCache = True
             #options.disableHdf5ChunkCache = self._shouldDisableChunkCache(peekFile)

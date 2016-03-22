@@ -420,7 +420,7 @@ __all__ = [ "name",
             "configure",
             "slaveFactories" ]
 
-name = "Plurality"
+name = "plurality"
 availability = (True, "OK")
 
 def slaveFactories(threaded):

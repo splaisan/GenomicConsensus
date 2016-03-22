@@ -227,7 +227,7 @@ __all__ = [ "name",
             "configure",
             "slaveFactories" ]
 
-name = "Arrow"
+name = "arrow"
 availability = (True, "OK")
 
 def configure(options, alnFile):

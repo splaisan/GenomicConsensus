@@ -43,8 +43,9 @@ class ResultCollector(object):
     """
     Gathers results and writes to a file.
     """
-    def __init__(self, resultsQueue, algorithmConfig):
+    def __init__(self, resultsQueue, algorithmName, algorithmConfig):
         self._resultsQueue = resultsQueue
+        self._algorithmName = algorithmName
         self._algorithmConfig = algorithmConfig
 
     def _run(self):
@@ -140,8 +141,7 @@ class ResultCollector(object):
                     spanName = refName
                 else:
                     spanName = refName + "_%d_%d" % (s, e)
-                cssName = consensus.consensusContigName(spanName,
-                                                        options.algorithm)
+                cssName = consensus.consensusContigName(spanName, self._algorithmName)
                 # Gather just the chunks pertaining to this span
                 chunksThisSpan = [ chunk for chunk in self.consensusChunksByRefId[refId]
                                    if windows.windowsIntersect(chunk.refWindow, span) ]
