@@ -8,4 +8,4 @@ Test that it doesn't crash when one BAM file in an otherwise valid AlignmentSet 
 
   $ DATA=$TESTDIR/../data/sanity
   $ REF="`python -c 'import pbcore.data ; print pbcore.data.getLambdaFasta()'`"
-  $ variantCaller --reference $REF -o contig.fasta $DATA/mixed.alignmentset.xml
+  $ arrow --reference $REF -o contig.fasta $DATA/mixed.alignmentset.xml

@@ -243,15 +243,16 @@ def configure(options, cmpH5):
         raise U.IncompatibleDataException(
             "The Quiver algorithm requires an alignment file containing standard (non-CCS) reads." )
 
-    # Reject Sequel chemistries explicitly---there are no Quiver
-    # trainings for Sequel.  Arrow should be used.
-    for chem in cmpH5.sequencingChemistry:
-        if chem.startswith("S/"):
-            raise U.IncompatibleDataException(
-                "The Quiver algorithm is not trained for Sequel data. " +
-                "Please use the Arrow algorithm instead.")
-
     if options.parametersSpec == "auto":
+        # Reject Sequel chemistries explicitly---there are no Quiver
+        # trainings for Sequel.  Arrow should be used.
+        # (Not that power-users can bypass this requirement using an explicit parameter set)
+        for chem in cmpH5.sequencingChemistry:
+            if chem.startswith("S/"):
+                raise U.IncompatibleDataException(
+                    "The Quiver algorithm is not trained for Sequel data. " +
+                    "Please use the Arrow algorithm instead.")
+
         if options.diploid:
             logging.info("Diploid analysis--resorting to unknown.NoQVsModel until other " +
                          "parameter sets can be recalibrated.")
