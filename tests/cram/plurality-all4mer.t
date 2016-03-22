@@ -4,18 +4,18 @@ Bite-sized quiver test using an All4Mers template!
   $ export INPUT=$DATA/all4mer/out.aligned_subreads.bam
   $ export REFERENCE=$DATA/all4mer/All4mer.V2.01_Insert.fa
 
-Run arrow.
+Run quiver.
 
-  $ arrow $INPUT -r $REFERENCE -o v.gff -o css.fa -o css.fq
+  $ plurality $INPUT -r $REFERENCE -o v.gff -o css.fa -o css.fq
 
 No variants!
 
   $ egrep -v '^#' v.gff | cat
 
-Perfect consensus, no no-calls
+Perfect consensus, no no-calls.
 
   $ cat css.fa
-  >All4mer.V2.01_Insert|arrow
+  >All4mer.V2.01_Insert|plurality
   CATCAGGTAAGAAAGTACGATGCTACAGCTTGTGACTGGTGCGGCACTTTTGGCTGAGTT
   TCCTGTCCACCTCATGTATTCTGCCCTAACGTCGGTCTTCACGCCATTACTAGACCGACA
   AAATGGAAGCCGGGGCCTTAAACCCCGTTCGAGGCGTAGCAAGGAGATAGGGTTATGAAC
@@ -23,16 +23,15 @@ Perfect consensus, no no-calls
   CGCATAATTTAGTGTTGATC
 
   $ fold -60 css.fq
-  @All4mer.V2.01_Insert|arrow
+  @All4mer.V2.01_Insert|plurality
   CATCAGGTAAGAAAGTACGATGCTACAGCTTGTGACTGGTGCGGCACTTTTGGCTGAGTT
   TCCTGTCCACCTCATGTATTCTGCCCTAACGTCGGTCTTCACGCCATTACTAGACCGACA
   AAATGGAAGCCGGGGCCTTAAACCCCGTTCGAGGCGTAGCAAGGAGATAGGGTTATGAAC
   TCTCCCAGTCAATATACCAACACATCGTGGGACGGATTGCAGAGCGAATCTATCCGCGCT
   CGCATAATTTAGTGTTGATC
   +
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~~~~~~~~~~~~~~~~~~~~
-
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+  IIIIIIIIIIIIIIIIIIII
