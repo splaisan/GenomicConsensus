@@ -51,7 +51,7 @@ def consensusAndVariantsForWindow(cmpH5, refWindow, referenceContig,
                                   depthLimit, quiverConfig):
     """
     High-level routine for calling the consensus for a
-    window of the genome given a cmp.h5.
+    window of the genome given an alignment file.
 
     Identifies the coverage contours of the window in order to
     identify subintervals where a good consensus can be called.
@@ -241,7 +241,7 @@ def configure(options, cmpH5):
 
     if cmpH5.readType != "standard":
         raise U.IncompatibleDataException(
-            "The Quiver algorithm requires a cmp.h5 file containing standard (non-CCS) reads." )
+            "The Quiver algorithm requires an alignment file containing standard (non-CCS) reads." )
 
     # Reject Sequel chemistries explicitly---there are no Quiver
     # trainings for Sequel.  Arrow should be used.
@@ -258,7 +258,7 @@ def configure(options, cmpH5):
             params = M.loadParameterSets(options.parametersFile, spec="unknown.NoQVsModel")
         else:
             params = M.loadParameterSets(options.parametersFile, cmpH5=cmpH5)
-            qvMsg = "This .cmp.h5 file lacks some of the QV data tracks that are required " + \
+            qvMsg = "This alignment file file lacks some of the QV data tracks that are required " + \
                     "for optimal performance of the Quiver algorithm.  For optimal results" + \
                     " use the ResequencingQVs workflow in SMRTPortal with bas.h5 files "    + \
                     "from an instrument using software version 1.3.1 or later, or the "     + \
@@ -273,7 +273,7 @@ def configure(options, cmpH5):
                                     cmpH5=cmpH5)
         if not all(ps.model.isCompatibleWithCmpH5(cmpH5) for ps in params.values()):
             raise U.IncompatibleDataException(
-                "Selected Quiver parameter set is incompatible with this cmp.h5 file " +
+                "Selected Quiver parameter set is incompatible with this alignment file " +
                 "due to missing data tracks.")
 
     logging.info("Using Quiver parameter set(s): %s" % (", ".join(ps.name for ps in params.values())))
