@@ -35,7 +35,7 @@ import ast
 import math, numpy as np, os.path, sys, itertools
 
 def die(msg):
-    print msg
+    print >>sys.stderr, msg
     sys.exit(-1)
 
 class CommonEqualityMixin(object):
