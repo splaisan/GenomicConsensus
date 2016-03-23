@@ -89,7 +89,8 @@ class ToolRunner(object):
             from GenomicConsensus.arrow import arrow
             algo = arrow
         elif name == "poa":
-            raise NotImplementedError
+            from GenomicConsensus.poa import poa
+            algo = poa
         elif name == "best":
             logging.info("Identifying best algorithm based on input data")
             from GenomicConsensus import algorithmSelection

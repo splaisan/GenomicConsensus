@@ -1,3 +1,6 @@
+Version 2.0.0
+  * Working support for Arrow and POA-only consensus models
+
 Version 1.1.0
   * Working support for DataSet read and reference files
 

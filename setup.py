@@ -20,6 +20,7 @@ setup(
                'bin/gffToVcf',
                'bin/gffToBed',
                'bin/plurality',
+               'bin/poa',
                'bin/quiver',
                'bin/arrow'],
     packages = find_packages(),
