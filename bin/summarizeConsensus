@@ -102,7 +102,12 @@ def run(options):
         regions_by_contig[seqid] = sorted(r, lambda a,b: cmp(a.start, b.start))
     logging.info("Processing variant records")
     i = 0
+    have_contigs = set(regions_by_contig.keys())
     for variantGffRecord in inputVariantsGff:
+        if not variantGffRecord.seqid in have_contigs:
+            raise KeyError(
+                "Can't find alignment summary for contig '{s}".format(
+                s=variantGffRecord.seqid))
         positions = [r.start for r in regions_by_contig[variantGffRecord.seqid]]
         idx = bisect.bisect_right(positions, variantGffRecord.start) - 1
         # XXX we have to be a little careful here - an insertion at the start
