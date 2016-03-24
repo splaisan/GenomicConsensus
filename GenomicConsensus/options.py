@@ -82,7 +82,7 @@ class Constants(object):
     MIN_COVERAGE_ID = "genomic_consensus.task_options.min_coverage"
     DIPLOID_MODE_ID = "genomic_consensus.task_options.diploid"
 
-    DEFAULT_ALGORITHM = "quiver"
+    DEFAULT_ALGORITHM = "best"
     DEFAULT_MIN_CONFIDENCE = 40
     DEFAULT_MIN_COVERAGE = 5
     DEFAULT_MAX_COVERAGE = 100
@@ -127,7 +127,7 @@ def get_parser():
         option_str="algorithm",
         default=Constants.DEFAULT_ALGORITHM,
         name="Algorithm",
-        description="Algorithm name") # FIXME
+        description="Variant calling algorithm")
     tcp.add_int(
         option_id=Constants.MIN_CONFIDENCE_ID,
         option_str="minConfidence",
