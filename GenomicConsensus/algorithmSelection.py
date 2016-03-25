@@ -51,9 +51,15 @@ def bestAlgorithm(sequencingChemistries):
     if len(sequencingChemistries) == 0:
         raise ValueError("sequencingChemistries must be nonempty list or set")
     chems = set(sequencingChemistries)
-    allRS = all(not(chem.startswith("S/")) for chem in chems)
-    anySequelBeta = any(chem == "S/P1-C1/beta" for chem in chems)
+    anyUnknown    = "unknown" in chems
+    anySequelBeta = "S/P1-C1/beta" in chems
+    allRS         = all(not(chem.startswith("S/")) for chem in chems) and (not anyUnknown)
 
-    if allRS:           return "quiver"
-    elif anySequelBeta: return "poa"
-    else:               return "arrow"
+    if anyUnknown:
+        return "poa"
+    elif anySequelBeta:
+        return "poa"
+    elif allRS:
+        return "quiver"
+    else:
+        return "arrow"
