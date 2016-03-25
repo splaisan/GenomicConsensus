@@ -94,7 +94,7 @@ class ToolRunner(object):
         elif name == "best":
             logging.info("Identifying best algorithm based on input data")
             from GenomicConsensus import algorithmSelection
-            algoName = algorithmSelection.bestAlgorithm(cmpH5.sequencingChemistry)
+            algoName = algorithmSelection.bestAlgorithm(cmpH5.sequencingChemistry, logging)
             return self._algorithmByName(algoName, cmpH5)
         else:
             die("Failure: unrecognized algorithm %s" % name)

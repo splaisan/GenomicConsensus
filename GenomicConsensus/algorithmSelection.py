@@ -31,7 +31,7 @@
 
 # Author: David Alexander
 
-def bestAlgorithm(sequencingChemistries):
+def bestAlgorithm(sequencingChemistries, logger=None):
     """
     Identify the (de novo) consensus algorithm we expect to deliver
     the best results, given the sequencing chemistries represented in
@@ -56,6 +56,10 @@ def bestAlgorithm(sequencingChemistries):
     allRS         = all(not(chem.startswith("S/")) for chem in chems) and (not anyUnknown)
 
     if anyUnknown:
+        if logger is not None:
+            logger.warning("Unidentifiable sequencing chemistry present in dataset; falling back to " +
+                           "nonparametric but suboptimal 'POA' algorithm.  Check if your SMRTanalysis " +
+                           "installation is out-of-date.")
         return "poa"
     elif anySequelBeta:
         return "poa"
