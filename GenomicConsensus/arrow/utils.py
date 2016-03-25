@@ -358,10 +358,10 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
 
     # Iterate until covergence
     try:
-        assert coverage >= arrowConfig.minPoaCoverage, \
-            "Insufficient coverage (%d) to call consensus (%d)" \
-            % (coverage, arrowConfig.minPoaCoverage)
-
+        if coverage < arrowConfig.minPoaCoverage:
+            logging.info("%s: Inadequate coverage to call consensus" % (refWindow,))
+            return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                                  refWindow, refSequence)
         _, converged = refineConsensus(ai, arrowConfig)
         assert converged, "Arrow did not converge to MLE"
         arrowCss = str(ai)
