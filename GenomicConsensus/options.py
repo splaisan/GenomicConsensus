@@ -308,7 +308,7 @@ def add_options_to_argument_parser(parser):
         dest="algorithm",
         type=str,
         choices=["quiver", "arrow", "plurality", "poa", "best"],
-        default="quiver")
+        default="best")
     algorithm.add_argument(
         "--parametersFile", "-P",
         dest="parametersFile",
