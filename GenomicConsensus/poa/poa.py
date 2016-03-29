@@ -168,7 +168,7 @@ def variantsAndConfidence(refWindow, refSequence, cssSequence, aligner="affine")
         align = cc.Align
 
     ga = align(refSequence, cssSequence)
-    confidence = np.ones((len(cssSequence),), dtype=np.uint8) * 5
+    confidence = np.ones((len(cssSequence),), dtype=np.uint8) * 20
     variants = variantsFromAlignment(ga, refWindow, confidence)
     return (confidence, variants)
 
