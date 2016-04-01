@@ -20,9 +20,9 @@ def ungappedPulseArray(a):
     else:
         raise Exception, "Invalid pulse array type"
 
-def _makePulseFeatureAccessor(featureName):
+def _makeBaseFeatureAccessor(featureName):
     def f(self, aligned=True, orientation="native"):
-        return self.pulseFeature(featureName, aligned=aligned, orientation=orientation)
+        return self.baseFeature(featureName, aligned=aligned, orientation=orientation)
     return f
 
 class AlignmentHitStub(object):
@@ -40,9 +40,9 @@ class AlignmentHitStub(object):
         self._reference = np.fromstring(nativeReference, dtype="S1")
         self._read      = np.fromstring(read, dtype="S1")
 
-        self._pulseFeatures = {}
+        self._baseFeatures = {}
         for featureName, feature in kwargs.iteritems():
-            self._pulseFeatures[featureName] = feature
+            self._baseFeatures[featureName] = feature
 
     def read(self, aligned=True, orientation="native"):
         val = self._read
@@ -73,12 +73,12 @@ class AlignmentHitStub(object):
     def spansReferencePosition(self, refPos):
         return self.referenceStart <= refPos < self.referenceEnd
 
-    def pulseFeature(self, featureName, aligned=True, orientation="native"):
-        data = self._pulseFeatures[featureName]
+    def baseFeature(self, featureName, aligned=True, orientation="native"):
+        data = self._baseFeatures[featureName]
         if orientation == "genomic" and self.reverseStrand:
             data = data[::-1]
         if not aligned:
-            data = ungappedPulseArray(data)
+            data = ungappedBaseArray(data)
         return data
 
     def clippedTo(self, refStart, refEnd):
@@ -86,14 +86,14 @@ class AlignmentHitStub(object):
         assert refStart <= self.referenceStart <= self.referenceEnd <= refEnd
         return self
 
-    IPD                = _makePulseFeatureAccessor("IPD")
-    PulseWidth         = _makePulseFeatureAccessor("PulseWidth")
-    QualityValue       = _makePulseFeatureAccessor("QualityValue")
-    InsertionQV        = _makePulseFeatureAccessor("InsertionQV")
-    DeletionQV         = _makePulseFeatureAccessor("DeletionQV")
-    DeletionTag        = _makePulseFeatureAccessor("DeletionTag")
-    MergeQV            = _makePulseFeatureAccessor("MergeQV")
-    SubstitutionQV     = _makePulseFeatureAccessor("SubstitutionQV")
+    IPD                = _makeBaseFeatureAccessor("IPD")
+    PulseWidth         = _makeBaseFeatureAccessor("PulseWidth")
+    QualityValue       = _makeBaseFeatureAccessor("QualityValue")
+    InsertionQV        = _makeBaseFeatureAccessor("InsertionQV")
+    DeletionQV         = _makeBaseFeatureAccessor("DeletionQV")
+    DeletionTag        = _makeBaseFeatureAccessor("DeletionTag")
+    MergeQV            = _makeBaseFeatureAccessor("MergeQV")
+    SubstitutionQV     = _makeBaseFeatureAccessor("SubstitutionQV")
 
     def __repr__(self):
         return "Stub 0x%x" % id(self)
@@ -107,7 +107,7 @@ FORWARD, REVERSE = False, True
 def _(s):
     """
     Decode an ASCII-art representation of
-    a pulse feature.
+    a base feature.
 
     Spec: string -> np.array(dtype=float32)
 

@@ -92,7 +92,7 @@ class Model(object):
 
     @classmethod
     def isCompatibleWithCmpH5(cls, cmpH5):
-        return all(cmpH5.hasPulseFeature(feature) for feature in cls.requiredFeatures)
+        return all(cmpH5.hasBaseFeature(feature) for feature in cls.requiredFeatures)
 
     @classmethod
     def extractFeatures(cls, aln):
@@ -112,7 +112,7 @@ class Model(object):
             _args = [ alnRead[~gapMask].tostring() ]
             for feature in ALL_FEATURES:
                 if feature in cls.requiredFeatures:
-                    _args.append(asFloatFeature(aln.pulseFeature(feature)[~gapMask]))
+                    _args.append(asFloatFeature(aln.baseFeature(feature)[~gapMask]))
                 else:
                     _args.append(cc.FloatFeature(int(aln.readLength)))
             return cc.QvSequenceFeatures(*_args)
@@ -121,7 +121,7 @@ class Model(object):
             _args = [ aln.read(aligned=False, orientation="native") ]
             for feature in ALL_FEATURES:
                 if feature in cls.requiredFeatures:
-                    _args.append(asFloatFeature(aln.pulseFeature(feature, aligned=False)))
+                    _args.append(asFloatFeature(aln.baseFeature(feature, aligned=False)))
                 else:
                     _args.append(cc.FloatFeature(int(aln.readLength)))
             return cc.QvSequenceFeatures(*_args)
@@ -402,7 +402,7 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
             die("Quiver: no available parameter set named %s" % \
                 spec)
     elif chemistryName:
-        qvsAvailable = cmpH5.pulseFeaturesAvailable()
+        qvsAvailable = cmpH5.baseFeaturesAvailable()
         p = _bestParameterSet(sets, chemistryName, qvsAvailable)
         if p.chemistry != chemistryName:
             die("Quiver: no parameter set available compatible with this " + \
@@ -416,7 +416,7 @@ def loadParameterSets(parametersFile=None, spec=None, cmpH5=None):
                 "this version of SMRTanalysis is too old to recognize a new chemistry.")
         if not _isChemistryMixSupported(chemistryNames):
             die("Unsupported chemistry mix, cannot proceed.")
-        qvsAvailable = cmpH5.pulseFeaturesAvailable()
+        qvsAvailable = cmpH5.baseFeaturesAvailable()
         bestParams = [ _bestParameterSet(sets, chemistryName, qvsAvailable)
                        for chemistryName in chemistryNames ]
         params = dict(zip(chemistryNames, bestParams))

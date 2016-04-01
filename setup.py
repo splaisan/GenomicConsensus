@@ -28,7 +28,7 @@ setup(
     include_package_data=True,
     zip_safe = False,
     install_requires=[
-        'pbcore >= 1.2.8',
+        'pbcore >= 1.2.9',
         'pbcommand >= 0.3.20',
         'numpy >= 1.6.0',
         'h5py >= 2.0.1',
