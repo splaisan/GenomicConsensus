@@ -31,7 +31,9 @@
 
 # Author: David Alexander
 
-def bestAlgorithm(sequencingChemistries, logger=None):
+from .utils import die
+
+def bestAlgorithm_(sequencingChemistries):
     """
     Identify the (de novo) consensus algorithm we expect to deliver
     the best results, given the sequencing chemistries represented in
@@ -41,9 +43,9 @@ def bestAlgorithm(sequencingChemistries, logger=None):
 
     - Just RS chemistry data?  Then use quiver (at least for now, until
       we get arrow > quiver on P6-C4)
-    - S/P1-C1/beta chemistry present?  Then we have to fall back to POA.
-    - Else (either all Sequel data post beta, or a mix of Sequel and
-      RS data), use arrow.
+    - Else (either all Sequel data, or a mix of Sequel and RS data),
+      use arrow.
+    - Unknown chemistry found? Return None; we should abort if this is found
 
     Note that the handling/rejection of chemistry mixtures (including
     mixtures of Sequel and RS data) is left to the algorithm itself.
@@ -52,18 +54,19 @@ def bestAlgorithm(sequencingChemistries, logger=None):
         raise ValueError("sequencingChemistries must be nonempty list or set")
     chems = set(sequencingChemistries)
     anyUnknown    = "unknown" in chems
-    anySequelBeta = "S/P1-C1/beta" in chems
     allRS         = all(not(chem.startswith("S/")) for chem in chems) and (not anyUnknown)
 
     if anyUnknown:
-        if logger is not None:
-            logger.warning("Unidentifiable sequencing chemistry present in dataset; falling back to " +
-                           "nonparametric but suboptimal 'POA' algorithm.  Check if your SMRTanalysis " +
-                           "installation is out-of-date.")
-        return "poa"
-    elif anySequelBeta:
-        return "poa"
+        return None
     elif allRS:
         return "quiver"
     else:
         return "arrow"
+
+def bestAlgorithm(sequencingChemistries):
+    ba = bestAlgorithm_(sequencingChemistries)
+    if ba is None:
+        die("Unidentifiable sequencing chemistry present in dataset.  " +
+            "Check if your SMRTanalysis installation is out-of-date.")
+    else:
+        return ba
