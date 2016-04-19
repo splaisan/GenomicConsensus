@@ -118,8 +118,7 @@ Further questions?
 
 Please consult the `FAQ document`_.
 
-
 .. _`FAQ document`: ./FAQ.rst
 .. _pitchfork : https://github.com/PacificBiosciences/pitchfork
-.. _`params.xml template`_: ./params-template.xml
+.. _`params.xml template`: ./params-template.xml
 .. _`SMRTpipe reference manual`: http://www.pacb.com/wp-content/uploads/2015/09/SMRT-Pipe-Reference-Guide.pdf
