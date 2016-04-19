@@ -3,13 +3,20 @@ Quiver FAQ
 
 What are EviCons? GenomicConsensus? Quiver? Plurality?  
 ------------------------------------------------------------
-**GenomicConsensus** is the current PacBio consensus and variant calling suite.  It contains a main driver program, ``variantCaller``,
-which provides two consensus/variant calling algorithms: **Arrow** and **Quiver**.  These algorithms can be run by calling ``variantCaller.py --algorithm=[arrow|quiver|plurality]`` or by going through the convenience wrapper scripts ``quiver`` and ``arrow``.
+**GenomicConsensus** is the current PacBio consensus and variant
+calling suite.  It contains a main driver program, ``variantCaller``,
+which provides two consensus/variant calling algorithms: **Arrow** and
+**Quiver**.  These algorithms can be run by calling
+``variantCaller.py --algorithm=[arrow|quiver|plurality]`` or by going
+through the convenience wrapper scripts ``quiver`` and ``arrow``.
 
-**EviCons** was the previous generation PacBio variant caller (removed in software release v1.3.1).
+**EviCons** was the previous generation PacBio variant caller (removed
+ in software release v1.3.1).
 
-Separate packages called **ConsensusCore** and **ConsensusCore2** are C++ libraries where all the computation behind
-Quiver and Arrow are done, respectively.  This is transparent to the user after installation.
+Separate packages called **ConsensusCore** and **ConsensusCore2** are
+C++ libraries where all the computation behind Quiver and Arrow are
+done, respectively.  This is transparent to the user after
+installation.
 
 
 What is Plurality?
@@ -72,6 +79,9 @@ We use the lowercase "quiver" to denote the quiver *tool* in GenomicConsensus,
 which applies the Quiver algorithm to mapped reads to derive sequence 
 consensus and variants.
 
+Quiver is described in detail in the supplementary material to the
+`HGAP paper`_.
+
 
 What is Arrow?
 --------------
@@ -93,12 +103,12 @@ HowTo_ document.
 
 
 What is the output from `quiver`/`arrow`?
--------------------------------------
+-----------------------------------------
 There are three output files from the GenomicConsensus tools:
 
-- A consensus *FASTA* file containing the consensus sequence
-- A consensus *FASTQ* file containing the consensus sequence with quality annotations
-- A variants *GFF* file containing a filtered, annotated list of variants identified
+1. A consensus *FASTA* file containing the consensus sequence
+2. A consensus *FASTQ* file containing the consensus sequence with quality annotations
+3. A variants *GFF* file containing a filtered, annotated list of variants identified
 
 It is important to note that the variants included in the output
 variants GFF file are *filtered* by coverage and quality, so not all
@@ -107,7 +117,7 @@ FASTA output will correspond to variants in the output variants GFF
 file.
 
 To enable all output files, the following can be run (for example)::
-    
+
     % quiver -j16 aligned_reads.cmp.h5 -r ref.fa \
      -o consensus.fa                             \
      -o consensus.fq                             \
@@ -403,3 +413,4 @@ calls.
 
 
 .. _HowTo: ./HowTo.rst
+.. _`HGAP paper`: http://www.nature.com/nmeth/journal/v10/n6/full/nmeth.2474.html

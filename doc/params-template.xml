@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<smrtpipeSettings>
+    <protocol version="1.3.0">
+        <param name="reference">
+        <!-- Specifiy the path of the reference genome.  Replace the path below.-->
+        <value>/mnt/secondary-siv/references/ecoli_split_1000</value>
+        </param>
+    </protocol>
+
+    <module id="P_Fetch" />
+
+    <module id="P_Filter">
+    <!-- Filter reads and subreads based on read length and quality value. -->
+        <param name="minLength">        <value>50</value>   </param>
+        <param name="minSubReadLength"> <value>50</value>   </param>
+        <param name="readScore">        <value>0.75</value> </param>
+    </module>
+
+    <module id="P_FilterReports"/>
+
+    <module id="P_Mapping">
+        <param name="maxHits">        <value>10  </value> </param>
+        <param name="maxDivergence">  <value>30  </value> </param>
+        <param name="minAnchorSize">  <value>12  </value> </param>
+        <param name="samBam">         <value>True</value> </param>
+        <param name="gff2Bed">        <value>True</value> </param>
+        <param name="placeRepeatsRandomly">
+            <value>True</value>
+        </param>
+        <param name="pbalign_opts">
+            <value>--seed=1 --minAccuracy=0.75 --minLength=50 --algorithmOptions='-useQuality' </value>
+        </param>
+        <param name="pulseMetrics">
+            <value>DeletionQV,IPD,InsertionQV,PulseWidth,QualityValue,MergeQV,SubstitutionQV,DeletionTag</value>
+        </param>
+        <param name="loadPulsesOpts"> <value>byread</value> </param>
+    </module>
+
+    <module id="P_MappingReports"/>
+
+    <module id="P_GenomicConsensus">
+        <param name="algorithm">         <value>quiver</value> </param>
+        <param name="outputConsensus">   <value>True  </value> </param>
+        <param name="makeVcf">           <value>True  </value> </param>
+        <param name="makeBed">           <value>True  </value> </param>
+        <param name="enableMapQVFilter"> <value>True  </value> </param>
+    </module>
+
+    <module id="P_ConsensusReports"/>
+    <!-- Generate reports for module P_GenomicConsensus. -->
+</smrtpipeSettings>

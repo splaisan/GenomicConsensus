@@ -1,164 +1,126 @@
 
-How to install and use Quiver
-=============================
+How to install and use GenomicConsensus
+=======================================
 
-Quiver is bundled in SMRTanalysis version 1.4 and later.  The easiest
-way to get Quiver is to install the most recent version of SMRTanalysis.
-
-If you want to install Quiver as a standalone package from the latest
-bleeding-edge code, follow the instructions below.
-
-*Note: please install this software on an isolated machine that does
-not have SMRTanalysis installed.  Older versions of SMRTanalysis
-pollute the ``PYTHONPATH``, which has the undesirable effect of
-overriding ``virtualenv``-installed modules.*
-
-Background
-----------
-**Quiver** is an algorithm for calling highly accurate consensus from
-multiple PacBio reads, using a pair-HMM exploiting both the basecalls
-and QV metrics to infer the true underlying DNA sequence.
-
-Quiver is available through the ``quiver`` script from the
-``GenomicConsensus`` package.  To use Quiver, the following PacBio
-software is required.
-
-- ``GenomicConsensus``, containing ``quiver``
-- ``ConsensusCore``, a C++ library containing the core computational
-  routines for Quiver
-- ``pbcore``, a package providing access to PacBio data files
+**GenomicConsensus is bundled in SMRTanalysis version 1.4 and later.
+We recommend that you obtain GenomicConsensus by installing the most
+recent version of SMRTanalysis.  Other means of installation are not
+officially supported.**
 
 
-Required libraries and tools
-----------------------------
-To install the PacBio software, the following are required:
+Basic running instructions
+--------------------------
 
-- Boost  >= 1.4.7   (standard C++ libraries)
-- SWIG   >= 2.0.7   (library wrapper generator)
-- Python 2.7.3
-- virtualenv        (builds isolated Python environments)
+Basic usage---using 8 CPUs to compute consensus of mapped reads and
+variants relative to a reference---is as follows::
 
-If you are within PacBio, these requirements are already installed
-within the cluster environment.
-
-Otherwise, you will need to install them yourself.  The automatic
-installation script requires that the ``swig`` executable is in your
-UNIX ``$PATH`` and that your boost installation can be found under
-``/usr/include`` or ``/usr/local``.
+    % quiver -j8 aligned_reads{.cmp.h5, .bam, .fofn, or .xml} \
+    >     -r reference{.fasta or .xml} -o variants.gff        \
+    >     -o consensus.fasta -o consensus.fastq
 
 
-Data file requirements
-----------------------
+``quiver`` is a shortcut for ``variantCaller --algorithm=quiver``.
+Naturally, to use arrow you could use the ``arrow`` shortcut or
+``variantCaller --algorithm=arrow``.
 
-To make the most accurate consensus calls possible, Quiver makes use
-of a battery of quality value metrics calculated by the basecaller.
-If you are using a SMRTportal installation verision 1.4 or later, then
-SMRTportal will load all the information Quiver needs, so you
-can skip the rest of this section.
+in this example we perform haploid consensus and variant calling on
+the mapped reads in the ``aligned_reads.bam`` which was aligned to
+``reference.fasta``.  The ``reference.fasta`` is only used for
+designating variant calls, not for computing the consensus.  The
+consensus quality score for every position can be found in the output
+FASTQ file.
 
-In SMRTportal versions 1.3.3 and prior, by default only a subset of
-these quality values are included in the ``.cmp.h5`` files produced by
-SMRTanalysis.  To get a ``.cmp.h5`` with all the QVs loaded, you will
-need to use the ``RS_Mapping_QVs`` protocol to create a ``cmp.h5``
-file for Quiver.
-
-If you are using an older version than SMRTportal/SMRTanalysis 1.3.3,
-please upgrade.
+*Note that 2.3 SMRTanalysis does not support "dataset" input (FOFN
+ or XML files); those who need this feature should wait for the forthcoming
+ release of SMRTanalysis 3.0 or build from GitHub sources.*
 
 
-Installation instructions
--------------------------
+Running a large-scale resequencing/polishing job in SMRTanalysis 2.3
+--------------------------------------------------------------------
 
-Step 1: Set up your Python environment
-``````````````````````````````````````
-I recommend using a Python *virtualenv* to isolate your sandbox.
+To run a large-scale resequencing job (>50 megabase genome @ 50x
+coverage,nominally), you want to spread the computation load across
+multiple nodes in your computing cluster.
 
-To set up a new virtualenv, do ::
+The `smrtpipe` workflow engine in SMRTanalysis 2.3 provides a
+convenient workflow automating this---it will automatically spread the
+load for both mapping and quiver jobs among your available cluster
+nodes.  This is accessible via the SMRTportal UI; the simplest way
 
-    $ cd; virtualenv -p python2.7 --no-site-packages VE-QUIVER
+If you have to run the `smrtpipe` workflow manually from the command
+line, a recipe is as folows:
 
-and activate the virtualenv using ::
+  1. Make sure the reference you will align and compare against is
+     present in a SMRTportal "reference repository".  Even if you
+     don't want to use SMRTportal, you need to build/import the
+     reference appropriately.
 
-    $ source ~/VE-QUIVER/bin/activate
+  2. Prepare an "input.fofn" file listing, one-per-line, each "bax.h5"
+     file in your input data set.
 
+  3. Convert the "input.fofn" to an "input.xml" file that SMRTpipe can
+     understand::
 
-Step 2: Install PacBio libraries
-````````````````````````````````
-To install the PacBio software, execute ::
+       $ fofnToSmrtpipeInput.py input.fofn > input.xml
 
-    $ pip install pbcore
+  4. Prepare your "params.xml" file.  Here is a `params.xml template`_
+     you can use; you should just need to edit the reference path.
 
-    $ git clone https://github.com/PacificBiosciences/ConsensusCore
-    $ cd ConsensusCore; python setup.py install --swig=$SWIG --boost=$BOOST
+  5. Activate your SMRTanalysis environment, and invoke smrtpipe::
 
-    $ pip install git+https://github.com/PacificBiosciences/ConsensusCore2
+       $ source <SMRT Analysis>/etc/setup.sh
+       $ smrtpipe.py --distribute --params=params.xml xml:input.xml
 
-    $ pip install git+https://github.com/PacificBiosciences/GenomicConsensus
+  6. After successful execution is complete, the results should be
+     available as `data/consensus.fast[aq].gz` and
+     `data/variants.gff.gz`, etc.
 
-where you replace ``$SWIG`` with the path to your ``swig`` executable
-and ``$BOOST`` with the path to your boost install (the top level
-directory).  (Note that if SWIG is in your ``$PATH`` and boost is in
-``/usr/local`` or ``/usr/include/``, you do not need to specify these
-flags on the command line---``setup.py`` will find them).
+Please consult the `SMRTpipe reference manual`_ for further information.
 
+*Note that resequencing (mapping reads against a reference genome and
+then calling consensus and identifying variants) and polishing
+(mapping reads against a draft assembly and then taking the consensus
+output as the final, polished, assembly) are the same algorithmic
+operation, the only effective difference is that the "variants.gff"
+output is not biologically meaningful in the polishing case---it just
+records the edits that were made to the draft to produce the polished
+assembly.*
 
-Step 3: Run Quiver
-``````````````````
-Those who wish to call consensus on a resequencing job can simply use
-the ``quiver`` script that has been installed in your
-virtualenv (from `GenomicConsensus`).
+Running a large-scale quiver/arrow job in SMRTanalysis 3.0+
+-----------------------------------------------------------
 
-For example, ::
-
-    $ quiver -j8 aligned_reads.bam              \
-    >        -r path/to/lambda.fasta            \
-    >        -o variants.gff -o consensus.fasta
-
-will use 8 CPUs to run Quiver on ``aligned_reads.bam``, outputting
-the consensus sequence and variants.
-
-Note that if you are using a cmp.h5 file and have not used the `RS_Mapping_QVs`
-protocol to generate that file---or if the source bas.h5 file was generated by
-pre-1.3.1 instrument software---the cmp.h5 will not contain the full battery of
-QV metrics required for optimal Quiver accuracy.  The command will still work,
-but it will give a warning that its accuracy will be suboptimal.
-
-Step 3.5: Run Quiver on Multiple Input Files
-````````````````````````````````````````````
-Multiple alignment files in a FOFN (File of File Names) can be quivered against
-a single reference (`GenomicConsensus` >= 1.1.0).
-
-An example input FOFN::
-
-    $ cat aligned_reads.fofn
-    /path/to/reads1.bam
-    /path/to/reads2.bam
-
-can be used instead of a reads file::
-
-    $ quiver -j8 aligned_reads.fofn             \
-    >        -r path/to/lambda.fasta            \
-    >        -o variants.gff -o consensus.fasta
-
-Quiver can also be used with DataSet XML files. See pbcore for details on
-generating new DataSet XML files for your alignment files.
-
-Step 4: Highly-accurate assembly consensus
-``````````````````````````````````````````
-Quiver enables consensus accuracies on genome assemblies at accuracies
-approaching or even exceeding Q60 (one error per million bases).  If
-you use the HGAP assembly protocol in SMRTportal 2.0 or later, Quiver
-runs automatically as the final "assembly polishing" step.
+(Forthcoming)
 
 
-Resources
----------
-Here is an `FAQ document`_ to address common issues.
+Building bleeding-edge code (unsupported)
+----------------------------------------
 
-For a technical summary of some of the details of how Quiver works, I
-recommend reading the supplementary material of our 2013 *Nature
-Methods* `HGAP paper`_
+If you need to access the the latest code for some reason, a
+convenient way to build it is to use PacBio's pitchfork_ build
+system, which will take care of all third party dependencies for you.
+Here's a recipe::
+
+  git clone git@github.com:PacificBiosciences/pitchfork.git
+  cd pitchfork
+  make GenomicConsensus   # may take some time, as it builds dependencies...
+
+Now, with GenomicConsensus built, you can use it via::
+
+  bash --init-file deployment/setup-env.sh  # Puts you in a subshell where your build is available
+  quiver --help                             # now you have quiver, arrow, etc. available
+
+If you encounter build issues using `pitchfork`, please report the
+issues there.  Note that you can deploy PacBio software to a location
+of your choice using pitchfork.
 
 
-.. _`FAQ document`: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst
-.. _`HGAP paper`: http://www.nature.com/nmeth/journal/v10/n6/full/nmeth.2474.html
+Further questions?
+------------------
+
+Please consult the `FAQ document`_.
+
+
+.. _`FAQ document`: ./FAQ.rst
+.. _pitchfork : https://github.com/PacificBiosciences/pitchfork
+.. _`params.xml template`_: ./params-template.xml
+.. _`SMRTpipe reference manual`: http://www.pacb.com/wp-content/uploads/2015/09/SMRT-Pipe-Reference-Guide.pdf

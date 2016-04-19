@@ -8,22 +8,27 @@ PacBio reads to get consensus and variant calls.
 Background on Quiver and Arrow
 ------------------------------
 
-*Quiver* is the legacy consensus model based on a conditional random field approach.  Over the
-years it has proven difficult to train and develop, so we are phasing it out in favor of the
-new model, Arrow.
+*Quiver* is the legacy consensus model based on a conditional random
+field approach.  Quiver enables consensus accuracies on genome
+assemblies at accuracies approaching or even exceeding Q60 (one error
+per million bases).  If you use the HGAP assembly protocol in
+SMRTportal 2.0 or later, Quiver runs automatically as the final
+"assembly polishing" step.
 
-*Arrow* is an improved consensus model based on a more straightforward hidden Markov model
-approach.
+Over the years Quiver has proven difficult to train and develop, so we are
+phasing it out in favor of the new model, Arrow.  *Arrow* is an
+improved consensus model based on a more straightforward hidden Markov
+model approach.
 
-Quiver is supported for PacBio RS data.  Arrow is supported for PacBio Sequel data
-and RS data with P6-C4 chemistry.
+Quiver is supported for PacBio RS data.  Arrow is supported for PacBio
+Sequel data and RS data with the P6-C4 chemistry.
 
 
 Getting GenomicConsensus
 ------------------------
-Casual users should get ``GenomicConsensus`` from the [SMRTanalysis software bundle](http://www.pacb.com/support/software-downloads/).
+Casual users should get ``GenomicConsensus`` from the
+[SMRTanalysis software bundle](http://www.pacb.com/support/software-downloads/).
 
-Instructions for those who want to build the software themselves are [here](./doc/Installation.rst).
 
 Running
 -------
@@ -54,7 +59,7 @@ FASTQ file.
 More documentation
 ------------------
 
-- [Detailed installation instructions](./doc/Installation.rst)
+- [More detailed installation and running instructions](./doc/HowTo.rst)
 - [FAQ](./doc/FAQ.rst)
 - [variants.gff spec](./doc/VariantsGffSpecification.rst)
 - [CHANGELOG](./CHANGELOG)
