@@ -48,32 +48,32 @@ load for both mapping and quiver jobs among your available cluster
 nodes.  This is accessible via the SMRTportal UI; the simplest way
 
 If you have to run the `smrtpipe` workflow manually from the command
-line, a recipe is as folows:
+line, a recipe is as folows::
 
-  1. Make sure the reference you will align and compare against is
-     present in a SMRTportal "reference repository".  Even if you
-     don't want to use SMRTportal, you need to build/import the
-     reference appropriately.
+1. Make sure the reference you will align and compare against is
+   present in a SMRTportal "reference repository".  Even if you
+   don't want to use SMRTportal, you need to build/import the
+   reference appropriately.
 
-  2. Prepare an "input.fofn" file listing, one-per-line, each "bax.h5"
-     file in your input data set.
+2. Prepare an "input.fofn" file listing, one-per-line, each "bax.h5"
+   file in your input data set.
 
-  3. Convert the "input.fofn" to an "input.xml" file that SMRTpipe can
-     understand::
+3. Convert the "input.fofn" to an "input.xml" file that SMRTpipe can
+   understand::
 
-       $ fofnToSmrtpipeInput.py input.fofn > input.xml
+   $ fofnToSmrtpipeInput.py input.fofn > input.xml
 
-  4. Prepare your "params.xml" file.  Here is a `params.xml template`_
-     you can use; you should just need to edit the reference path.
+4. Prepare your "params.xml" file.  Here is a `params.xml template`_
+   you can use; you should just need to edit the reference path.
 
-  5. Activate your SMRTanalysis environment, and invoke smrtpipe::
+5. Activate your SMRTanalysis environment, and invoke smrtpipe::
 
-       $ source <SMRT Analysis>/etc/setup.sh
-       $ smrtpipe.py --distribute --params=params.xml xml:input.xml
+   $ source <SMRT Analysis>/etc/setup.sh
+   $ smrtpipe.py --distribute --params=params.xml xml:input.xml
 
-  6. After successful execution is complete, the results should be
-     available as `data/consensus.fast[aq].gz` and
-     `data/variants.gff.gz`, etc.
+6. After successful execution is complete, the results should be
+   available as `data/consensus.fast[aq].gz` and
+   `data/variants.gff.gz`, etc.
 
 Please consult the `SMRTpipe reference manual`_ for further information.
 
