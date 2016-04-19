@@ -3,12 +3,13 @@ Quiver FAQ
 
 What are EviCons? GenomicConsensus? Quiver? Plurality?  
 ------------------------------------------------------------
-**GenomicConsensus** is the current PacBio consensus and variant calling suite.  It contains a main program, ``variantCaller.py``,
-which provides two consensus / variant calling algorithms: **Plurality** and **Quiver**.  These algorithms can be run by calling ``variantCaller.py --algorithm=[arrow|quiver|plurality]`` or by going through the convenience wrapper scripes ``quiver`` and ``plurality``.
+**GenomicConsensus** is the current PacBio consensus and variant calling suite.  It contains a main driver program, ``variantCaller``,
+which provides two consensus/variant calling algorithms: **Arrow** and **Quiver**.  These algorithms can be run by calling ``variantCaller.py --algorithm=[arrow|quiver|plurality]`` or by going through the convenience wrapper scripts ``quiver`` and ``arrow``.
 
 **EviCons** was the previous generation PacBio variant caller (removed in software release v1.3.1).
 
-Separate packages called **ConsensusCore** and **ConsensusCore2** are C++ libraries where all the computation behind Quiver and Arrow are done, respectively (and is transparent to the user after installation).
+Separate packages called **ConsensusCore** and **ConsensusCore2** are C++ libraries where all the computation behind
+Quiver and Arrow are done, respectively.  This is transparent to the user after installation.
 
 
 What is Plurality?
@@ -50,9 +51,9 @@ challenges.
 What is Quiver?
 ---------------
 **Quiver** is a more sophisticated algorithm that finds the maximum
-likelihood template sequence given PacBio reads of the template. 
+quasi-likelihood template sequence given PacBio reads of the template. 
 PacBio reads are modeled using a conditional random field approach that
-prescribes a probability to a read given a template sequence.  In
+scores the quasi-likelihood of a read given a template sequence.  In
 addition to the base sequence of each read, Quiver uses several
 additional *QV* covariates that the basecaller provides.  Using these
 covariates provides additional information about each read, allowing
@@ -67,17 +68,33 @@ it resolves the example above with ease.
 The name **Quiver** reflects a consensus-calling algorithm that is
 `QV-aware`.
 
-How do I run Quiver?
---------------------
+We use the lowercase "quiver" to denote the quiver *tool* in GenomicConsensus,
+which applies the Quiver algorithm to mapped reads to derive sequence 
+consensus and variants.
 
+
+What is Arrow?
+--------------
+Arrow is a newer model intended to supercede Quiver in the near future. 
+The key differences from Quiver are that it uses an HMM model instead 
+of a CRF, it computes true likelihoods, and it uses a smaller set of
+covariates.  We expect a whitepaper on Arrow to be available soon.
+
+We use the lowercase "arrow" to denote the arrow *tool*, which applies
+the Arrow algorithm to mapped reads to derive sequence 
+consensus and variants.
+
+
+How do I run `quiver`/`arrow`?
+------------------------------
 For general instructions on installing and running, see the
-HowToQuiver_ document.
+HowTo_ document.
 
 
 
-What does Quiver put in its output files?
------------------------------------------
-There are three output files from Quiver:
+What is the output from `quiver`/`arrow`?
+-------------------------------------
+There are three output files from the GenomicConsensus tools:
 
 - A consensus *FASTA* file containing the consensus sequence
 - A consensus *FASTQ* file containing the consensus sequence with quality annotations
@@ -89,18 +106,17 @@ variants that are apparent in comparing the reference to the consensus
 FASTA output will correspond to variants in the output variants GFF
 file.
 
-To enable all output files, the following can be run (for example):
-
-     % quiver -j16 aligned_reads.cmp.h5 -r ref.fa \
-         -o consensus.fa                          \
-         -o consensus.fq                          \
-         -o variants.gff
-
+To enable all output files, the following can be run (for example)::
+    
+    % quiver -j16 aligned_reads.cmp.h5 -r ref.fa \
+     -o consensus.fa                             \
+     -o consensus.fq                             \
+     -o variants.gff
 
 The extension is used to determine the output file format.
 
 
-What does it mean that Quiver's consensus is *de novo*?
+What does it mean that `quiver` consensus is *de novo*?
 -------------------------------------------------------
 Quiver's consensus is *de novo* in the sense that the reference and the reference
 alignment are not used to inform the consensus output.  Only the reads
@@ -114,8 +130,8 @@ consensus.  One can set ``--noEvidenceConsensusCall=nocall`` to
 avoid using the reference even in zero coverage regions.
 
 
-What is Quiver's accuracy?
---------------------------
+What is the expected `quiver` accuracy?
+---------------------------------------
 Quiver's expected accuracy is a function of coverage and chemistry.
 The C2 chemistry (no longer available), P6-C4 and P4-C2 chemistries
 provide the most accuracy.  Nominal consensus accuracy levels are as
@@ -146,23 +162,29 @@ of 99.999%.  These accuracy expectations are based on routine
 validations performed on multiple bacterial genomes before each
 chemistry release.
 
-What are the residual errors after applying Quiver?
----------------------------------------------------
+
+What is the expected accuracy from `arrow`
+------------------------------------------
+`arrow` achieves similar accuracy to `quiver`.  Numbers will be published soon.
+
+
+What are the residual errors after applying `quiver`?
+-----------------------------------------------------
 
 If there are errors remaining applying Quiver, they will almost
 invariably be homopolymer run-length errors (insertions or deletions).
 
 
 
-Does Quiver need to know what sequencing chemistry was used?
-----------------------------------------------------------
+Does `quiver`/`arrow` need to know what sequencing chemistry was used?
+----------------------------------------------------------------------
 
 At present, the Quiver model is trained per-chemistry, so it is very
 important that Quiver knows the sequencing chemistries used.
 
-If SMRT Analysis software was used to build the `cmp.h5` file, the
+If SMRT Analysis software was used to build the `cmp.h5` or BAM input file, the
 `cmp.h5` will be loaded with information about the sequencing
-chemistry used for each SMRT Cell, and Quiver will automatically
+chemistry used for each SMRT Cell, and GenomicConsensus will automatically
 identify the right parameters to use.
 
 If custom software was used to build the `cmp.h5`, or an
@@ -174,12 +196,16 @@ chemistry or model must be explicity entered. For example::
 
 
 
-Can a mix of chemistries be used in a cmp.h5 file for Quiver?
------------------------------------------------------------
+Can a mix of chemistries be used in a cmp.h5 file for quiver/arrow?
+-------------------------------------------------------------------
 
-Yes!  Quiver automatically sees the chemistry *per-SMRT Cell*, so it
+Yes!  GenomicConsensus tools automatically see the chemistry *per-SMRT Cell*, so it
 can figure out the right parameters for each read and model them
 appropriately.
+
+
+What chemistries and chemistry mixes are supported?
+---------------------------------------------------
 
 Chemistry mixtures of P6-C4, P4-C2, P5-C3, and C2 are supported.  If
 other chemistries are mixed in a `cmp.h5`, Quiver will give undefined
@@ -187,8 +213,8 @@ results.  However, Quiver can still be used on any `cmp.h5` file
 containing sequencing reads from a single chemistry.
 
 
-What are the QVs that Quiver uses?
-------------------------------------
+What are the QVs that the Quiver model uses?
+--------------------------------------------
 Quiver uses additional QV tracks provided by the basecaller.  
 These QVs may be looked at as little breadcrumbs that are left behind by
 the basecaller to help identify positions where it was likely that
@@ -212,20 +238,20 @@ lacking some of these tracks, Quiver will still run, though it will
 issue a warning that its performance will be suboptimal.
 
 
-Why is Quiver making errors in some region?
--------------------------------------------
-The most likely cause for *true* errors made by Quiver is that the
+Why is `quiver`/`arrow` making errors in some region?
+-----------------------------------------------------
+The most likely cause for *true* errors made by these tools is that the
 coverage in the region was low.  If there is 5x coverage over a
 1000-base region, then 10 errors in that region can be expected.
 
 It is important to understand that the effective coverage available to
-Quiver is not the full coverage apparent in plots---Quiver and
-Plurality both filter out ambiguously mapped reads by default.  The
+`quiver`/`arrow` is not the full coverage apparent in plots---the tools
+filter out ambiguously mapped reads by default.  The
 remaining coverage after filtering is called the /effective coverage/.
 See the next section for discussion of `MapQV`.
 
 If you have verified that there is high effective coverage in the region
-in question, it is highly possible---given the high accuracy Quiver
+in question, it is highly possible---given the high accuracy quiver and arrow
 can achieve---that the apparent errors actually
 reflect true sequence variants.  Inspect the FASTQ output file to
 ensure that the region was called at high confidence; if an erroneous
@@ -271,13 +297,13 @@ calls.  Quiver and Plurality both filter out aligned reads with a
 MapQV below 20 (by default), so as not to call a variant using data of
 uncertain genomic origin.
 
-This can be problematic if using Quiver to get a consensus
+This can be problematic if using quiver/arrow to get a consensus
 sequence.  If the genome of interest contains long (relative to the library
 insert size) highly-similar repeats, the effective coverage (after
 `MapQV` filtering) may be reduced in the repeat regions---this is termed
 these `MapQV` dropouts.  If the coverage is sufficiently reduced in
-these regions, Quiver will not call consensus in these regions---see
-`What does Quiver do for genomic regions with no effective coverage?`_.
+these regions, quiver/arrow will not call consensus in these regions---see
+`What do quiver/arrow do for genomic regions with no effective coverage?`_.
 
 If you want to use ambiguously mapped reads in computing a consensus
 for a denovo assembly, the `MapQV` filter can be turned off entirely.
@@ -292,14 +318,14 @@ How can the `MapQV` filter be turned off and when should it be?
 --------------------------------------------------------------
 The `MapQV` filter can be disabled using the flag
 ``--mapQvThreshold=0`` (shorthand: ``-m=0``).  If running a
-Quiver job via SMRT Portal, this can be done by unchecking the "Use
+quiver/arrow job via SMRT Portal, this can be done by unchecking the "Use
 only unambiguously mapped reads" option. Consider this in
 de novo assembly projects, but it is not recommended for variant
 calling applications.
 
 
-How can variant calls made by Quiver be inspected or validated?
---------------------------------------------------------------
+How can variant calls made by quiver/arrow be inspected or validated?
+---------------------------------------------------------------------
 When in doubt, it is easiest to inspect the region in a tool like
 SMRT View, which enables you to view the reads aligned to the region.
 Deletions and substitutions should be fairly easy to spot; to view
@@ -307,10 +333,10 @@ insertions, right-click on the reference base and select "View
 Insertions Before...".
 
 
-What are the filtering parameters that Quiver uses?
----------------------------------------------------
+What are the filtering parameters that quiver/arrow use?
+--------------------------------------------------------
 
-Quiver limits read coverage, filters reads by `MapQV`, and filters
+The available options limit read coverage, filters reads by `MapQV`, and filters
 variants by quality and coverage.
 
 - The overall read coverage used to call consensus in every window is
@@ -325,24 +351,24 @@ variants by quality and coverage.
 
 What happens when the sample is a mixture, or diploid?
 -----------------------------------------------------
-At present, Quiver assumes a haploid sample, and the behavior of
-*Quiver* on sample mixtures or diploid/polyploid samples is
+At present, quiver/arrow assume a haploid sample, and the behavior of
+on sample mixtures or diploid/polyploid samples is
 *undefined*.  The program will not crash, but the output results are
 not guaranteed to accord with any one of the haplotypes in the sample,
 as opposed to a potential patchwork.  
 
 
-Why would I want to *iterate* the mapping+Quiver process?
----------------------------------------------------------
-Some customers using Quiver for polishing highly repetitive genomes
-have found that if they take the consensus FASTA output of Quiver, use
+Why would I want to *iterate* the mapping+(quiver/arrow) process?
+-----------------------------------------------------------------
+Some customers using quiver for polishing highly repetitive genomes
+have found that if they take the consensus FASTA output of quiver, use
 it as a new reference, and then perform mapping and Quiver again to
 get a new consensus, they get improved results from the second round
-of Quiver.
+of quiver.
 
 This can be explained by noting that the output of the first round of
-Quiver is more accurate than the initial draft consensus output by the
-assembler, so the second round's mapping to the Quiver consensus can
+quiver is more accurate than the initial draft consensus output by the
+assembler, so the second round's mapping to the quiver consensus can
 be more sensitive in mapping reads from repetitive regions.  This can
 then result in improved consensus in those repetitive regions, because
 the reads have been assigned more correctly to their true genomic
@@ -351,7 +377,7 @@ of reads around from one rounds' mapping to the next might alter
 borderline (low confidence) consensus calls even away from repetitive
 regions.
 
-We recommend the (mapping+Quiver) iteration for customers polishing
+We recommend the (mapping+quiver) iteration for customers polishing
 repetitive genomes, and it could also prove useful for resequencing
 applications.  However we caution that this is very much an
 *exploratory* procedure and we make no guarantees about its
@@ -360,9 +386,9 @@ when the procedure is iterated, and the procedure is *not* guaranteed
 to be convergent.
 
 
-Is iterating the (mapping+Quiver) process a convergent procedure?
------------------------------------------------------------------
-We have seen many examples where (mapping+Quiver), repeated many
+Is iterating the (mapping+quiver/arrow) process a convergent procedure?
+-----------------------------------------------------------------------
+We have seen many examples where (mapping+quiver), repeated many
 times, is evidently *not* a convergent procedure.  For example, a
 variant call may be present in iteration n, absent in n+1, and then
 present again in n+2.  It is possible for subtle changes in mapping to
@@ -373,4 +399,4 @@ calls.
 
 
 
-.. _HowToQuiver: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst
+.. _HowTo: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowTo.rst
