@@ -2,7 +2,7 @@ GenomicConsensus (quiver, arrow) [![Circle CI](https://circleci.com/gh/PacificBi
 -------------------------
 
 The ``GenomicConsensus`` package provides the ``variantCaller`` tool,
-which allows you to apply the Quiver or Arrow algorithm to the mapped
+which allows you to apply the Quiver or Arrow algorithm to mapped
 PacBio reads to get consensus and variant calls.
 
 Background on Quiver and Arrow
@@ -19,8 +19,8 @@ Quiver is supported for PacBio RS data.  Arrow is supported for PacBio Sequel da
 and RS data with P6-C4 chemistry.
 
 
-Getting ``GenomicConsensus``
-----------------------------
+Getting GenomicConsensus
+------------------------
 Casual users should get ``GenomicConsensus`` from the [SMRTanalysis software bundle](http://www.pacb.com/support/software-downloads/).
 
 Instructions for those who want to build the software themselves are [here](./doc/Installation.rst).
