@@ -207,10 +207,13 @@ appropriately.
 What chemistries and chemistry mixes are supported?
 ---------------------------------------------------
 
-Chemistry mixtures of P6-C4, P4-C2, P5-C3, and C2 are supported.  If
-other chemistries are mixed in a `cmp.h5`, Quiver will give undefined
-results.  However, Quiver can still be used on any `cmp.h5` file
-containing sequencing reads from a single chemistry.
+
+For Quiver: all PacBio RS chemistries are supported.  Chemistry
+mixtures of P6-C4, P4-C2, P5-C3, and C2 are supported.
+
+For Arrow: the RS chemistry P6-C4, and all PacBio Sequel chemistries
+are supported.  Mixes of these chemistries are supported.
+
 
 
 What are the QVs that the Quiver model uses?
