@@ -1,19 +1,19 @@
 GenomicConsensus (quiver, arrow) [![Circle CI](https://circleci.com/gh/PacificBiosciences/GenomicConsensus.svg?style=svg)](https://circleci.com/gh/PacificBiosciences/GenomicConsensus)
 -------------------------
 
-The ``GenomicConsensus`` package provides the ``variantCaller`` tool, 
-which allows you to apply the /Quiver/ or /Arrow/ algorithm to the mapped
-PacBio reads to get consensus and variant calls. 
+The ``GenomicConsensus`` package provides the ``variantCaller`` tool,
+which allows you to apply the Quiver or Arrow algorithm to the mapped
+PacBio reads to get consensus and variant calls.
 
 Background on Quiver and Arrow
 ------------------------------
 
 *Quiver* is the legacy consensus model based on a conditional random field approach.  Over the
-years it has proven difficult to train and develop, so we are phasing it out in favor of the 
-new model, /Arrow/.  
+years it has proven difficult to train and develop, so we are phasing it out in favor of the
+new model, Arrow.
 
-*Arrow* is an improved consensus model based on a more straightforward hidden Markov model 
-approach.  
+*Arrow* is an improved consensus model based on a more straightforward hidden Markov model
+approach.
 
 Quiver is supported for PacBio RS data.  Arrow is supported for PacBio Sequel data
 and RS data with P6-C4 chemistry.
@@ -23,7 +23,7 @@ Getting ``GenomicConsensus``
 ----------------------------
 Casual users should get ``GenomicConsensus`` from the [SMRTanalysis software bundle](http://www.pacb.com/support/software-downloads/).
 
-Instructions for those who want to build the software themselves are [here](./BUILD.md).
+Instructions for those who want to build the software themselves are [here](./doc/Installation.rst).
 
 Running
 -------
@@ -36,7 +36,7 @@ Basic usage is as follows:
 ```
 
 ``quiver`` is a shortcut for ``variantCaller --algorithm=quiver``.
-Naturally, to use arrow you could use the ``arrow`` shortcut or 
+Naturally, to use arrow you could use the ``arrow`` shortcut or
 ``variantCaller --algorithm=arrow``.
 
 in this example we perform haploid consensus and variant calling on
@@ -51,10 +51,10 @@ FASTQ file.
  release of SMRTanalysis 3.0 or build from GitHub sources.*
 
 
-Documentation
--------------
+More documentation
+------------------
 
-- [More detailed installation instructions](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowToQuiver.rst)
-- [Quiver FAQ](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/QuiverFAQ.rst)
-- [variants.gff spec](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/VariantsGffSpecification.rst)
-- [CHANGELOG](https://github.com/PacificBiosciences/GenomicConsensus/blob/master/CHANGELOG)
+- [Detailed installation instructions](./doc/Installation.rst)
+- [FAQ](./doc/FAQ.rst)
+- [variants.gff spec](./doc/VariantsGffSpecification.rst)
+- [CHANGELOG](./CHANGELOG)
