@@ -399,4 +399,4 @@ calls.
 
 
 
-.. _HowTo: https://github.com/PacificBiosciences/GenomicConsensus/blob/master/doc/HowTo.rst
+.. _HowTo: ./HowTo.rst
