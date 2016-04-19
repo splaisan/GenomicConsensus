@@ -5,17 +5,17 @@ The ``GenomicConsensus`` package provides the ``variantCaller`` tool,
 which allows you to apply the /Quiver/ or /Arrow/ algorithm to the mapped
 PacBio reads to get consensus and variant calls. 
 
-Background on "quiver" and "arrow"
-----------------------------------
+Background on Quiver and Arrow
+------------------------------
 
-/Quiver/ is the legacy consensus model based on a conditional random field approach.  Over the
+*Quiver* is the legacy consensus model based on a conditional random field approach.  Over the
 years it has proven difficult to train and develop, so we are phasing it out in favor of the 
 new model, /Arrow/.  
 
-/Arrow/ is an improved consensus model based on a more straightforward hidden Markov model 
+*Arrow* is an improved consensus model based on a more straightforward hidden Markov model 
 approach.  
 
-/Quiver/ is supported for PacBio RS data.  /Arrow/ is supported for PacBio Sequel data
+Quiver is supported for PacBio RS data.  Arrow is supported for PacBio Sequel data
 and RS data with P6-C4 chemistry.
 
 
@@ -46,9 +46,9 @@ designating variant calls, not for computing the consensus.  The
 consensus quality score for every position can be found in the output
 FASTQ file.
 
-/Note that 2.3 SMRTanalysis does not support "dataset" input (FOFN
+*Note that 2.3 SMRTanalysis does not support "dataset" input (FOFN
  or XML files); those who need this feature should wait for the forthcoming
- release of SMRTanalysis 3.0 or build from GitHub sources./
+ release of SMRTanalysis 3.0 or build from GitHub sources.*
 
 
 Documentation
