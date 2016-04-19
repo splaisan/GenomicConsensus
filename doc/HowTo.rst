@@ -2,8 +2,7 @@
 How to install and use GenomicConsensus
 =======================================
 
-**GenomicConsensus is bundled in SMRTanalysis version 1.4 and later.
-We recommend that you obtain GenomicConsensus by installing the most
+**We recommend that you obtain GenomicConsensus by installing the most
 recent version of SMRTanalysis.  Other means of installation are not
 officially supported.**
 
@@ -31,8 +30,8 @@ consensus quality score for every position can be found in the output
 FASTQ file.
 
 *Note that 2.3 SMRTanalysis does not support "dataset" input (FOFN
- or XML files); those who need this feature should wait for the forthcoming
- release of SMRTanalysis 3.0 or build from GitHub sources.*
+or XML files); those who need this feature should wait for the forthcoming
+release of SMRTanalysis 3.0 or build from GitHub sources.*
 
 
 Running a large-scale resequencing/polishing job in SMRTanalysis 2.3
