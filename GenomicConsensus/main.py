@@ -269,6 +269,19 @@ class ToolRunner(object):
 
         random.seed(42)
 
+        if options.pdb or options.pdbAtStartup:
+            print >>sys.stderr, "Process ID: %d" % os.getpid()
+            try:
+                import ipdb
+            except ImportError:
+                die("Debugging options require 'ipdb' package installed.")
+
+            if not options.threaded:
+                die("Debugging only works with -T (threaded) mode")
+
+        if options.pdbAtStartup:
+            ipdb.set_trace()
+
         logging.info("h5py version: %s" % h5py.version.version)
         logging.info("hdf5 version: %s" % h5py.version.hdf5_version)
         logging.info("ConsensusCore version: %s" %
@@ -318,10 +331,6 @@ class ToolRunner(object):
                                                       "profile-main.out"))
 
             elif options.pdb:
-                if not options.threaded:
-                    die("Debugging only works with -T (threaded) mode")
-                logging.info("PID: %d", os.getpid())
-                import ipdb
                 with ipdb.launch_ipdb_on_exception():
                     self._mainLoop()
 

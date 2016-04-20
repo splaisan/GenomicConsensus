@@ -332,6 +332,12 @@ def add_options_to_argument_parser(parser):
     debugging = parser.add_argument_group("Verbosity and debugging/profiling")
     add_debug_option(debugging)
     debugging.add_argument(
+        "--pdbAtStartup",
+        action="store_true",
+        dest="pdbAtStartup",
+        default=False,
+        help="Drop into Python debugger at startup (requires ipdb)")
+    debugging.add_argument(
         "--profile",
         action="store_true",
         dest="doProfiling",
