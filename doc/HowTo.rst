@@ -44,7 +44,9 @@ multiple nodes in your computing cluster.
 The `smrtpipe` workflow engine in SMRTanalysis 2.3 provides a
 convenient workflow automating this---it will automatically spread the
 load for both mapping and quiver jobs among your available cluster
-nodes.  This is accessible via the SMRTportal UI; the simplest way
+nodes.  This is accessible via the SMRTportal UI; the simplest way to 
+set up and run thse workflows is via tha UI.  Nonetheless, we include 
+command-line instructions for completeness.
 
 If you have to run the `smrtpipe` workflow manually from the command
 line, a recipe is as folows::
@@ -52,7 +54,10 @@ line, a recipe is as folows::
 1. Make sure the reference you will align and compare against is
    present in a SMRTportal "reference repository".  Even if you
    don't want to use SMRTportal, you need to build/import the
-   reference appropriately.
+   reference appropriately, and the simplest way to do that is
+   via SMRTportal.  If you don't have a SMRTportal instance, 
+   you can use the `referenceUploader` command to prepare your
+   reference repository.
 
 2. Prepare an "input.fofn" file listing, one-per-line, each "bax.h5"
    file in your input data set.
