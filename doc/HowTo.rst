@@ -17,7 +17,6 @@ variants relative to a reference---is as follows::
     >     -r reference{.fasta or .xml} -o variants.gff        \
     >     -o consensus.fasta -o consensus.fastq
 
-
 ``quiver`` is a shortcut for ``variantCaller --algorithm=quiver``.
 Naturally, to use arrow you could use the ``arrow`` shortcut or
 ``variantCaller --algorithm=arrow``.
@@ -56,7 +55,7 @@ line, a recipe is as folows::
    don't want to use SMRTportal, you need to build/import the
    reference appropriately, and the simplest way to do that is
    via SMRTportal.  If you don't have a SMRTportal instance, 
-   you can use the `referenceUploader` command to prepare your
+   you can use the ``referenceUploader`` command to prepare your
    reference repository.
 
 2. Prepare an "input.fofn" file listing, one-per-line, each "bax.h5"
