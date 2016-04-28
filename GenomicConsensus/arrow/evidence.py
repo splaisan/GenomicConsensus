@@ -124,8 +124,8 @@ class ArrowEvidence(object):
         return sorted(list(set(self.positions)))
 
     @property
-    def totalScores(self):
-        return self.baselineScores[:, np.newaxis] + self.scores
+    def delta(self):
+        return self.scores - self.baselineScores[:, np.newaxis]
 
     @staticmethod
     def load(path):

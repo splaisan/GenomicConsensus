@@ -138,10 +138,9 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
                 ((options.dumpEvidence == "all") or
                  (options.dumpEvidence == "variants") and (len(variants) > 0))
             if shouldDumpEvidence:
-                logging.info("Arrow does not yet support --dumpEvidence")
-#                 dumpEvidence(options.evidenceDirectory,
-#                              subWin, windowRefSeq,
-#                              clippedAlns, css)
+                dumpEvidence(options.evidenceDirectory,
+                             subWin, windowRefSeq,
+                             clippedAlns, css)
         else:
             css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
                                                  subWin, intRefSeq)

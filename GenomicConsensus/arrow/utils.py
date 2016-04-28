@@ -233,9 +233,9 @@ def _shortMutationDescription(mut, tpl):
     """
     _type = _typeMap[mut.Type]
     _pos = mut.Start()
-    _oldBase = "." if mut.Type() == cc.MutationType_INSERTION \
+    _oldBase = "." if mut.Type == cc.MutationType_INSERTION \
                else tpl[_pos]
-    _newBase = "." if mut.Type() == cc.MutationType_DELETION \
+    _newBase = "." if mut.Type == cc.MutationType_DELETION \
                else mut.Base
     return "%d %s %s > %s" % (_pos, _type, _oldBase, _newBase)
 
@@ -253,16 +253,17 @@ def scoreMatrix(ai):
     """
     css = str(ai)
     allMutations = sorted(allSingleBaseMutations(css))
-    shape = (ai.NumReads(), len(allMutations))
+    readNames = list(ai.ReadNames())
+    numReads = len(readNames)
+    shape = (numReads, len(allMutations))
     scoreMatrix = np.zeros(shape)
     for j, mut in enumerate(allMutations):
-        mutScores = ai.ReadLLs(mut)
+        mutScores = ai.LLs(mut)
         scoreMatrix[:, j] = mutScores
-    baselineScores =  np.array(ai.ReadLLs())
-    rowNames = [ ai.Read(i).Name
-                 for i in xrange(ai.NumReads()) ]
+    baselineScores =  np.array(ai.LLs())
     columnNames = [ _shortMutationDescription(mut, css)
                     for mut in allMutations ]
+    rowNames = readNames
     return (rowNames, columnNames, baselineScores, scoreMatrix)
 
 
