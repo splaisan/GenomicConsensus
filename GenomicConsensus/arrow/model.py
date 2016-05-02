@@ -80,30 +80,34 @@ class ArrowConfig(object):
         self.minZScore                  = minZScore
 
     @staticmethod
-    def extractFeatures(aln):
-        """
-        Extract the data in a cmp.h5 alignment record into a
-        native-orientation gapless string.
-        """
-        if isinstance(aln, CmpH5Alignment):
-            die("Arrow does not support CmpH5 files!")
-        else:
-            return aln.read(aligned=False, orientation="native")
-
-    @staticmethod
     def extractMappedRead(aln, windowStart):
         """
         Given a clipped alignment, convert its coordinates into template
         space (starts with 0), bundle it up with its features as a
         MappedRead.
         """
+        if isinstance(aln, CmpH5Alignment):
+            die("Arrow does not support CmpH5 files!")
+            return aln.read(aligned=False, orientation="native")
+
         assert aln.referenceSpan > 0
+
+        def baseFeature(featureName):
+            if aln.reader.hasBaseFeature(featureName):
+                return aln.baseFeature(featureName, aligned=False, orientation="native")
+            else:
+                return np.zeros((aln.qLen,), dtype=np.uint8)
+
         name = aln.readName
         chemistry = aln.sequencingChemistry
         strand = cc.StrandEnum_REVERSE if aln.isReverseStrand else cc.StrandEnum_FORWARD
-        read = cc.Read(name, ArrowConfig.extractFeatures(aln), chemistry)
-        return (cc.MappedRead(read,
-                              strand,
-                              int(aln.referenceStart - windowStart),
-                              int(aln.referenceEnd   - windowStart)),
-                cc.SNR(aln.hqRegionSnr))
+        read = cc.Read(name,
+                       aln.read(aligned=False, orientation="native"),
+                       cc.Uint8Vector(baseFeature("Ipd:CodecV1").tolist()),
+                       cc.Uint8Vector(baseFeature("PulseWidth:CodecV1").tolist()),
+                       cc.SNR(aln.hqRegionSnr),
+                       chemistry)
+        return cc.MappedRead(read,
+                             strand,
+                             int(aln.referenceStart - windowStart),
+                             int(aln.referenceEnd   - windowStart))

@@ -78,7 +78,7 @@ class ToolRunner(object):
         options.temporaryDirectory = tempfile.mkdtemp(prefix="GenomicConsensus-", dir="/tmp")
         logging.info("Created temporary directory %s" % (options.temporaryDirectory,) )
 
-    def _algorithmByName(self, name, cmpH5):
+    def _algorithmByName(self, name, peekFile):
         if name == "plurality":
             from GenomicConsensus.plurality import plurality
             algo = plurality
@@ -88,14 +88,19 @@ class ToolRunner(object):
         elif name == "arrow":
             from GenomicConsensus.arrow import arrow
             algo = arrow
+            # TODO(lhepler): maybe get rid of this fallback more centrally one day
+            if set(peekFile.sequencingChemistry) - set(["P6-C4", "S/P1-C1/beta"]):
+                if (not peekFile.hasBaseFeature("Ipd:CodecV1") or
+                    not peekFile.hasBaseFeature("PulseWidth:CodecV1")):
+                    die("Model requires missing base feature: IPD or PulseWidth")
         elif name == "poa":
             from GenomicConsensus.poa import poa
             algo = poa
         elif name == "best":
             logging.info("Identifying best algorithm based on input data")
             from GenomicConsensus import algorithmSelection
-            algoName = algorithmSelection.bestAlgorithm(cmpH5.sequencingChemistry)
-            return self._algorithmByName(algoName, cmpH5)
+            algoName = algorithmSelection.bestAlgorithm(peekFile.sequencingChemistry)
+            return self._algorithmByName(algoName, peekFile)
         else:
             die("Failure: unrecognized algorithm %s" % name)
         isOK, msg = algo.availability
