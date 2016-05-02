@@ -341,18 +341,18 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
     # coordinates relative to the POA consensus
     mappedReads = [ arrowConfig.extractMappedRead(aln, refStart) for aln in alns ]
     queryPositions = cc.TargetToQueryPositions(ga)
-    mappedReads = [ (lifted(queryPositions, mr), snr) for (mr, snr) in mappedReads ]
+    mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
     ai = cc.MultiMolecularIntegrator(poaCss, cc.IntegratorConfig(arrowConfig.minZScore))
     coverage = 0
-    for (mr, snr) in mappedReads:
+    for mr in mappedReads:
         if (mr.TemplateEnd <= mr.TemplateStart or
             mr.TemplateEnd - mr.TemplateStart < 2 or
             mr.Length() < 2):
             continue
-        coverage += 1 if ai.AddRead(mr, snr) == cc.AddReadResult_SUCCESS else 0
+        coverage += 1 if ai.AddRead(mr) == cc.AddReadResult_SUCCESS else 0
 
     # TODO(lhepler, dalexander): propagate coverage around somehow
 
