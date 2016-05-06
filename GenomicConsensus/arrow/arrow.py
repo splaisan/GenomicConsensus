@@ -43,6 +43,7 @@ from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
 from GenomicConsensus.arrow.evidence import dumpEvidence
 from GenomicConsensus.arrow import diploid
+from GenomicConsensus.utils import die
 
 import GenomicConsensus.arrow.model as M
 import GenomicConsensus.arrow.utils as U
@@ -237,6 +238,17 @@ def configure(options, alnFile):
 
     if options.diploid:
         logging.warn("Diploid analysis not yet supported under Arrow model.")
+
+    # test available chemistries
+    supp = set(cc.SupportedChemistries())
+    logging.info("Found consensus models for: ({0})".format(", ".join(sorted(supp))))
+
+    used = set(alnFile.sequencingChemistry)
+    unsupp = used - supp
+    if unsupp:
+        die("Arrow: unsupported chemistries found: ({0})".format(", ".join(sorted(unsupp))))
+
+    logging.info("Using consensus models for: ({0})".format(", ".join(sorted(used))))
 
     return M.ArrowConfig(minMapQV=options.minMapQV,
                          noEvidenceConsensus=options.noEvidenceConsensusCall,
