@@ -103,8 +103,8 @@ class ArrowConfig(object):
         strand = cc.StrandEnum_REVERSE if aln.isReverseStrand else cc.StrandEnum_FORWARD
         read = cc.Read(name,
                        aln.read(aligned=False, orientation="native"),
-                       cc.Uint8Vector(baseFeature("Ipd:CodecV1").tolist()),
-                       cc.Uint8Vector(baseFeature("PulseWidth:CodecV1").tolist()),
+                       cc.Uint8Vector(baseFeature("Ipd").astype(np.uint8).tolist()),
+                       cc.Uint8Vector(baseFeature("PulseWidth").astype(np.uint8).tolist()),
                        cc.SNR(aln.hqRegionSnr),
                        chemistry)
         return cc.MappedRead(read,
