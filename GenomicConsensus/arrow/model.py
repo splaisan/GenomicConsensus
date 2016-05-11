@@ -95,7 +95,8 @@ class ArrowConfig(object):
 
         def baseFeature(featureName):
             if aln.reader.hasBaseFeature(featureName):
-                return aln.baseFeature(featureName, aligned=False, orientation="native")
+                rawFeature = aln.baseFeature(featureName, aligned=False, orientation="native")
+                return rawFeature.clip(0,255).astype(np.uint8)
             else:
                 return np.zeros((aln.qLen,), dtype=np.uint8)
 
@@ -104,8 +105,8 @@ class ArrowConfig(object):
         strand = cc.StrandEnum_REVERSE if aln.isReverseStrand else cc.StrandEnum_FORWARD
         read = cc.Read(name,
                        aln.read(aligned=False, orientation="native"),
-                       cc.Uint8Vector(baseFeature("Ipd").astype(np.uint8).tolist()),
-                       cc.Uint8Vector(baseFeature("PulseWidth").astype(np.uint8).tolist()),
+                       cc.Uint8Vector(baseFeature("Ipd").tolist()),
+                       cc.Uint8Vector(baseFeature("PulseWidth").tolist()),
                        cc.SNR(aln.hqRegionSnr),
                        chemistry if self.chemistryOverride is None else self.chemistryOverride)
         return cc.MappedRead(read,
