@@ -64,7 +64,8 @@ class ArrowConfig(object):
                  readStumpinessThreshold=0.1,
                  minReadScore=0.75,
                  minHqRegionSnr=3.75,
-                 minZScore=-3.5):
+                 minZScore=-3.5,
+                 chemistryOverride=None):
 
         self.minMapQV                   = minMapQV
         self.minPoaCoverage             = minPoaCoverage
@@ -78,9 +79,9 @@ class ArrowConfig(object):
         self.minReadScore               = minReadScore
         self.minHqRegionSnr             = minHqRegionSnr
         self.minZScore                  = minZScore
+        self.chemistryOverride          = chemistryOverride
 
-    @staticmethod
-    def extractMappedRead(aln, windowStart):
+    def extractMappedRead(self, aln, windowStart):
         """
         Given a clipped alignment, convert its coordinates into template
         space (starts with 0), bundle it up with its features as a
@@ -106,7 +107,7 @@ class ArrowConfig(object):
                        cc.Uint8Vector(baseFeature("Ipd").astype(np.uint8).tolist()),
                        cc.Uint8Vector(baseFeature("PulseWidth").astype(np.uint8).tolist()),
                        cc.SNR(aln.hqRegionSnr),
-                       chemistry)
+                       chemistry if self.chemistryOverride is None else self.chemistryOverride)
         return cc.MappedRead(read,
                              strand,
                              int(aln.referenceStart - windowStart),

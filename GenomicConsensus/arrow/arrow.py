@@ -243,6 +243,9 @@ def configure(options, alnFile):
     logging.info("Found consensus models for: ({0})".format(", ".join(sorted(supp))))
 
     used = set(alnFile.sequencingChemistry)
+    if options.parametersSpec != "auto":
+        used = set([options.parametersSpec])
+
     unsupp = used - supp
     if unsupp:
         die("Arrow: unsupported chemistries found: ({0})".format(", ".join(sorted(unsupp))))
@@ -254,7 +257,9 @@ def configure(options, alnFile):
                          computeConfidence=(not options.fastMode),
                          minReadScore=options.minReadScore,
                          minHqRegionSnr=options.minHqRegionSnr,
-                         minZScore=options.minZScore)
+                         minZScore=options.minZScore,
+                         chemistryOverride=(None if options.parametersSpec == "auto"
+                                            else options.parametersSpec))
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
