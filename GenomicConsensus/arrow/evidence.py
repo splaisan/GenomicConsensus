@@ -37,8 +37,61 @@ from collections import namedtuple
 from itertools import groupby
 from bisect import bisect_left, bisect_right
 from pbcore.io import FastaReader, FastaWriter
-from .utils import scoreMatrix
+
+import ConsensusCore2 as cc2
+
 from .. import reference
+from .utils import allSingleBaseMutations
+
+_typeMap = { cc2.MutationType_INSERTION    : "Ins",
+             cc2.MutationType_DELETION     : "Del",
+             cc2.MutationType_SUBSTITUTION : "Sub" }
+
+def _shortMutationDescription(mut, tpl):
+    """
+    More compact and uniform mutation description strings
+    Examples:
+
+    201 Ins . > G
+    201 Sub C > T
+    201 Del C > .
+    """
+    _type = _typeMap[mut.Type]
+    _pos = mut.Start()
+    _oldBase = "." if mut.Type == cc2.MutationType_INSERTION \
+               else tpl[_pos]
+    _newBase = "." if mut.Type == cc2.MutationType_DELETION \
+               else mut.Base
+    return "%d %s %s > %s" % (_pos, _type, _oldBase, _newBase)
+
+
+def scoreMatrix(ai):
+    """
+    Returns (rowNames, columnNames, S)
+
+    where:
+      - S is a matrix where S_{ij} represents the score delta
+        of mutation j against read i
+      - rowNames[i] is an identifier name for the the read i---presently
+        we use the the row number within the cmp.h5, encoded as a string
+      - columnNames[j] is an identifier for mutation j, encoding the
+        position, type, and base change
+    """
+    css = str(ai)
+    allMutations = sorted(allSingleBaseMutations(css))
+    readNames = list(ai.ReadNames())
+    numReads = len(readNames)
+    shape = (numReads, len(allMutations))
+    scoreMatrix = np.zeros(shape)
+    for j, mut in enumerate(allMutations):
+        mutScores = ai.LLs(mut)
+        scoreMatrix[:, j] = mutScores
+    baselineScores =  np.array(ai.LLs())
+    columnNames = [ _shortMutationDescription(mut, css)
+                    for mut in allMutations ]
+    rowNames = readNames
+    return (rowNames, columnNames, baselineScores, scoreMatrix)
+
 
 class ArrowEvidence(object):
 
