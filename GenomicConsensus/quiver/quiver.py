@@ -248,7 +248,9 @@ def configure(options, cmpH5):
         # trainings for Sequel.  Arrow should be used.
         # (Not that power-users can bypass this requirement using an explicit parameter set)
         for chem in cmpH5.sequencingChemistry:
-            if chem.startswith("S/"):
+            if chem == "S/P1-C1":
+                params = M.loadParameterSets(options.parametersFile, spec="unknown.NoQVsModel")
+            elif chem.startswith("S/"):
                 raise U.IncompatibleDataException(
                     "The Quiver algorithm is not trained for Sequel data. " +
                     "Please use the Arrow algorithm instead.")
