@@ -36,9 +36,14 @@ release of SMRTanalysis 3.0 or build from GitHub sources.*
 Running a large-scale resequencing/polishing job in SMRTanalysis 2.3
 --------------------------------------------------------------------
 
+*We do not recommend attempting  to construct a single giant cmp.h5 file and
+then processing it on a single node.  This is inefficient and users attempting to do this
+have run into many problems with the instability of the HDF5 library (which PacBio is
+`moving away from <http://pacbiofileformats.readthedocs.io/en/3.0/BAM.html>`).*
+
 To run a large-scale resequencing job (>50 megabase genome @ 50x
 coverage,nominally), you want to spread the computation load across
-multiple nodes in your computing cluster.
+multiple nodes in your computing cluster.  
 
 The `smrtpipe` workflow engine in SMRTanalysis 2.3 provides a
 convenient workflow automating this---it will automatically spread the
