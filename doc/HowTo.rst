@@ -36,10 +36,10 @@ release of SMRTanalysis 3.0 or build from GitHub sources.*
 Running a large-scale resequencing/polishing job in SMRTanalysis 2.3
 --------------------------------------------------------------------
 
-*We do not recommend attempting  to construct a single giant cmp.h5 file and
+We do not recommend attempting  to construct a single giant cmp.h5 file and
 then processing it on a single node.  This is inefficient and users attempting to do this
 have run into many problems with the instability of the HDF5 library (which PacBio is
-`moving away from <http://pacbiofileformats.readthedocs.io/en/3.0/BAM.html>`).*
+moving away from, in favor of BAM_.)
 
 To run a large-scale resequencing job (>50 megabase genome @ 50x
 coverage,nominally), you want to spread the computation load across
@@ -131,3 +131,4 @@ Please consult the `FAQ document`_.
 .. _pitchfork : https://github.com/PacificBiosciences/pitchfork
 .. _`params.xml template`: ./params-template.xml
 .. _`SMRTpipe reference manual`: http://www.pacb.com/wp-content/uploads/2015/09/SMRT-Pipe-Reference-Guide.pdf
+.. _`BAM`: http://pacbiofileformats.readthedocs.io/en/3.0/BAM.html
