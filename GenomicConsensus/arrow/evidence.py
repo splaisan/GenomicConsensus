@@ -196,7 +196,7 @@ def dumpFocusedEvidence(evidenceDumpBaseDirectory,
             "SnrA,SnrC,SnrG,SnrT," +
             "BaselineLL," + "," + mutName + "\n")
     for (aln, readName, ll, llDelta) in zip(alns, readNames, baselineScores, deltas):
-        assert readName == aln.readName  # FIXME: this will fail for inactive reads.
+        assert (readName == aln.readName) or (readName == "*Inactive evaluator*")
         identifiers = "%s,%s,%d" % (aln.qName, aln.readName, aln.rowNumber)
         bases = "%s,%s,%s,%s,%s,%s" % \
                 (aln.read      (orientation="native",  aligned=False),
