@@ -94,9 +94,9 @@ def scoreMatrix(ai):
     return (rowNames, columnNames, baselineScores, scoreMatrix)
 
 
-def dumpEvidence(evidenceDumpBaseDirectory,
-                 refWindow, refSequence, alns,
-                 arrowConsensus):
+def dumpFullEvidence(evidenceDumpBaseDirectory,
+                     refWindow, refSequence, alns,
+                     arrowConsensus):
     # Format of evidence dump:
     # evidence_dump/
     #   ref000001/
@@ -142,6 +142,76 @@ def dumpEvidence(evidenceDumpBaseDirectory,
                                aln.read(orientation="genomic", aligned=False))
     readsFasta.close()
 
+
+def dumpFocusedEvidence(evidenceDumpBaseDirectory,
+                        refWindow, refSequence, alns,
+                        arrowConsensus, variants):
+
+    join = os.path.join
+    refId, refStart, refEnd = refWindow
+    refName = reference.idToName(refId)
+    windowDirectory = join(evidenceDumpBaseDirectory,
+                           refName,
+                           "%d-%d" % (refStart, refEnd))
+    logging.info("Dumping evidence to %s" % (windowDirectory,))
+
+    if os.path.exists(windowDirectory):
+        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
+    os.makedirs(windowDirectory)
+
+    # -- the work...
+
+    ai = arrowConsensus.ai
+
+    # Dump a more streamlined evidence with a focus on variants that
+    # were called.
+
+    if len(variants) > 1:
+        logging.warning("Evidence dump: no support yet for multiple variants in a window.")
+    variant = variants[0]
+
+    def inverseMutation(refWindow, variant):
+        # Identify the template mutation that "undoes" the variant
+        if variant.variantType == "Insertion":
+            return cc2.Mutation(cc2.MutationType_DELETION,
+                                variant.refStart - refStart)
+        else:
+            raise NotImplementedError
+
+    try:
+        inv = inverseMutation(refWindow, variant)
+    except NotImplementedError:
+        logging.warn("Evidence dump: currently only support for insertion variants")
+        return
+    mutName = _shortMutationDescription(inv, arrowConsensus.sequence)
+
+    scores = np.array(ai.LLs(inv))
+    baselineScores = np.array(ai.LLs())
+    readNames = ai.ReadNames()
+    deltas = scores - baselineScores
+
+    f = open(join(windowDirectory, "arrow-scores.csv"), "w")
+    f.write("qName,aName,RowNumber,Read,Reference,ForwardOrientedRead," +
+            "ForwardOrientedReference,ForwardAlignedRead,ForwardAlignedReference," +
+            "SnrA,SnrC,SnrG,SnrT," +
+            "BaselineLL," + "," + mutName + "\n")
+    for (aln, readName, ll, llDelta) in zip(alns, readNames, baselineScores, deltas):
+        assert readName == aln.readName  # FIXME: this will fail for inactive reads.
+        identifiers = "%s,%s,%d" % (aln.qName, aln.readName, aln.rowNumber)
+        bases = "%s,%s,%s,%s,%s,%s" % \
+                (aln.read      (orientation="native",  aligned=False),
+                 aln.reference (orientation="native",  aligned=False),
+                 aln.read      (orientation="genomic", aligned=False),
+                 aln.reference (orientation="genomic", aligned=False),
+                 aln.read      (orientation="genomic", aligned=True),
+                 aln.reference (orientation="genomic", aligned=True))
+        snrMetrics = "%f,%f,%f,%f" % tuple(aln.hqRegionSnr)
+        likelhoodMetrics = "%f,%f" % (ll, llDelta)
+
+        f.write(",".join([identifiers,
+                          bases,
+                          snrMetrics,
+                          likelhoodMetrics]) + "\n")
 
 class ArrowEvidence(object):
     """

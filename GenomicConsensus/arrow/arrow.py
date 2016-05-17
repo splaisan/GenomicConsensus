@@ -41,7 +41,7 @@ from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from GenomicConsensus.consensus import Consensus, ArrowConsensus, join
 from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
-from GenomicConsensus.arrow.evidence import dumpEvidence
+from GenomicConsensus.arrow.evidence import dumpFocusedEvidence, dumpFullEvidence
 from GenomicConsensus.arrow import diploid
 from GenomicConsensus.utils import die
 
@@ -134,13 +134,16 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
             variants += filteredVars
 
             # Dump?
-            shouldDumpEvidence = \
-                ((options.dumpEvidence == "all") or
-                 (options.dumpEvidence == "variants") and (len(variants) > 0))
-            if shouldDumpEvidence:
-                dumpEvidence(options.evidenceDirectory,
-                             subWin, windowRefSeq,
-                             clippedAlns, css)
+            if (options.dumpEvidence == "all"):
+                dumpFullEvidence(options.evidenceDirectory,
+                                 subWin, windowRefSeq,
+                                 clippedAlns, css)
+            elif (options.dumpEvidence == "variants") and (len(filteredVars) > 0):
+                dumpFocusedEvidence(options.evidenceDirectory,
+                                    subWin, windowRefSeq,
+                                    clippedAlns, css, filteredVars)
+
+
         else:
             css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
                                                  subWin, intRefSeq)
