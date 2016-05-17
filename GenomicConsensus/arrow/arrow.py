@@ -41,7 +41,7 @@ from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from GenomicConsensus.consensus import Consensus, ArrowConsensus, join
 from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
-from GenomicConsensus.arrow.evidence import ArrowEvidence
+from GenomicConsensus.arrow.evidence import dumpFocusedEvidence, dumpFullEvidence
 from GenomicConsensus.arrow import diploid
 from GenomicConsensus.utils import die
 
@@ -139,25 +139,14 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
             variants += filteredVars
 
             # Dump?
-            maybeDumpEvidence = \
-                ((options.dumpEvidence == "all") or
-                 (options.dumpEvidence == "outliers") or
-                 (options.dumpEvidence == "variants") and (len(variants) > 0))
-            if maybeDumpEvidence:
-                refId, refStart, refEnd = subWin
-                refName = reference.idToName(refId)
-                windowDirectory = os.path.join(
-                    options.evidenceDirectory,
-                    refName,
-                    "%d-%d" % (refStart, refEnd))
-                ev = ArrowEvidence.fromConsensus(css)
-                if options.dumpEvidence != "outliers":
-                    ev.save(windowDirectory)
-                elif (np.max(ev.delta) > 20):
-                    # Mathematically I don't think we should be seeing
-                    # deltas > 6 in magnitude, but let's just restrict
-                    # attention to truly bonkers outliers.
-                    ev.save(windowDirectory)
+            if (options.dumpEvidence == "all"):
+                dumpFullEvidence(options.evidenceDirectory,
+                                 subWin, windowRefSeq,
+                                 clippedAlns, css)
+            elif (options.dumpEvidence == "variants") and (len(filteredVars) > 0):
+                dumpFocusedEvidence(options.evidenceDirectory,
+                                    subWin, windowRefSeq,
+                                    clippedAlns, css, filteredVars)
 
         else:
             css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
