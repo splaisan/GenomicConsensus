@@ -58,7 +58,7 @@ def bestAlgorithm_(sequencingChemistries):
 
     if anyUnknown:
         return None
-    elif allRS or chems == set(["S/P1-C1"]):
+    elif allRS:
         return "quiver"
     else:
         return "arrow"
