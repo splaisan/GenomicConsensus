@@ -112,12 +112,10 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
                           (reference.windowToString(subWin),
                            " ".join([str(hit.readName) for hit in alns])))
 
-            css = U.consensusForAlignments(subWin,
-                                           intRefSeq,
-                                           clippedAlns,
-                                           arrowConfig)
-
-            siteCoverage = U.coverageInWindow(subWin, alns)
+            css, siteCoverage = U.consensusForAlignments(subWin,
+                                                         intRefSeq,
+                                                         clippedAlns,
+                                                         arrowConfig)
 
             variants_ = U.variantsFromConsensus(subWin, windowRefSeq,
                                                 css.sequence, css.confidence, siteCoverage,

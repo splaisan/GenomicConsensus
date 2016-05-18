@@ -313,8 +313,7 @@ def filterAlns(refWindow, alns, arrowConfig):
 def sufficientlyAccurate(mappedRead, poaCss, minAccuracy):
     if minAccuracy <= 0.0:
         return True
-    s, e = mappedRead.TemplateStart, mappedRead.TemplateEnd
-    tpl = poaCss[s:e]
+    tpl = poaCss[mappedRead.TemplateStart:mappedRead.TemplateEnd]
     if mappedRead.Strand == cc.StrandEnum_FORWARD:
         pass
     elif mappedRead.Strand == cc.StrandEnum_REVERSE:
@@ -338,6 +337,13 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
     Clipping has already been done!
     """
     _, refStart, refEnd = refWindow
+    refLength = max(refEnd - refStart, 0)
+    siteCoverage = np.zeros(shape=(refLength,), dtype=np.uint)
+
+    if refLength < 1:
+        logging.info("%s: skipping 0-length window" % (refWindow,))
+        return (ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                               refWindow, refSequence), siteCoverage)
 
     # Compute the POA consensus, which is our initial guess, and
     # should typically be > 99.5% accurate
@@ -350,8 +356,8 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
         p = cc.PoaConsensus.FindConsensus(fwdSequences[:arrowConfig.maxPoaCoverage])
     except:
         logging.info("%s: POA could not be generated" % (refWindow,))
-        return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
-                                              refWindow, refSequence)
+        return (ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                               refWindow, refSequence), siteCoverage)
     ga = cc.Align(refSequence, p.Sequence)
     numPoaVariants = ga.Errors()
     poaCss = p.Sequence
@@ -360,13 +366,13 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
     # coordinates relative to the POA consensus
     mappedReads = [ arrowConfig.extractMappedRead(aln, refStart) for aln in alns ]
     queryPositions = cc.TargetToQueryPositions(ga)
-    mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
+    mappedReads = [ (lifted(queryPositions, mr), (mr.TemplateStart, mr.TemplateEnd))
+                    for mr in mappedReads ]
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
     ai = cc.MultiMolecularIntegrator(poaCss, cc.IntegratorConfig(arrowConfig.minZScore))
-    coverage = 0
-    for mr in mappedReads:
+    for (mr, (s, e)) in mappedReads:
         if (mr.TemplateEnd <= mr.TemplateStart or
             mr.TemplateEnd - mr.TemplateStart < 2 or
             mr.Length() < 2):
@@ -382,14 +388,15 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
             logging.debug("%s: skipping read '%s' due to insufficient accuracy, (poa, read): ('%s', '%s')" % (refWindow, mr.Name, tpl, mr.Seq))
             continue
         if ai.AddRead(mr) == cc.AddReadResult_SUCCESS:
-            coverage += 1
+            siteCoverage[s:e] += 1
 
     # Iterate until covergence
     try:
-        if coverage < arrowConfig.minPoaCoverage:
+        if np.max(siteCoverage) < arrowConfig.minPoaCoverage:
+            siteCoverage[:] = 0
             logging.info("%s: Inadequate coverage to call consensus" % (refWindow,))
-            return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
-                                                  refWindow, refSequence)
+            return (ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                                   refWindow, refSequence), siteCoverage)
         _, converged = refineConsensus(ai, arrowConfig)
         assert converged, "Arrow did not converge to MLE"
         arrowCss = str(ai)
@@ -397,23 +404,10 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
             confidence = consensusConfidence(ai)
         else:
             confidence = np.zeros(shape=len(arrowCss), dtype=int)
-        return ArrowConsensus(refWindow,
-                              arrowCss,
-                              confidence,
-                              ai)
+        return (ArrowConsensus(refWindow, arrowCss, confidence, ai), siteCoverage)
     except:
+        siteCoverage[:] = 0
         traceback = ''.join(format_exception(*sys.exc_info()))
         logging.info("%s: %s" % (refWindow, traceback))
-        return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
-                                              refWindow, refSequence)
-
-
-def coverageInWindow(refWin, hits):
-    winId, winStart, winEnd = refWin
-    a = np.array([(hit.referenceStart, hit.referenceEnd)
-                  for hit in hits
-                  if hit.referenceName == winId])
-    tStart = a[:,0]
-    tEnd   = a[:,1]
-    cov = projectIntoRange(tStart, tEnd, winStart, winEnd)
-    return cov
+        return (ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                               refWindow, refSequence), siteCoverage)
