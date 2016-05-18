@@ -65,6 +65,7 @@ class ArrowConfig(object):
                  minReadScore=0.75,
                  minHqRegionSnr=3.75,
                  minZScore=-3.5,
+                 minAccuracy=0.82,
                  chemistryOverride=None):
 
         self.minMapQV                   = minMapQV
@@ -79,6 +80,7 @@ class ArrowConfig(object):
         self.minReadScore               = minReadScore
         self.minHqRegionSnr             = minHqRegionSnr
         self.minZScore                  = minZScore
+        self.minAccuracy                = minAccuracy
         self.chemistryOverride          = chemistryOverride
 
     def extractMappedRead(self, aln, windowStart):
@@ -89,7 +91,6 @@ class ArrowConfig(object):
         """
         if isinstance(aln, CmpH5Alignment):
             die("Arrow does not support CmpH5 files!")
-            return aln.read(aligned=False, orientation="native")
 
         assert aln.referenceSpan > 0
 

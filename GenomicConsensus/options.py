@@ -90,6 +90,7 @@ class Constants(object):
     DEFAULT_MIN_READSCORE = 0.65
     DEFAULT_MIN_HQREGIONSNR = 3.75
     DEFAULT_MIN_ZSCORE = -3.5
+    DEFAULT_MIN_ACCURACY = 0.82
 
 def get_parser():
     """
@@ -300,6 +301,13 @@ def add_options_to_argument_parser(parser):
         type=float,
         default=Constants.DEFAULT_MIN_ZSCORE,
         help="The minimum acceptable z-score for reads that will be used for analysis (arrow-only).")
+    readSelection.add_argument(
+        "--minAccuracy",
+        action="store",
+        dest="minAccuracy",
+        type=float,
+        default=Constants.DEFAULT_MIN_ACCURACY,
+        help="The minimum acceptable window-global alignment accuracy for reads that will be used for the analysis (arrow-only).")
 
     algorithm = parser.add_argument_group("Algorithm and parameter settings")
     algorithm.add_argument(

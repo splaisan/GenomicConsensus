@@ -258,6 +258,7 @@ def configure(options, alnFile):
                          minReadScore=options.minReadScore,
                          minHqRegionSnr=options.minHqRegionSnr,
                          minZScore=options.minZScore,
+                         minAccuracy=options.minAccuracy,
                          chemistryOverride=(None if options.parametersSpec == "auto"
                                             else options.parametersSpec))
 
