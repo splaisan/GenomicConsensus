@@ -310,6 +310,24 @@ def filterAlns(refWindow, alns, arrowConfig):
                 a.readScore >= arrowConfig.minReadScore ]
 
 
+def sufficientlyAccurate(mappedRead, poaCss, minAccuracy):
+    if minAccuracy <= 0.0:
+        return True
+    s, e = mappedRead.TemplateStart, mappedRead.TemplateEnd
+    tpl = poaCss[s:e]
+    if mappedRead.Strand == cc.StrandEnum_FORWARD:
+        pass
+    elif mappedRead.Strand == cc.StrandEnum_REVERSE:
+        tpl = reverseComplement(tpl)
+    else:
+        return False
+    aln = cc.AlignLinear(tpl, mappedRead.Seq)
+    nErrors = sum(1 for t in aln.Transcript() if t != 'M')
+    tlen = len(tpl)
+    acc = 1.0 - 1.0 * min(nErrors, tlen) / tlen
+    return acc >= minAccuracy
+
+
 def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
     """
     Call consensus on this interval---without subdividing the interval
@@ -353,9 +371,18 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
             mr.TemplateEnd - mr.TemplateStart < 2 or
             mr.Length() < 2):
             continue
-        coverage += 1 if ai.AddRead(mr) == cc.AddReadResult_SUCCESS else 0
-
-    # TODO(lhepler, dalexander): propagate coverage around somehow
+        if not sufficientlyAccurate(mr, poaCss, arrowConfig.minAccuracy):
+            tpl = poaCss[mr.TemplateStart:mr.TemplateEnd]
+            if mr.Strand == cc.StrandEnum_FORWARD:
+                pass
+            elif mr.Strand == cc.StrandEnum_REVERSE:
+                tpl = reverseComplement(tpl)
+            else:
+                tpl = "INACTIVE/UNMAPPED"
+            logging.debug("%s: skipping read '%s' due to insufficient accuracy, (poa, read): ('%s', '%s')" % (refWindow, mr.Name, tpl, mr.Seq))
+            continue
+        if ai.AddRead(mr) == cc.AddReadResult_SUCCESS:
+            coverage += 1
 
     # Iterate until covergence
     try:
