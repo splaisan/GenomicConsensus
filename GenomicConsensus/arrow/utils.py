@@ -142,7 +142,7 @@ def consensusConfidence(ai, positions=None):
     omitted, confidence values are returned for all positions in the
     consensus (str(ai)).
     """
-    return np.array(np.clip(cc.ConsensusQVs(ai), 0, 93), dtype=np.uint8)
+    return np.array(np.clip(cc.ConsensusQualities(ai), 0, 93), dtype=np.uint8)
 
 def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None):
     """
