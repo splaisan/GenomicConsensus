@@ -3,15 +3,13 @@ import unittest
 import os.path
 
 from pbcore.io import openDataSet, ContigSet
-import pbcore.data
 import pbcommand.testkit
 
-# XXX local data directory, absolutely required
+import pbtestdata
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 assert os.path.isdir(DATA_DIR)
 
-# optional (but required for TestSummarizeConsensus)
-DATA_DIR_2 = "/mnt/secondary/Share/Quiver/TestData/tinyLambda/"
 
 class TestVariantCaller(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "variantCaller "
@@ -19,9 +17,7 @@ class TestVariantCaller(pbcommand.testkit.PbTestApp):
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
     REQUIRES_PBCORE = True
     INPUT_FILES = [
-        pbcore.data.getBamAndCmpH5()[0],
-#        "/pbi/dept/secondary/siv/testdata/SA3-DS/lambda/2372215/0007_tiny/Alignment_Results/m150404_101626_42267_c100807920800000001823174110291514_s1_p0.1.alignmentset.xml",
-        pbcore.data.getLambdaFasta()
+        pbtestdata.get_file("aligned-xml"), pbtestdata.get_file("lambdaNEB")
     ]
     TASK_OPTIONS = {
       "genomic_consensus.task_options.min_coverage": 0,
@@ -70,15 +66,14 @@ class TestGffToVcf(pbcommand.testkit.PbTestApp):
     }
 
 
-@unittest.skipUnless(os.path.isdir(DATA_DIR_2), "Missing %s" % DATA_DIR_2)
 class TestSummarizeConsensus(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "summarizeConsensus"
     DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
     REQUIRES_PBCORE = True
     INPUT_FILES = [
-        os.path.join(DATA_DIR_2, "alignment_summary.gff"),
-        os.path.join(DATA_DIR_2, "variants.gff.gz")
+        pbtestdata.get_file("alignment-summary-gff"),
+        pbtestdata.get_file("variants-gff")
     ]
     TASK_OPTIONS = {}
 

@@ -7,5 +7,5 @@ Test for sane behavior in the presence of bogus arguments.
 Test that it doesn't crash when one BAM file in an otherwise valid AlignmentSet is empty.
 
   $ DATA=$TESTDIR/../data/sanity
-  $ REF="`python -c 'import pbcore.data ; print pbcore.data.getLambdaFasta()'`"
+  $ REF="`pbdata get lambda-fasta`"
   $ arrow --reference $REF -o contig.fasta $DATA/mixed.alignmentset.xml
