@@ -69,7 +69,7 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
         alnHits = U.readsInWindow(alnFile, refWindow,
                                   depthLimit=20000,
                                   minMapQV=arrowConfig.minMapQV,
-                                  strategy="longest",
+                                  strategy="long-and-strand-balanced",
                                   stratum=options.readStratum,
                                   barcode=options.barcode)
         starts = np.fromiter((hit.tStart for hit in alnHits), np.int)
@@ -99,7 +99,7 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
         alns = U.readsInWindow(alnFile, subWin,
                                depthLimit=depthLimit,
                                minMapQV=arrowConfig.minMapQV,
-                               strategy="longest",
+                               strategy="long-and-strand-balanced",
                                stratum=options.readStratum,
                                barcode=options.barcode)
         clippedAlns_ = [ aln.clippedTo(*interval) for aln in alns ]
