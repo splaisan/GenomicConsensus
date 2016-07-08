@@ -19,4 +19,4 @@ Arrow, since the SNR capping fix, also gets no errors.
   $ gffsubtract.pl arrow-variants.gff $MASK | grep -v "#" | sed 's/\t/ /g'
 
   $ fastacomposition arrow-css.fasta
-  arrow-css.fasta A 960233 C 470725 G 470270 T 971457
+  arrow-css.fasta A 960232 C 470725 G 470271 T 971457
