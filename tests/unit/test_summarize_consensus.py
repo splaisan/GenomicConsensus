@@ -31,7 +31,7 @@ chr2\t.\tregion\t10000\t23469\t0.00\t+\t.\tcov=0,48,89;cov2=47.303,12.036;gaps=1
 chr3\t.\tregion\t1\t7000\t0.00\t+\t.\tcov=0,48,89;cov2=47.303,12.036;gaps=1,24"""
 
 EXPECTED = """\
-##source GenomicConsensus 2.0.0
+##source GenomicConsensus 2.1.0
 ##pacbio-alignment-summary-version 0.6
 ##source-commandline this line will be skipped in the comparison
 chr1\t.\tregion\t1\t5000\t0.00\t+\t.\tcov=4,23,28;cov2=20.162,5.851;gaps=0,0;cQv=20,20,20;del=0;ins=0;sub=1
