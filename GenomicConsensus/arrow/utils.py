@@ -381,7 +381,7 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
                 tpl = "INACTIVE/UNMAPPED"
             logging.debug("%s: skipping read '%s' due to insufficient accuracy, (poa, read): ('%s', '%s')" % (refWindow, mr.Name, tpl, mr.Seq))
             continue
-        if ai.AddRead(mr) == cc.AddReadResult_SUCCESS:
+        if ai.AddRead(mr) == cc.State_VALID:
             coverage += 1
 
     # Iterate until covergence
