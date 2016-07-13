@@ -2,7 +2,7 @@ This actually failed once because of a missing import, so we might as
 well test it.
 
   $ variantCaller --version
-  2.0.0
+  2.1.0
 
 This will break if the parser setup is messed up.
 
