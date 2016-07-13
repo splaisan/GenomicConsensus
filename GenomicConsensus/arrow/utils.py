@@ -132,8 +132,8 @@ def refineConsensus(ai, arrowConfig):
     cfg = cc.PolishConfig(arrowConfig.maxIterations,
                           arrowConfig.mutationSeparation,
                           arrowConfig.mutationNeighborhood)
-    isConverged, nTested, nApplied = cc.Polish(ai, cfg)
-    return str(ai), isConverged
+    polishResult = cc.Polish(ai, cfg)
+    return str(ai), polishResult.hasConverged
 
 def consensusConfidence(ai, positions=None):
     """
@@ -315,9 +315,9 @@ def sufficientlyAccurate(mappedRead, poaCss, minAccuracy):
         return True
     s, e = mappedRead.TemplateStart, mappedRead.TemplateEnd
     tpl = poaCss[s:e]
-    if mappedRead.Strand == cc.StrandEnum_FORWARD:
+    if mappedRead.Strand == cc.StrandType_FORWARD:
         pass
-    elif mappedRead.Strand == cc.StrandEnum_REVERSE:
+    elif mappedRead.Strand == cc.StrandType_REVERSE:
         tpl = reverseComplement(tpl)
     else:
         return False
@@ -373,9 +373,9 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
             continue
         if not sufficientlyAccurate(mr, poaCss, arrowConfig.minAccuracy):
             tpl = poaCss[mr.TemplateStart:mr.TemplateEnd]
-            if mr.Strand == cc.StrandEnum_FORWARD:
+            if mr.Strand == cc.StrandType_FORWARD:
                 pass
-            elif mr.Strand == cc.StrandEnum_REVERSE:
+            elif mr.Strand == cc.StrandType_REVERSE:
                 tpl = reverseComplement(tpl)
             else:
                 tpl = "INACTIVE/UNMAPPED"
