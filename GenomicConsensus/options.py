@@ -357,7 +357,7 @@ def add_options_to_argument_parser(parser):
         nargs="?",
         default=None,
         const="variants",
-        choices=["variants", "all"])
+        choices=["variants", "all", "outliers"])
     debugging.add_argument(
         "--evidenceDirectory",
         default="evidence_dump")

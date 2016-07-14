@@ -30,7 +30,7 @@
 
 # Authors: David Alexander, Lance Hepler
 
-import logging
+import logging, os.path
 import ConsensusCore2 as cc, numpy as np
 
 from .. import reference
@@ -41,7 +41,7 @@ from ..ResultCollector import ResultCollectorProcess, ResultCollectorThread
 from GenomicConsensus.consensus import Consensus, ArrowConsensus, join
 from GenomicConsensus.windows import kSpannedIntervals, holes, subWindow
 from GenomicConsensus.variants import filterVariants, annotateVariants
-from GenomicConsensus.arrow.evidence import dumpEvidence
+from GenomicConsensus.arrow.evidence import ArrowEvidence
 from GenomicConsensus.arrow import diploid
 from GenomicConsensus.utils import die
 
@@ -134,13 +134,26 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
             variants += filteredVars
 
             # Dump?
-            shouldDumpEvidence = \
+            maybeDumpEvidence = \
                 ((options.dumpEvidence == "all") or
+                 (options.dumpEvidence == "outliers") or
                  (options.dumpEvidence == "variants") and (len(variants) > 0))
-            if shouldDumpEvidence:
-                dumpEvidence(options.evidenceDirectory,
-                             subWin, windowRefSeq,
-                             clippedAlns, css)
+            if maybeDumpEvidence:
+                refId, refStart, refEnd = subWin
+                refName = reference.idToName(refId)
+                windowDirectory = os.path.join(
+                    options.evidenceDirectory,
+                    refName,
+                    "%d-%d" % (refStart, refEnd))
+                ev = ArrowEvidence.fromConsensus(css)
+                if options.dumpEvidence != "outliers":
+                    ev.save(windowDirectory)
+                elif (np.max(np.abs(ev.delta)) > 20):
+                    # Mathematically I don't think we should be seeing
+                    # deltas > 6 in magnitude, but let's just restrict
+                    # attention to truly bonkers outliers.
+                    ev.save(windowDirectory)
+
         else:
             css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
                                                  subWin, intRefSeq)

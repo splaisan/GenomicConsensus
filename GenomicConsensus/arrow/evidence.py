@@ -30,8 +30,7 @@
 
 # Authors: David Alexander, Lance Hepler
 
-__all__ = [ "dumpEvidence",
-            "ArrowEvidence" ]
+__all__ = [ "ArrowEvidence" ]
 
 import h5py, logging, os.path, numpy as np
 from collections import namedtuple
@@ -40,29 +39,6 @@ from bisect import bisect_left, bisect_right
 from pbcore.io import FastaReader, FastaWriter
 from .utils import scoreMatrix
 from .. import reference
-
-def dumpEvidence(evidenceDumpBaseDirectory,
-                 refWindow, refSequence, alns,
-                 arrowConsensus):
-    # Format of evidence dump:
-    # evidence_dump/
-    #   ref000001/
-    #     0-1005/
-    #       reference.fa
-    #       reads.fa
-    #       consensus.fa
-    #       arrow-scores.h5
-    #     995-2005/
-    #       ...
-    join = os.path.join
-    refId, refStart, refEnd = refWindow
-    refName = reference.idToName(refId)
-    windowDirectory = join(evidenceDumpBaseDirectory,
-                           refName,
-                           "%d-%d" % (refStart, refEnd))
-    logging.info("Dumping evidence to %s" % (windowDirectory,))
-    ev = ArrowEvidence.fromConsensus(arrowConsensus)
-    ev.save(windowDirectory)
 
 class ArrowEvidence(object):
 
@@ -144,7 +120,17 @@ class ArrowEvidence(object):
         """
         Save this ArrowEvidence to a directory.  The directory will be
         *created* by this method.
+
+        Format of evidence dump:
+        evidence_dump/
+          ref000001/
+            0-1005/
+              consensus.fa
+              arrow-scores.h5
+            995-2005/
+            ...
         """
+        logging.info("Dumping evidence to %s" % (dir,))
         join = os.path.join
         if os.path.exists(dir):
             raise Exception, "Evidence dump does not expect directory %s to exist." % dir
