@@ -61,40 +61,10 @@ def dumpEvidence(evidenceDumpBaseDirectory,
                            refName,
                            "%d-%d" % (refStart, refEnd))
     logging.info("Dumping evidence to %s" % (windowDirectory,))
-
-    if os.path.exists(windowDirectory):
-        raise Exception, "Evidence dump does not expect directory %s to exist." % windowDirectory
-    os.makedirs(windowDirectory)
-    refFasta       = FastaWriter(join(windowDirectory, "reference.fa"))
-    readsFasta     = FastaWriter(join(windowDirectory, "reads.fa"))
-    consensusFasta = FastaWriter(join(windowDirectory, "consensus.fa"))
-
-    windowName = refName + (":%d-%d" % (refStart, refEnd))
-    refFasta.writeRecord(windowName, refSequence)
-    refFasta.close()
-
-    consensusFasta.writeRecord(windowName + "|arrow", arrowConsensus.sequence)
-    consensusFasta.close()
-
-    rowNames, columnNames, baselineScores, scores = scoreMatrix(arrowConsensus.ai)
-    arrowScoreFile = h5py.File(join(windowDirectory, "arrow-scores.h5"))
-    arrowScoreFile.create_dataset("Scores", data=scores)
-    vlen_str = h5py.special_dtype(vlen=str)
-    arrowScoreFile.create_dataset("RowNames", data=rowNames, dtype=vlen_str)
-    arrowScoreFile.create_dataset("ColumnNames", data=columnNames, dtype=vlen_str)
-    arrowScoreFile.create_dataset("BaselineScores", data=baselineScores)
-    arrowScoreFile.close()
-    for aln in alns:
-        readsFasta.writeRecord(str(aln.rowNumber),
-                               aln.read(orientation="genomic", aligned=False))
-    readsFasta.close()
-
+    ev = ArrowEvidence.fromConsensus(arrowConsensus)
+    ev.save(windowDirectory)
 
 class ArrowEvidence(object):
-    """
-    An experimental reader class for arrow evidence dumps produced by
-    arrow --dumpEvidence
-    """
 
     Mutation = namedtuple("Mutation", ("Position", "Type", "FromBase", "ToBase"))
 
@@ -105,15 +75,35 @@ class ArrowEvidence(object):
         type, fromBase, _, toBase = fields[1:]
         return ArrowEvidence.Mutation(pos, type, fromBase, toBase)
 
-    def __init__(self, path, refStart, consensus, rowNames, colNames, baselineScores, scores):
-        self.path           = path
-        self.refStart       = refStart
+    def __init__(self, refWindow, consensus, rowNames, colNames, baselineScores, scores):
+        self.refWindow      = refWindow # tuple(str, int, int)
         self.consensus      = consensus
         self.rowNames       = rowNames
         self.colNames       = colNames
         self.baselineScores = baselineScores
         self.scores         = scores
         self.muts           = map(ArrowEvidence._parseMutName, self.colNames)
+
+    @staticmethod
+    def fromConsensus(css):
+        rowNames, colNames, baselineScores, scores = scoreMatrix(css.ai)
+        return ArrowEvidence(css.refWindow,
+                             css,
+                             rowNames,
+                             colNames,
+                             baselineScores,
+                             scores)
+    @property
+    def refName(self):
+        return self.refWindow[0]
+
+    @property
+    def refStart(self):
+        return self.refWindow[1]
+
+    @property
+    def refEnd(self):
+        return self.refWindow[2]
 
     @property
     def positions(self):
@@ -128,29 +118,64 @@ class ArrowEvidence(object):
         return self.scores - self.baselineScores[:, np.newaxis]
 
     @staticmethod
-    def load(path):
-        if path.endswith("/"): path = path[:-1]
+    def load(dir):
+        """
+        Load an ArrowEvidence from a directory
+        """
+        if dir.endswith("/"): dir = dir[:-1]
 
-        refWin_ = path.split("/")[-1].split("-")
-        refStart = int(refWin_[0])
+        refWin_ = dir.split("/")[-1].split("-")
+        self.refWin = (refWin_[0], int(refWin_[1]), int(refWin_[2]))
 
-        with FastaReader(path + "/consensus.fa") as fr:
+        with FastaReader(dir + "/consensus.fa") as fr:
             consensus = next(iter(fr)).sequence
 
-        with h5py.File(path + "/arrow-scores.h5", "r") as f:
+        with h5py.File(dir + "/arrow-scores.h5", "r") as f:
             scores   = f["Scores"].value
             baselineScores = f["BaselineScores"].value
             colNames = f["ColumnNames"].value
             rowNames = f["RowNames"].value
-            return ArrowEvidence(path, refStart, consensus,
+            return ArrowEvidence(dir, refStart, refEnd,
+                                 consensus,
                                  rowNames, colNames,
                                  baselineScores, scores)
+
+    def save(self, dir):
+        """
+        Save this ArrowEvidence to a directory.  The directory will be
+        *created* by this method.
+        """
+        join = os.path.join
+        if os.path.exists(dir):
+            raise Exception, "Evidence dump does not expect directory %s to exist." % dir
+        os.makedirs(dir)
+        #refFasta       = FastaWriter(join(dir, "reference.fa"))
+        #readsFasta     = FastaWriter(join(dir, "reads.fa"))
+        consensusFasta = FastaWriter(join(dir, "consensus.fa"))
+        windowName = self.refName + (":%d-%d" % (self.refStart, self.refEnd))
+        #refFasta.writeRecord(windowName, self.refSequence)
+        #refFasta.close()
+
+        consensusFasta.writeRecord(windowName + "|arrow", self.consensus.sequence)
+        consensusFasta.close()
+
+        arrowScoreFile = h5py.File(join(dir, "arrow-scores.h5"))
+        arrowScoreFile.create_dataset("Scores", data=self.scores)
+        vlen_str = h5py.special_dtype(vlen=str)
+        arrowScoreFile.create_dataset("RowNames", data=self.rowNames, dtype=vlen_str)
+        arrowScoreFile.create_dataset("ColumnNames", data=self.colNames, dtype=vlen_str)
+        arrowScoreFile.create_dataset("BaselineScores", data=self.baselineScores)
+        arrowScoreFile.close()
+        # for aln in alns:
+        #     readsFasta.writeRecord(str(aln.rowNumber),
+        #                            aln.read(orientation="genomic", aligned=False))
+        # readsFasta.close()
+
 
     def forPosition(self, pos):
         posStart = bisect_left(self.positions, pos)
         posEnd   = bisect_right(self.positions, pos)
-        return ArrowEvidence(self.path,
-                             self.refStart,
+        return ArrowEvidence(self.refStart,
                              self.consensus,
                              self.rowNames,
                              self.colNames[posStart:posEnd],
@@ -160,8 +185,7 @@ class ArrowEvidence(object):
 
     def justSubstitutions(self):
         colMask = np.array(map(lambda s: ("Sub" in s), self.colNames))
-        return ArrowEvidence(self.path,
-                             self.refStart,
+        return ArrowEvidence(self.refStart,
                              self.consensus,
                              self.rowNames,
                              self.colNames[colMask],
@@ -169,5 +193,6 @@ class ArrowEvidence(object):
                              self.scores[:, colMask])
 
     def rowNumbers(self):
-        with FastaReader(self.path + "/reads.fa") as fr:
-            return [ int(ctg.name) for ctg in fr ]
+        # with FastaReader(self.dir + "/reads.fa") as fr:
+        #     return [ int(ctg.name) for ctg in fr ]
+        raise NotImplementedError
