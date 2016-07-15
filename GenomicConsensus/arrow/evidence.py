@@ -52,6 +52,7 @@ class ArrowEvidence(object):
         return ArrowEvidence.Mutation(pos, type, fromBase, toBase)
 
     def __init__(self, refWindow, consensus, rowNames, colNames, baselineScores, scores):
+        assert isinstance(consensus, str)
         self.refWindow      = refWindow # tuple(str, int, int)
         self.consensus      = consensus
         self.rowNames       = rowNames
@@ -64,7 +65,7 @@ class ArrowEvidence(object):
     def fromConsensus(css):
         rowNames, colNames, baselineScores, scores = scoreMatrix(css.ai)
         return ArrowEvidence(css.refWindow,
-                             css,
+                             css.sequence,
                              rowNames,
                              colNames,
                              baselineScores,
@@ -99,20 +100,17 @@ class ArrowEvidence(object):
         Load an ArrowEvidence from a directory
         """
         if dir.endswith("/"): dir = dir[:-1]
-
-        refWin_ = dir.split("/")[-1].split("-")
-        self.refWin = (refWin_[0], int(refWin_[1]), int(refWin_[2]))
-
+        refStart, refEnd = map(int, dir.split("/")[-1].split("-"))
+        refName = dir.split("/")[-2]
+        refWindow = (refName, refStart, refEnd)
         with FastaReader(dir + "/consensus.fa") as fr:
             consensus = next(iter(fr)).sequence
-
         with h5py.File(dir + "/arrow-scores.h5", "r") as f:
             scores   = f["Scores"].value
             baselineScores = f["BaselineScores"].value
             colNames = f["ColumnNames"].value
             rowNames = f["RowNames"].value
-            return ArrowEvidence(dir, refStart, refEnd,
-                                 consensus,
+            return ArrowEvidence(refWindow, consensus,
                                  rowNames, colNames,
                                  baselineScores, scores)
 
@@ -142,7 +140,7 @@ class ArrowEvidence(object):
         #refFasta.writeRecord(windowName, self.refSequence)
         #refFasta.close()
 
-        consensusFasta.writeRecord(windowName + "|arrow", self.consensus.sequence)
+        consensusFasta.writeRecord(windowName + "|arrow", self.consensus)
         consensusFasta.close()
 
         arrowScoreFile = h5py.File(join(dir, "arrow-scores.h5"))

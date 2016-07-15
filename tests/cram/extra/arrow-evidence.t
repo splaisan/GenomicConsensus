@@ -16,3 +16,13 @@ Inspect the output...
   evidence_dump/All4mer.V2.01_Insert/0-260
   evidence_dump/All4mer.V2.01_Insert/0-260/arrow-scores.h5
   evidence_dump/All4mer.V2.01_Insert/0-260/consensus.fa
+
+
+Try to load it up using the API...
+
+  $ python << EOF
+  > from GenomicConsensus.arrow.evidence import ArrowEvidence
+  > ev = ArrowEvidence.load("evidence_dump/All4mer.V2.01_Insert/0-260")
+  > assert 8*len(ev.consensus)==len(ev.colNames)==2080
+  > assert ev.delta.shape == (len(ev.rowNames), len(ev.colNames))==(95,2080)
+  > EOF
