@@ -12,7 +12,7 @@ unless an O(N^2) loop is used.
   $ GFFREF=$TESTDATA/alignment_summary_variants.gff
   $ OUTPUT=alignment_summary_variants_test.gff
   $ summarizeConsensus --variantsGff $VARIANTS --output $OUTPUT $SUMMARY
-  $ diff -I "##source-commandline" $OUTPUT $GFFREF
+  $ diff -I "##source" $OUTPUT $GFFREF
 
 Second test has 20000 regions in a single contig, and 10000 variants.  This
 will also take several minutes.
@@ -22,4 +22,4 @@ will also take several minutes.
   $ GFFREF=$TESTDATA/alignment_summary_variants_big_chr.gff
   $ OUTPUT=alignment_summary_variants_big_chr_test.gff
   $ summarizeConsensus --variantsGff $VARIANTS --output $OUTPUT $SUMMARY
-  $ diff -I "##source-commandline" $OUTPUT $GFFREF
+  $ diff -I "##source" $OUTPUT $GFFREF
