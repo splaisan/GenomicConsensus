@@ -103,7 +103,7 @@ class ArrowConfig(object):
 
         name = aln.readName
         chemistry = aln.sequencingChemistry
-        strand = cc.StrandEnum_REVERSE if aln.isReverseStrand else cc.StrandEnum_FORWARD
+        strand = cc.StrandType_REVERSE if aln.isReverseStrand else cc.StrandType_FORWARD
         read = cc.Read(name,
                        aln.read(aligned=False, orientation="native"),
                        cc.Uint8Vector(baseFeature("Ipd").tolist()),
