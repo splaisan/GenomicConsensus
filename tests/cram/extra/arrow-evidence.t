@@ -10,7 +10,7 @@ Run arrow w/ evidence dump
 
 Inspect the output...
 
-  $ find evidence_dump
+  $ find evidence_dump | sort
   evidence_dump
   evidence_dump/All4mer.V2.01_Insert
   evidence_dump/All4mer.V2.01_Insert/0-260
