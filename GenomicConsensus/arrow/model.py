@@ -65,8 +65,7 @@ class ArrowConfig(object):
                  minReadScore=0.75,
                  minHqRegionSnr=3.75,
                  minZScore=-3.5,
-                 minAccuracy=0.82,
-                 chemistryOverride=None):
+                 minAccuracy=0.82):
 
         self.minMapQV                   = minMapQV
         self.minPoaCoverage             = minPoaCoverage
@@ -81,7 +80,6 @@ class ArrowConfig(object):
         self.minHqRegionSnr             = minHqRegionSnr
         self.minZScore                  = minZScore
         self.minAccuracy                = minAccuracy
-        self.chemistryOverride          = chemistryOverride
 
     def extractMappedRead(self, aln, windowStart):
         """
@@ -109,7 +107,7 @@ class ArrowConfig(object):
                        cc.Uint8Vector(baseFeature("Ipd").tolist()),
                        cc.Uint8Vector(baseFeature("PulseWidth").tolist()),
                        cc.SNR(aln.hqRegionSnr),
-                       chemistry if self.chemistryOverride is None else self.chemistryOverride)
+                       chemistry)
         return cc.MappedRead(read,
                              strand,
                              int(aln.referenceStart - windowStart),

@@ -251,17 +251,25 @@ def configure(options, alnFile):
     if options.diploid:
         logging.warn("Diploid analysis not yet supported under Arrow model.")
 
+    # load parameters from file
+    if options.parametersFile:
+        if not cc.LoadModels(options.parametersFile):
+            die("Arrow: unable to load parameters from: ({0})".format(options.parametersFile))
+
     # test available chemistries
     supp = set(cc.SupportedChemistries())
     logging.info("Found consensus models for: ({0})".format(", ".join(sorted(supp))))
 
-    used = set(alnFile.sequencingChemistry)
+    used = set([])
     if options.parametersSpec != "auto":
-        used = set([options.parametersSpec])
-
-    unsupp = used - supp
-    if unsupp:
-        die("Arrow: unsupported chemistries found: ({0})".format(", ".join(sorted(unsupp))))
+        if not cc.OverrideModel(options.parametersSpec):
+            die("Arrow: unable to override model with: ({0})".format(options.parametersSpec))
+        used.add(options.parametersSpec)
+    else:
+        used.update(alnFile.sequencingChemistry)
+        unsupp = used - supp
+        if used - supp:
+            die("Arrow: unsupported chemistries found: ({0})".format(", ".join(sorted(unsupp))))
 
     logging.info("Using consensus models for: ({0})".format(", ".join(sorted(used))))
 
@@ -271,9 +279,7 @@ def configure(options, alnFile):
                          minReadScore=options.minReadScore,
                          minHqRegionSnr=options.minHqRegionSnr,
                          minZScore=options.minZScore,
-                         minAccuracy=options.minAccuracy,
-                         chemistryOverride=(None if options.parametersSpec == "auto"
-                                            else options.parametersSpec))
+                         minAccuracy=options.minAccuracy)
 
 def slaveFactories(threaded):
     # By default we use slave processes. The tuple ordering is important.
