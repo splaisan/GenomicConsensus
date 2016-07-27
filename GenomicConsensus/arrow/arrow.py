@@ -253,6 +253,7 @@ def configure(options, alnFile):
 
     # load parameters from file
     if options.parametersFile:
+        logging.info("Loading model parameters from: ({0})".format(options.parametersFile))
         if not cc.LoadModels(options.parametersFile):
             die("Arrow: unable to load parameters from: ({0})".format(options.parametersFile))
 
@@ -262,6 +263,7 @@ def configure(options, alnFile):
 
     used = set([])
     if options.parametersSpec != "auto":
+        logging.info("Overriding model selection with: ({0})".format(options.parametersSpec))
         if not cc.OverrideModel(options.parametersSpec):
             die("Arrow: unable to override model with: ({0})".format(options.parametersSpec))
         used.add(options.parametersSpec)
