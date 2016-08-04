@@ -183,7 +183,7 @@ class ToolRunner(object):
     def _checkFileCompatibility(self, alnFile):
         if not alnFile.isSorted:
             die("Input Alignment file must be sorted.")
-        if alnFile.isEmpty:
+        if alnFile.isCmpH5 and alnFile.isEmpty:
             die("Input Alignment file must be nonempty.")
 
     def _shouldDisableChunkCache(self, alnFile):
