@@ -14,7 +14,7 @@ dependencies:
         - pushd _deps ; if [ ! -d boost_1_58_0 ] ; then wget http://downloads.sourceforge.net/project/boost/boost/1.58.0/boost_1_58_0.tar.bz2 ; tar xjf boost_1_58_0.tar.bz2 ; fi
         - pushd _deps ; if [ ! -f swig-3.0.8/bin/swig ] ; then rm -fr swig-3.0.8* ; mkdir dl ; pushd dl ; wget http://downloads.sourceforge.net/project/swig/swig/swig-3.0.8/swig-3.0.8.tar.gz ; tar xzf swig-3.0.8.tar.gz ; pushd swig-3.0.8 ; ./configure --prefix $(readlink -f ../../swig-3.0.8) ; make ; make install ; fi
         - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore.git
-        - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore2.git
+        - pushd _deps ; git clone https://github.com/PacificBiosciences/unanimity.git
         - pushd _deps ; git clone https://github.com/PacificBiosciences/PacBioTestData.git
         - pip install --upgrade pip
         - pip install numpy
@@ -26,7 +26,7 @@ dependencies:
         - pip install cram nose
     override:
         - pushd _deps/ConsensusCore ; python setup.py install --boost=$(readlink -f ../boost_1_58_0) --swig=$(readlink -f ../swig-3.0.8/bin/swig)
-        - pushd _deps/ConsensusCore2 ; CC=gcc-4.8 CXX=g++-4.8 CMAKE_COMMAND=$(readlink -f ../cmake-3.3.0-Linux-x86_64/bin/cmake) Boost_INCLUDE_DIRS=$(readlink -f ../boost_1_58_0) SWIG_COMMAND=$(readlink -f ../swig-3.0.8/bin/swig) pip install --verbose --upgrade --no-deps .
+        - pushd _deps/unanimity ; CMAKE_BUILD_TYPE=ReleaseWithAssert CC=gcc-4.8 CXX=g++-4.8 CMAKE_COMMAND=$(readlink -f ../cmake-3.3.0-Linux-x86_64/bin/cmake) Boost_INCLUDE_DIRS=$(readlink -f ../boost_1_58_0) SWIG_COMMAND=$(readlink -f ../swig-3.0.8/bin/swig) pip install --verbose --upgrade --no-deps .
         - pushd _deps/PacBioTestData ; git lfs pull && make python
 test:
     pre:
