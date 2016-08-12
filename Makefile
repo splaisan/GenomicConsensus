@@ -15,13 +15,13 @@ tests:
 	# Unit tests
 	nosetests --with-xunit tests/unit
 	# End-to-end tests
-	PATH=`pwd`:$(PATH) cram tests/cram/*.t
+	PATH=`pwd`:$(PATH) cram --xunit-file=gc-cram.xml tests/cram/*.t
 
 extra-tests:
 	# Tests that need to be run by Jenkins but are slowing
 	# down the development cycle, so aren't run by "tests"
 	# target.
-	PATH=`pwd`:$(PATH) cram tests/cram/extra/*.t
+	PATH=`pwd`:$(PATH) cram --xunit-file=gc-extra-cram.xml tests/cram/extra/*.t
 
 internal-tests:
 	# Long running tests that depend on files located on PacBio internal NFS
@@ -31,7 +31,7 @@ internal-tests:
 	 module add exonerate/2.0.0     && \
 	 module add blasr/2.3.0         && \
 	 module add gfftools/dalexander && \
-	 cram tests/cram/internal/*.t)
+	 cram --xunit-file=gc-internal-cram.xml tests/cram/internal/*.t)
 
 doc:
 	cd doc; make html
