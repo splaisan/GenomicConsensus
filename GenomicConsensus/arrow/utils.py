@@ -328,33 +328,41 @@ def sufficientlyAccurate(mappedRead, poaCss, minAccuracy):
     return acc >= minAccuracy
 
 
-def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
+def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None, polish=True):
     """
     Call consensus on this interval---without subdividing the interval
     further.
 
-    Testable!
+    Returns an ArrowConsensus object.
 
-    Clipping has already been done!
+    Requires that clipping has already been done.
+
+    If `draft` is provided, it will serve as the starting
+    point for polishing.  If not, the POA will be used to generate a
+    draft starting point.
+
+    If `polish` is False, the arrow polishing procedure will not be
+    used, and the draft consensus will be returned.
     """
     _, refStart, refEnd = refWindow
 
-    # Compute the POA consensus, which is our initial guess, and
-    # should typically be > 99.5% accurate
-    fwdSequences = [ a.read(orientation="genomic", aligned=False)
-                     for a in alns
-                     if a.spansReferenceRange(refStart, refEnd) ]
-    assert len(fwdSequences) >= arrowConfig.minPoaCoverage
+    if draft is None:
+        # Compute the POA consensus, which is our initial guess, and
+        # should typically be > 99.5% accurate
+        fwdSequences = [ a.read(orientation="genomic", aligned=False)
+                         for a in alns
+                         if a.spansReferenceRange(refStart, refEnd) ]
+        assert len(fwdSequences) >= arrowConfig.minPoaCoverage
 
-    try:
-        p = cc.PoaConsensus.FindConsensus(fwdSequences[:arrowConfig.maxPoaCoverage])
-    except:
-        logging.info("%s: POA could not be generated" % (refWindow,))
-        return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
-                                              refWindow, refSequence)
-    ga = cc.Align(refSequence, p.Sequence)
-    numPoaVariants = ga.Errors()
-    poaCss = p.Sequence
+        try:
+            p = cc.PoaConsensus.FindConsensus(fwdSequences[:arrowConfig.maxPoaCoverage])
+        except:
+            logging.info("%s: POA could not be generated" % (refWindow,))
+            return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
+                                                  refWindow, refSequence)
+        draft = p.Sequence
+
+    ga = cc.Align(refSequence, draft)
 
     # Extract reads into ConsensusCore2-compatible objects, and map them into the
     # coordinates relative to the POA consensus
@@ -364,15 +372,15 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
-    ai = cc.MultiMolecularIntegrator(poaCss, cc.IntegratorConfig(arrowConfig.minZScore))
+    ai = cc.MultiMolecularIntegrator(draft, cc.IntegratorConfig(arrowConfig.minZScore))
     coverage = 0
     for mr in mappedReads:
         if (mr.TemplateEnd <= mr.TemplateStart or
             mr.TemplateEnd - mr.TemplateStart < 2 or
             mr.Length() < 2):
             continue
-        if not sufficientlyAccurate(mr, poaCss, arrowConfig.minAccuracy):
-            tpl = poaCss[mr.TemplateStart:mr.TemplateEnd]
+        if not sufficientlyAccurate(mr, draft, arrowConfig.minAccuracy):
+            tpl = draft[mr.TemplateStart:mr.TemplateEnd]
             if mr.Strand == cc.StrandType_FORWARD:
                 pass
             elif mr.Strand == cc.StrandType_REVERSE:
@@ -384,13 +392,17 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig):
         if ai.AddRead(mr) == cc.State_VALID:
             coverage += 1
 
-    # Iterate until covergence
     if coverage < arrowConfig.minPoaCoverage:
         logging.info("%s: Inadequate coverage to call consensus" % (refWindow,))
         return ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
                                               refWindow, refSequence)
-    _, converged = refineConsensus(ai, arrowConfig)
 
+    if not polish:
+        confidence = np.zeros(len(draft), dtype=int)
+        return ArrowConsensus(refWindow, draft, confidence, ai)
+
+    # Iterate until covergence
+    _, converged = refineConsensus(ai, arrowConfig)
     if converged:
         arrowCss = str(ai)
         if arrowConfig.computeConfidence:
