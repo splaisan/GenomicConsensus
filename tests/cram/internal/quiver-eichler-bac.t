@@ -6,7 +6,7 @@
 The QVs warning gets printed to stderr N times ... ignore it for now.
 
   $ quiver -p C2 --noEvidenceConsensusCall=nocall \
-  > -j${JOBS-8} $INPUT -r $ASSEMBLY_REFERENCE -o variants.gff -o css.fasta 2>/dev/null
+  > -j${JOBS-4} $INPUT -r $ASSEMBLY_REFERENCE -o variants.gff -o css.fasta 2>/dev/null
 
 Variant scores are currently miscalibrated (need to fix the
 NoMergeQVModel; bug 22255).  Note that these variants listed below are

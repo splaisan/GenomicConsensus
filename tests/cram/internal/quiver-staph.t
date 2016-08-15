@@ -7,7 +7,7 @@ pysiv_jobs/jobs/BAMMapping/saureus_p6c4
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/staph/S_aureus_USA300_TCH1516.fasta
   $ export MASK=/mnt/secondary/Share/Quiver/GenomeMasks/S_aureus_USA300_TCH1516-mask.gff 
 
-  $ quiver -j${JOBS-8} $BAM -r $REFERENCE -o variants.gff -o css.fasta -o css.fastq
+  $ quiver -j${JOBS-4} $BAM -r $REFERENCE -o variants.gff -o css.fasta -o css.fastq
 
 Inspect the variant calls.  The first variant call might be an error
 (follow up on this) but the latter is an error in the reference, it

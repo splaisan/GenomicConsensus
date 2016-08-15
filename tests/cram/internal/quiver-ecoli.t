@@ -7,14 +7,14 @@ Run quiver on a large-insert C2 E. coli job.
 For some reason, this old cmp.h5 file lacks proper chemistry
 information.  Quiver should reject it.
 
-  $ quiver -j${JOBS-8} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ quiver -j${JOBS-4} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
   "unknown" chemistry in alignment file: either an unsupported chemistry has been used, the alignment file has been improperly constructed, or this version of SMRTanalysis is too old to recognize a new chemistry.
   [255]
 
 
 Well, we know it was a C2 job, so let's force the issue
 
-  $ quiver -p C2 -j${JOBS-8} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ quiver -p C2 -j${JOBS-4} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
 
 Inspect the variants list.  A few mutations seem to have crept in
 since I built the new reference.
