@@ -89,10 +89,11 @@ class ToolRunner(object):
             from GenomicConsensus.arrow import arrow
             algo = arrow
             # All arrow models require PW except P6 and the first S/P1-C1
-            if set(peekFile.sequencingChemistry) - set(["P6-C4", "S/P1-C1/beta"]):
-                if (not peekFile.hasBaseFeature("Ipd") or
-                    not peekFile.hasBaseFeature("PulseWidth")):
-                    die("Model requires missing base feature: IPD or PulseWidth")
+            for readGroup in peekFile.readGroupTable:
+                if set([readGroup["SequencingChemistry"]]) - set(["P6-C4", "S/P1-C1/beta"]):
+                    if ("Ipd" not in readGroup["BaseFeatures"] or
+                        "PulseWidth" not in readGroup["BaseFeatures"]):
+                        die("Model requires missing base feature: IPD or PulseWidth")
         elif name == "poa":
             from GenomicConsensus.poa import poa
             algo = poa
