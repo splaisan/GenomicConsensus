@@ -97,7 +97,7 @@ class ArrowConfig(object):
                 rawFeature = aln.baseFeature(featureName, aligned=False, orientation="native")
                 return rawFeature.clip(0,255).astype(np.uint8)
             else:
-                return np.zeros((aln.qLen,), dtype=np.uint8)
+                return np.zeros((aln.readLength,), dtype=np.uint8)
 
         name = aln.readName
         chemistry = aln.sequencingChemistry
