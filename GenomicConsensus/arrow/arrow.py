@@ -148,7 +148,7 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
                 ev = ArrowEvidence.fromConsensus(css)
                 if options.dumpEvidence != "outliers":
                     ev.save(windowDirectory)
-                elif (np.max(np.abs(ev.delta)) > 20):
+                elif (np.max(ev.delta) > 20):
                     # Mathematically I don't think we should be seeing
                     # deltas > 6 in magnitude, but let's just restrict
                     # attention to truly bonkers outliers.
