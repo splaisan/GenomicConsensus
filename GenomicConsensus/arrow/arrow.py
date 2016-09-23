@@ -112,15 +112,20 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
                           (reference.windowToString(subWin),
                            " ".join([str(hit.readName) for hit in alns])))
 
+            alnsUsed = [] if options.reportEffectiveCoverage else None
             css = U.consensusForAlignments(subWin,
                                            intRefSeq,
                                            clippedAlns,
-                                           arrowConfig)
+                                           arrowConfig,
+                                           alnsUsed=alnsUsed)
 
+            # Tabulate the coverage implied by these alignments, as
+            # well as the post-filtering ("effective") coverage
             siteCoverage = U.coverageInWindow(subWin, alns)
+            effectiveSiteCoverage = U.coverageInWindow(subWin, alnsUsed) if options.reportEffectiveCoverage else None
 
             variants_ = U.variantsFromConsensus(subWin, windowRefSeq,
-                                                css.sequence, css.confidence, siteCoverage,
+                                                css.sequence, css.confidence, siteCoverage, effectiveSiteCoverage,
                                                 options.aligner,
                                                 ai=None)
 
