@@ -144,7 +144,7 @@ def consensusConfidence(ai, positions=None):
     """
     return np.array(np.clip(cc.ConsensusQualities(ai), 0, 93), dtype=np.uint8)
 
-def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None):
+def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None, effectiveSiteCoverage=None):
     """
     Extract the variants implied by a pairwise alignment to the
     reference.
@@ -186,6 +186,11 @@ def variantsFromAlignment(a, refWindow, cssQvInWindow=None, siteCoverage=None):
             if siteCoverage is not None and np.size(siteCoverage) > 0:
                 refPos_ = min(refPos-refStart, len(siteCoverage)-1)
                 variant.coverage = siteCoverage[refPos_]
+            if effectiveSiteCoverage is not None and np.size(effectiveSiteCoverage) > 0:
+                refPos_ = min(refPos-refStart, len(siteCoverage)-1)
+                variant.annotate("effectiveCoverage", effectiveSiteCoverage[refPos_])
+                #import ipdb
+                #ipdb.set_trace()
             if cssQvInWindow is not None and np.size(cssQvInWindow) > 0:
                 cssPos_ = min(cssPos, len(cssQvInWindow)-1)
                 variant.confidence = cssQvInWindow[cssPos_]
@@ -268,8 +273,8 @@ def scoreMatrix(ai):
 
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
-                          cssQvInWindow=None, siteCoverage=None, aligner="affine",
-                          ai=None):
+                          cssQvInWindow=None, siteCoverage=None, effectiveSiteCoverage=None,
+                          aligner="affine", ai=None):
     """
     Compare the consensus and the reference in this window, returning
     a list of variants.
@@ -283,7 +288,7 @@ def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
 
     ga = align(refSequenceInWindow, cssSequenceInWindow)
 
-    return variantsFromAlignment(ga, refWindow, cssQvInWindow, siteCoverage)
+    return variantsFromAlignment(ga, refWindow, cssQvInWindow, siteCoverage, effectiveSiteCoverage)
 
 
 def filterAlns(refWindow, alns, arrowConfig):
@@ -328,7 +333,8 @@ def sufficientlyAccurate(mappedRead, poaCss, minAccuracy):
     return acc >= minAccuracy
 
 
-def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None, polish=True):
+def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None, polish=True,
+                           alnsUsed=None):
     """
     Call consensus on this interval---without subdividing the interval
     further.
@@ -343,8 +349,16 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None
 
     If `polish` is False, the arrow polishing procedure will not be
     used, and the draft consensus will be returned.
+
+    `alnsUsed` is an output parameter; if not None, it should be an
+    empty list on entry; on return from this function, the list will
+    contain the alns objects that were actually used to compute the
+    consensus (those not filtered out).
     """
     _, refStart, refEnd = refWindow
+
+    if alnsUsed is not None:
+        assert alnsUsed == []
 
     if draft is None:
         # Compute the POA consensus, which is our initial guess, and
@@ -374,7 +388,7 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None
     # until convergence.
     ai = cc.MultiMolecularIntegrator(draft, cc.IntegratorConfig(arrowConfig.minZScore))
     coverage = 0
-    for mr in mappedReads:
+    for i, mr in enumerate(mappedReads):
         if (mr.TemplateEnd <= mr.TemplateStart or
             mr.TemplateEnd - mr.TemplateStart < 2 or
             mr.Length() < 2):
@@ -391,6 +405,8 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None
             continue
         if ai.AddRead(mr) == cc.State_VALID:
             coverage += 1
+            if alnsUsed is not None:
+                alnsUsed.append(alns[i])
 
     if coverage < arrowConfig.minPoaCoverage:
         logging.info("%s: Inadequate coverage to call consensus" % (refWindow,))

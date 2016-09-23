@@ -365,6 +365,10 @@ def add_options_to_argument_parser(parser):
         "--annotateGFF",
         action="store_true",
         help="Augment GFF variant records with additional information")
+    debugging.add_argument(
+        "--reportEffectiveCoverage",
+        action="store_true",
+        help="Additionally record the *post-filtering* coverage at variant sites")
 
     advanced = parser.add_argument_group("Advanced configuration options")
     advanced.add_argument(
