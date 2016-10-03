@@ -278,6 +278,13 @@ def configure(options, alnFile):
         if used - supp:
             die("Arrow: unsupported chemistries found: ({0})".format(", ".join(sorted(unsupp))))
 
+    # All arrow models require PW except P6 and the first S/P1-C1
+    for readGroup in alnFile.readGroupTable:
+        if set([readGroup["SequencingChemistry"]]) - set(["P6-C4", "S/P1-C1/beta"]):
+            if ("Ipd" not in readGroup["BaseFeatures"] or
+                "PulseWidth" not in readGroup["BaseFeatures"]):
+                die("Arrow model requires missing base feature: IPD or PulseWidth")
+
     logging.info("Using consensus models for: ({0})".format(", ".join(sorted(used))))
 
     return M.ArrowConfig(minMapQV=options.minMapQV,
