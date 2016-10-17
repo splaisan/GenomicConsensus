@@ -164,7 +164,8 @@ def get_contract_parser():
     tcp = p.tool_contract_parser
     p.add_input_file_type(FileTypes.GFF, "gffFile",
         "GFF file", "GFF file")
-    tcp.add_output_file_type(FileTypes.VCF, "vcf", "VCF file", "VCF file",
+    tcp.add_output_file_type(FileTypes.VCF, "vcf", "Variant Calls",
+        description="List of variants from the reference",
         default_name="output")
     ap.add_argument("--globalReference", action="store", default=None,
         help="Name of global reference to put in Meta field")
