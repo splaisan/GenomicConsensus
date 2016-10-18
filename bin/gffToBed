@@ -175,7 +175,7 @@ def get_contract_parser():
     p.add_input_file_type(FileTypes.GFF, "gff",
         "GFF file", "GFF file")
     tcp.add_output_file_type(FileTypes.BED, "bed",
-        "BED file", "BED file", "output")
+        "Variant Calls", "List of variants from the reference", "output")
     tcp.add_str(Constants.PURPOSE_ID, "purpose",
         default="variants",
         name="Purpose",

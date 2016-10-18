@@ -52,8 +52,8 @@ def get_contract_parser():
         help="Input variants.gff or variants.gff.gz filename",
         required=True)
     p.tool_contract_parser.add_output_file_type(FileTypes.GFF, "output",
-        name="Output GFF file",
-        description="New alignment summary GFF file",
+        name="Coverage and Variant Call Summary",
+        description="Coverage and variant call summary for regions (bins) spanning the reference",
         default_name="alignment_summary_variants")
     p.arg_parser.parser.add_argument("-o", "--output",
         type=str,
