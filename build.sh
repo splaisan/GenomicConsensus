@@ -12,6 +12,9 @@ then
 fi
 source venv/bin/activate
 
+# Stop on first error
+set -e
+
 echo "## Install pip modules"
 pip install --upgrade pip
 pip install numpy cython h5py pysam cram nose jsonschema avro
