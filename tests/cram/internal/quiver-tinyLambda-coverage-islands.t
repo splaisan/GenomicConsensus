@@ -6,7 +6,7 @@ determined adaptively based on where the coverage actually is.
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/tinyLambda/aligned_reads_1.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/tinyLambda/lambdaNEB.fa
 
-  $ quiver -p unknown --quiet -j${JOBS-4} --noEvidenceConsensusCall=nocall \
+  $ quiver -p unknown --quiet -j${JOBS-16} --noEvidenceConsensusCall=nocall \
   >        $INPUT -r $REFERENCE                                 \
   >        -o variants.gff -o css.fa -o css.fq
 

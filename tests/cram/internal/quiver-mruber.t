@@ -1,7 +1,7 @@
 
   $ export INPUT=/mnt/secondary/Share/Quiver/TestData/mruber/aligned_reads.cmp.h5
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/mruber/Mruber_DSM_1279.fasta
-  $ quiver -p C2 -j${JOBS-4} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
+  $ quiver -p C2 -j${JOBS-16} $INPUT -r $REFERENCE -o variants.gff -o css.fasta
 
 Inspect the variant calls.
 
