@@ -4,8 +4,8 @@ Compare quiver vs. arrow on a high SNR Staph job.
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/staph/S_aureus_USA300_TCH1516.fasta
   $ export MASK=/mnt/secondary/Share/Quiver/GenomeMasks/S_aureus_USA300_TCH1516-mask.gff
 
-  $ quiver -j${JOBS-4} $INPUT -r $REFERENCE -o quiver-variants.gff -o quiver-css.fasta
-  $ arrow  -j${JOBS-4} $INPUT -r $REFERENCE -o  arrow-variants.gff -o arrow-css.fasta
+  $ quiver -j${JOBS-16} $INPUT -r $REFERENCE -o quiver-variants.gff -o quiver-css.fasta
+  $ arrow  -j${JOBS-16} $INPUT -r $REFERENCE -o  arrow-variants.gff -o arrow-css.fasta
 
 Quiver does a good job here---no errors.
 

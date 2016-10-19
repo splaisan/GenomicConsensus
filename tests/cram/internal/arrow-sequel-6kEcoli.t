@@ -3,7 +3,7 @@
   $ export REFERENCE=/mnt/secondary/Share/Quiver/TestData/ecoli/ecoliK12_pbi_March2013.fasta
   $ export MASK=/mnt/secondary/Share/Quiver/GenomeMasks/ecoliK12_pbi_March2013-mask.gff
 
-  $ arrow  -j${JOBS-4} $INPUT -r $REFERENCE -o  arrow-variants.gff -o arrow-css.fasta
+  $ arrow  -j${JOBS-16} $INPUT -r $REFERENCE -o  arrow-variants.gff -o arrow-css.fasta
 
 We do all right on short-insert Sequel data since Flea---only one
 error identified here:
