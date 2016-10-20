@@ -1,11 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-if [ "$(ps -p "$$" -o comm=)" != "bash" ]; then
-    # Taken from http://unix-linux.questionfor.info/q_unix-linux-programming_85038.html
-    bash "$0" "$@"
-    exit "$?"
-fi
 
 echo "# DEPENDENCIES"
 echo "## Load modules"
