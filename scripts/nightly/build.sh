@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 if [ "$(ps -p "$$" -o comm=)" != "bash" ]; then
     # Taken from http://unix-linux.questionfor.info/q_unix-linux-programming_85038.html
@@ -16,7 +17,10 @@ if [ ! -d venv ]
 then
     /mnt/software/v/virtualenv/13.0.1/virtualenv.py venv
 fi
+
+set +u
 source venv/bin/activate
+set -u
 
 echo "## Install pip modules"
 pip install --upgrade pip
@@ -51,4 +55,6 @@ echo "## install ConsensusCore"
 echo "## install GC"
 ( pip install --upgrade --no-deps --verbose . )
 
+set +u
 deactivate
+set -u

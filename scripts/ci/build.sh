@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 echo "# DEPENDENCIES"
 echo "## Load modules"
@@ -10,10 +11,9 @@ if [ ! -d venv ]
 then
     /mnt/software/v/virtualenv/13.0.1/virtualenv.py venv
 fi
+set +u
 source venv/bin/activate
-
-# Stop on first error
-set -e
+set -u
 
 echo "## Install pip modules"
 pip install --upgrade pip
@@ -59,4 +59,6 @@ python -c "import ConsensusCore2 ; print ConsensusCore2.__version__"
 echo "## test CC2 via GC"
 make check
 
+set +u
 deactivate
+set -u
