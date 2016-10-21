@@ -15,6 +15,7 @@ dependencies:
         - pushd _deps ; if [ ! -f swig-3.0.8/bin/swig ] ; then rm -fr swig-3.0.8* ; mkdir dl ; pushd dl ; wget http://downloads.sourceforge.net/project/swig/swig/swig-3.0.8/swig-3.0.8.tar.gz ; tar xzf swig-3.0.8.tar.gz ; pushd swig-3.0.8 ; ./configure --prefix $(readlink -f ../../swig-3.0.8) ; make ; make install ; fi
         - pushd _deps ; git clone https://github.com/PacificBiosciences/ConsensusCore.git
         - pushd _deps ; git clone https://github.com/PacificBiosciences/unanimity.git
+        - pushd _deps/unanimity; git submodule update --init --remote
         - pushd _deps ; git clone https://github.com/PacificBiosciences/PacBioTestData.git
         - pip install --upgrade pip
         - pip install numpy
