@@ -113,7 +113,7 @@ def get_parser():
         "Reference DataSet", "Fasta or Reference DataSet")
     tcp.add_output_file_type(FileTypes.GFF, "variants",
         name="Variant Calls",
-        description="Liast of variants from the reference",
+        description="List of variants from the reference",
         default_name="variants")
     tcp.add_output_file_type(FileTypes.DS_CONTIG, "consensus",
         name="Consensus Contigs",
@@ -122,6 +122,10 @@ def get_parser():
     tcp.add_output_file_type(FileTypes.FASTQ, "consensus_fastq",
         name="Consensus Contigs",
         description="Consensus contigs in FASTQ format",
+        default_name="consensus")
+    tcp.add_output_file_type(FileTypes.FASTA, "consensus_fasta",
+        name="Consensus Contigs",
+        description="Consensus contigs in FASTA format",
         default_name="consensus")
     tcp.add_str(
         option_id=Constants.ALGORITHM_ID,
