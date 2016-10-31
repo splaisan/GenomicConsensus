@@ -386,7 +386,7 @@ def resolved_tool_contract_runner(resolved_contract):
     reference_path = rc.task.input_files[1]
     gff_path = rc.task.output_files[0]
     dataset_path = rc.task.output_files[1]
-    fasta_path = rc.task.output_files[3]
+    fasta_path = re.sub(".contigset.xml", ".fasta", dataset_path)
     fastq_path = rc.task.output_files[2]
     args = [
         alignment_path,
