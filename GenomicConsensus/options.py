@@ -123,10 +123,6 @@ def get_parser():
         name="Consensus Contigs",
         description="Consensus contigs in FASTQ format",
         default_name="consensus")
-    tcp.add_output_file_type(FileTypes.FASTA, "consensus_fasta",
-        name="Consensus Contigs",
-        description="Consensus contigs in FASTA format",
-        default_name="consensus")
     tcp.add_str(
         option_id=Constants.ALGORITHM_ID,
         option_str="algorithm",
