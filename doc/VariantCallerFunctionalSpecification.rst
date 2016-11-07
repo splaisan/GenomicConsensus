@@ -63,29 +63,26 @@ Input and output
 ````````````````
 ``variantCaller`` requires two input files:
 
-- A file of reference-aligned reads in PacBio's standard BAM format;
-- A FASTA file that has been processed by ReferenceUploader.
+- A sorted file of reference-aligned reads in `PacBio's standard BAM format`_;
+- A FASTA file adhering to `PacBio's FASTA file conventions`_
 
-The tool's output is formatted in the GFF format, as described in (how
-to link to other file?).  External tools can be used to convert the
-GFF file to a VCF or BED file---two other standard interchange formats
-for variant calling.
-
-The input file is the main argument to ``variantCaller``, while the output
-file is provided as an argument to the ``-o`` flag.  For example,
+The input file is the main argument to ``variantCaller``, while the
+output files are provided as arguments to the ``-o`` flag.  For
+example,
 
 ::
 
-        variantCaller aligned_subreads.bam -r lambda.fa  -o variants.gff
+        variantCaller aligned_subreads.bam -r lambda.fa  -o myVariants.gff -o myConsensus.fasta
 
 will read input from ``aligned_subreads.bam``, using the reference
-``lambda.fa``, and send output to the file ``variants.gff``.  The
-extension of the filename provided to the ``-o`` flag is meaningful,
-as it determines the output file format.  The file formats presently
-supported, by extension, are
+``lambda.fa``, and send variant call output to the file
+``myVariants.gff``, and consensus output to ``myConsensus.fasta``.
+The extension of the filename provided to the ``-o`` flag is
+meaningful, as it determines the output file format.  The file formats
+presently supported, by extension, are
 
 ``.gff``
-        PacBio GFFv3 variants format
+        PacBio GFFv3 variants format; convertable to VCF or BED.
 
 ``.fasta``
         FASTA file recording the consensus sequence calculated for each reference contig
@@ -93,6 +90,27 @@ supported, by extension, are
 ``.fastq``
         FASTQ file recording the consensus sequence calculated for
         each reference contig, as well as per-base confidence scores
+
+
+.. note::
+
+   The *quiver* and *arrow* algorithms require that certain metrics
+   are in place in the input BAM file.
+
+   *quiver*, which operates on RSII data only, requires the
+   basecaller-computed "pulse features" ``InsertionQV``,
+   ``SubstitutionQV``, ``DeletionQV``, and ``DeletionTag``.  These
+   features are populated in BAM tags by the ``bax2bam`` conversion
+   program.
+
+   *arrow*, which operates on RSII P6-C4 data and all Sequel data,
+   requires per-read SNR metrics, and the per-base ``PulseWidth``
+   metric for Sequel data (but not for RSII P6-C4).  These metrics are
+   populated by Sequel instrument software or the ``bax2bam``
+   converter (for RSII data).
+
+   The selected algorithm will halt with an error message if features
+   it requires are unavailable.
 
 
 Available algorithms
@@ -105,14 +123,14 @@ At this time there are two algorithms available for variant calling:
 the most frequent read base or bases found in alignment with each
 reference base, and reports deviations from the reference as potential
 variants.  This is a very insensitive and flawed approach for PacBio
-data, which has
+sequence data, which is prone to insertion and deletion errors.
 
 **Quiver** is a more complex procedure based on algorithms originally
 developed for CCS.  Quiver leverages the quality values (QVs) provided by
 upstream processing tools, which provide insight into whether
 insertions/deletions/substitutions were deemed likely at a given read
 position.  Use of **quiver** requires the ``ConsensusCore``
-library
+library.
 
 **Arrow** is the successor to Quiver; it uses a more principled HMM
 model approach.  It does not require basecaller quality value metrics;
@@ -140,10 +158,10 @@ which is the canonical means of installing Python packages.
 Confidence values
 -----------------
 
-*arrow*,*quiver*,*plurality*, make a confidence metric available for
-every position of the consensus sequence.  The confidence should be
-interpreted as a phred-transformed posterior probability that the
-consensus call is incorrect; i.e.
+The arrow*, *quiver*, and *plurality* algorithms make a confidence
+metric available for every position of the consensus sequence.  The
+confidence should be interpreted as a phred-transformed posterior
+probability that the consensus call is incorrect; i.e.
 
 .. math::
 
@@ -182,5 +200,9 @@ runtime of the BLASR process that produced the cmp.h5. The running
 time of the *quiver* algorithm should not exceed 4x the runtime of
 BLASR.
 
-The amount of core memory (RAM) used by a ``variantCaller`` run
-should not exceed 2GB per CPU core.
+The amount of core memory (RAM) used by a ``variantCaller`` run should
+not exceed 2GB per active CPU core (as selected using the ``-j`` flag).
+
+
+.. _PacBio's standard BAM format: http://pacbiofileformats.readthedocs.io/en/3.0/BAM.html
+.. _PacBio's FASTA file conventions: http://pacbiofileformats.readthedocs.io/en/3.0/FASTA.html
