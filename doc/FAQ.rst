@@ -95,6 +95,16 @@ the Arrow algorithm to mapped reads to derive sequence
 consensus and variants.
 
 
+What data works with Arrow/Quiver?
+----------------------------------
+
+Quiver supports all PacBio *RSII* data since the C2 chemistry release
+(late 2012).
+
+Arrow supports all data from the PacBio Sequel instrument, as well as
+data from the PacBio RSII using the P6-C4 chemistry.
+
+
 How do I run `quiver`/`arrow`?
 ------------------------------
 For general instructions on installing and running, see the
