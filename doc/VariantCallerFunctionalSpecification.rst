@@ -45,8 +45,7 @@ which requests that variant calling proceed,
 
 A particularly useful option is ``--referenceWindow/-w``: this option
 allows the user to direct the tool to perform variant calling
-exclusively on a *window* of the reference genome, where the
-
+exclusively on a *window* of the reference genome.
 
 Invoking
 
