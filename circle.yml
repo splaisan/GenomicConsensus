@@ -18,11 +18,12 @@ dependencies:
         - pushd _deps/unanimity; git submodule update --init --remote
         - pushd _deps ; git clone https://github.com/PacificBiosciences/PacBioTestData.git
         - pip install --upgrade pip
-        - pip install numpy
+        - pip install jsonschema avro requests iso8601
+        - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
+        - pip install numpy # deps for pbcore
         - pip install cython
         - pip install h5py
         - pip install pysam
-        - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
         - pip install --upgrade --no-deps git+https://github.com/PacificBiosciences/pbcore.git
         - pip install cram nose
     override:
@@ -31,6 +32,6 @@ dependencies:
         - pushd _deps/PacBioTestData ; git lfs pull && make python
 test:
     pre:
-        - pip install --verbose .
+        - pip install --verbose --upgrade --no-deps .
     override:
         - make check
