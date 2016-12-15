@@ -164,53 +164,76 @@ def dumpFocusedEvidence(evidenceDumpBaseDirectory,
 
     # Dump a more streamlined evidence with a focus on variants that
     # were called.
+    def inverseMutation(variant):
+        if len(variant.refSeq) > 1 or len(variant.readSeq1) > 1:
+            raise NotImplementedError
 
-    if len(variants) > 1:
-        logging.warning("Evidence dump: no support yet for multiple variants in a window.")
-    variant = variants[0]
-
-    def inverseMutation(refWindow, variant):
         # Identify the template mutation that "undoes" the variant
         if variant.variantType == "Insertion":
             return cc2.Mutation(cc2.MutationType_DELETION,
                                 variant.refStart - refStart)
+        elif variant.variantType == "Deletion":
+            return cc2.Mutation(cc2.MutationType_INSERTION,
+                                variant.refStart - refStart,
+                                variant.refSeq)
+        elif variant.variantType == "Substitution":
+            return cc2.Mutation(cc2.MutationType_SUBSTITUTION,
+                                variant.refStart - refStart,
+                                variant.refSeq)
         else:
             raise NotImplementedError
 
     try:
-        inv = inverseMutation(refWindow, variant)
+        invVars = cc2.MutationVector([inverseMutation(v) for v in variants])
+        refSeqP = cc2.ApplyMutations(arrowConsensus.sequence, invVars)
+        if refSeqP != refSequence:
+            raise Exception, "Consensus + Variants != RefSeq in window %s." % (refWindow,)
     except NotImplementedError:
-        logging.warn("Evidence dump: currently only support for insertion variants")
-        return
-    mutName = _shortMutationDescription(inv, arrowConsensus.sequence)
+        logging.warn("Unable to verify Consensus + Variants == RefSeq in window %s", refWindow)
 
-    scores = np.array(ai.LLs(inv))
-    baselineScores = np.array(ai.LLs())
-    readNames = ai.ReadNames()
-    deltas = scores - baselineScores
+    for variant in variants:
+        try:
+            inv = inverseMutation(variant)
+        except NotImplementedError:
+            logging.warn("Evidence dump: doesn't support variant `%s`", str(variant))
+            continue
 
-    f = open(join(windowDirectory, "arrow-scores.csv"), "w")
-    f.write("qName,aName,RowNumber,Read,Reference,ForwardOrientedRead," +
-            "ForwardOrientedReference,ForwardAlignedRead,ForwardAlignedReference," +
-            "SnrA,SnrC,SnrG,SnrT," +
-            "BaselineLL," + "," + mutName + "\n")
-    for (aln, readName, ll, llDelta) in zip(alns, readNames, baselineScores, deltas):
-        assert (readName == aln.readName) or (readName == "*Inactive evaluator*")
-        identifiers = "%s,%s,%d" % (aln.qName, aln.readName, aln.rowNumber)
-        bases = "%s,%s,%s,%s,%s,%s" % \
-                (aln.read      (orientation="native",  aligned=False),
-                 aln.reference (orientation="native",  aligned=False),
-                 aln.read      (orientation="genomic", aligned=False),
-                 aln.reference (orientation="genomic", aligned=False),
-                 aln.read      (orientation="genomic", aligned=True),
-                 aln.reference (orientation="genomic", aligned=True))
-        snrMetrics = "%f,%f,%f,%f" % tuple(aln.hqRegionSnr)
-        likelhoodMetrics = "%f,%f" % (ll, llDelta)
+        mutName = _shortMutationDescription(inv, arrowConsensus.sequence)
+        fileName = "%s%d%s-arrow-scores.csv" % (variant.refSeq or "I",
+                                                variant.refStart,
+                                                variant.readSeq1 or "D")
+        scores = np.array(ai.LLs(inv))
+        baselineScores = np.array(ai.LLs())
+        readNames = ai.ReadNames()
+        deltas = scores - baselineScores
 
-        f.write(",".join([identifiers,
-                          bases,
-                          snrMetrics,
-                          likelhoodMetrics]) + "\n")
+        alns = [aln for aln in alns if aln.readName in readNames]
+
+        with open(join(windowDirectory, fileName), "w") as f:
+            f.write("qName,aName,RowNumber,Read,Reference,ForwardOrientedRead," +
+                    "ForwardOrientedReference,ForwardAlignedRead,ForwardAlignedReference," +
+                    "SnrA,SnrC,SnrG,SnrT," +
+                    "BaselineLL," + "\"" + mutName + "\"\n")
+            for (aln, readName, ll, llDelta) in zip(alns, readNames, baselineScores, deltas):
+                if readName != aln.readName and readName != "*Inactive evaluator*":
+                    logging.warn("invalid readName (%s) when aln.readName (%s)", readName, aln.readName)
+                assert (readName == aln.readName) or (readName == "*Inactive evaluator*")
+                identifiers = "%s,%s,%d" % (aln.qName, aln.readName, aln.rowNumber)
+                bases = "%s,%s,%s,%s,%s,%s" % \
+                        (aln.read      (orientation="native",  aligned=False),
+                         aln.reference (orientation="native",  aligned=False),
+                         aln.read      (orientation="genomic", aligned=False),
+                         aln.reference (orientation="genomic", aligned=False),
+                         aln.read      (orientation="genomic", aligned=True),
+                         aln.reference (orientation="genomic", aligned=True))
+                snrMetrics = "%f,%f,%f,%f" % tuple(aln.hqRegionSnr)
+                likelhoodMetrics = "%f,%f" % (ll, llDelta)
+
+                f.write(",".join([identifiers,
+                                  bases,
+                                  snrMetrics,
+                                  likelhoodMetrics]))
+                f.write("\n")
 
 
 class ArrowEvidence(object):
