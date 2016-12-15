@@ -210,7 +210,7 @@ def dumpFocusedEvidence(evidenceDumpBaseDirectory,
         alns = [aln for aln in alns if aln.readName in readNames]
 
         with open(join(windowDirectory, fileName), "w") as f:
-            f.write("qName,aName,RowNumber,Read,Reference,ForwardOrientedRead," +
+            f.write("qName,aName,Strand,RowNumber,Read,Reference,ForwardOrientedRead," +
                     "ForwardOrientedReference,ForwardAlignedRead,ForwardAlignedReference," +
                     "SnrA,SnrC,SnrG,SnrT," +
                     "BaselineLL," + "\"" + mutName + "\"\n")
@@ -218,7 +218,8 @@ def dumpFocusedEvidence(evidenceDumpBaseDirectory,
                 if readName != aln.readName and readName != "*Inactive evaluator*":
                     logging.warn("invalid readName (%s) when aln.readName (%s)", readName, aln.readName)
                 assert (readName == aln.readName) or (readName == "*Inactive evaluator*")
-                identifiers = "%s,%s,%d" % (aln.qName, aln.readName, aln.rowNumber)
+		strand = "+" if aln.isForwardStrand else "-"
+                identifiers = "%s,%s,%s,%d" % (aln.qName, aln.readName, strand, aln.rowNumber)
                 bases = "%s,%s,%s,%s,%s,%s" % \
                         (aln.read      (orientation="native",  aligned=False),
                          aln.reference (orientation="native",  aligned=False),
