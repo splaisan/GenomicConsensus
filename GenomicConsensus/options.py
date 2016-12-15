@@ -162,7 +162,7 @@ def add_options_to_argument_parser(parser):
     basics.add_argument(
         "inputFilename",
         type=canonicalizedFilePath,
-        help="The input cmp.h5 file")
+        help="The input cmp.h5 or BAM alignment file")
     basics.add_argument(
         "--referenceFilename", "--reference", "-r",
         action="store",
@@ -322,8 +322,9 @@ def add_options_to_argument_parser(parser):
         dest="parametersFile",
         type=str,
         default=None,
-        help="Parameter set filename (QuiverParameters.ini), or directory D " + \
-             "such that either D/*/GenomicConsensus/QuiverParameters.ini, "   + \
+        help="Parameter set filename (such as ArrowParameters.json or "       + \
+             "QuiverParameters.ini), or directory D such that either "        + \
+             "D/*/GenomicConsensus/QuiverParameters.ini, "                    + \
              "or D/GenomicConsensus/QuiverParameters.ini, is found.  In the " + \
              "former case, the lexically largest path is chosen.")
     algorithm.add_argument(
@@ -335,7 +336,7 @@ def add_options_to_argument_parser(parser):
         help="Name of parameter set (chemistry.model) to select from the "   + \
              "parameters file, or just the name of the chemistry, in which " + \
              "case the best available model is chosen.  Default is 'auto', " + \
-             "which selects the best parameter set from the cmp.h5")
+             "which selects the best parameter set from the alignment data")
 
     debugging = parser.add_argument_group("Verbosity and debugging/profiling")
     add_debug_option(debugging)
