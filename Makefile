@@ -1,13 +1,6 @@
 SHELL = /bin/bash -e
 INTERNAL_UTILS_PATH = /mnt/secondary/Share/Quiver/Tools
 
-bdist:
-	python setup.py build --executable="/usr/bin/env python"
-	python setup.py bdist --formats=egg
-
-install:
-	python setup.py install
-
 develop:
 	python setup.py develop
 
@@ -44,15 +37,6 @@ clean:
 
 tags:
 	find GenomicConsensus -name "*.py" | xargs etags
-
-pip-install:
-	@which pip > /dev/null
-	@pip freeze|grep 'GenomicConsensus=='>/dev/null \
-      && pip uninstall -y GenomicConsensus \
-      || true
-	@pip install --no-index \
-           --install-option="--install-scripts=$(PREFIX)/bin" \
-           ./
 
 # Aliases
 docs: doc
