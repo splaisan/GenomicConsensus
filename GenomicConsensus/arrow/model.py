@@ -81,7 +81,7 @@ class ArrowConfig(object):
         self.minZScore                  = minZScore
         self.minAccuracy                = minAccuracy
 
-    def extractMappedRead(self, aln, windowStart):
+    def extractMappedRead(self, aln, windowStart, windowEnd):
         """
         Given a clipped alignment, convert its coordinates into template
         space (starts with 0), bundle it up with its features as a
@@ -111,4 +111,6 @@ class ArrowConfig(object):
         return cc.MappedRead(read,
                              strand,
                              int(aln.referenceStart - windowStart),
-                             int(aln.referenceEnd   - windowStart))
+                             int(aln.referenceEnd   - windowStart),
+                             bool(aln.referenceStart <= windowStart),
+                             bool(windowEnd <= aln.referenceEnd))

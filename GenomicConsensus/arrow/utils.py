@@ -218,8 +218,8 @@ def lifted(queryPositions, mappedRead):
     newStart = queryPositions[mappedRead.TemplateStart]
     newEnd   = queryPositions[mappedRead.TemplateEnd]
     copy = cc.MappedRead(mappedRead)
-    copy.TemplateStart = newStart
-    copy.TemplateEnd = newEnd
+    copy.TemplateStart = 0 if mappedRead.PinStart else newStart
+    copy.TemplateEnd = queryPositions[-1] if mappedRead.PinEnd else newEnd
     return copy
 
 def variantsFromConsensus(refWindow, refSequenceInWindow, cssSequenceInWindow,
@@ -330,8 +330,9 @@ def consensusForAlignments(refWindow, refSequence, alns, arrowConfig, draft=None
 
     # Extract reads into ConsensusCore2-compatible objects, and map them into the
     # coordinates relative to the POA consensus
-    mappedReads = [ arrowConfig.extractMappedRead(aln, refStart) for aln in alns ]
+    mappedReads = [ arrowConfig.extractMappedRead(aln, refStart, refEnd) for aln in alns ]
     queryPositions = cc.TargetToQueryPositions(ga)
+    assert queryPositions[-1] == len(draft)
     mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
 
     # Load the mapped reads into the mutation scorer, and iterate
