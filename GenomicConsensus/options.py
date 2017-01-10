@@ -82,6 +82,7 @@ class Constants(object):
     MIN_COVERAGE_ID = "genomic_consensus.task_options.min_coverage"
     DIPLOID_MODE_ID = "genomic_consensus.task_options.diploid"
 
+    ALGORITHM_CHOICES = ("quiver", "arrow", "plurality", "poa", "best")
     DEFAULT_ALGORITHM = "best"
     DEFAULT_MIN_CONFIDENCE = 40
     DEFAULT_MIN_COVERAGE = 5
@@ -123,12 +124,13 @@ def get_parser():
         name="Consensus Contigs",
         description="Consensus contigs in FASTQ format",
         default_name="consensus")
-    tcp.add_str(
+    tcp.add_choice_str(
         option_id=Constants.ALGORITHM_ID,
         option_str="algorithm",
         default=Constants.DEFAULT_ALGORITHM,
         name="Algorithm",
-        description="Variant calling algorithm")
+        description="Variant calling algorithm",
+        choices=Constants.ALGORITHM_CHOICES)
     tcp.add_int(
         option_id=Constants.MIN_CONFIDENCE_ID,
         option_str="minConfidence",
@@ -315,8 +317,8 @@ def add_options_to_argument_parser(parser):
         action="store",
         dest="algorithm",
         type=str,
-        choices=["quiver", "arrow", "plurality", "poa", "best"],
-        default="best")
+        choices=Constants.ALGORITHM_CHOICES,
+        default=Constants.DEFAULT_ALGORITHM)
     algorithm.add_argument(
         "--parametersFile", "-P",
         dest="parametersFile",
