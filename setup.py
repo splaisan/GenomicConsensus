@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
-from os.path import join, dirname
+from os.path import join, dirname, realpath
 
 # Load __VERSION__ from the GenomicConsensus package that is under
 # this directory---do NOT import GenomicConsensus, as importing
 # GenomicConsensus may fail if it has not actually been installed yet.
 globals = {}
-execfile("GenomicConsensus/__init__.py", globals)
+pth = join(dirname(realpath(__file__)), "GenomicConsensus", "__init__.py")
+execfile(pth, globals)
 __VERSION__ = globals["__VERSION__"]
 
-
 setup(
-    name = 'GenomicConsensus',
+    name='GenomicConsensus',
     version=__VERSION__,
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',

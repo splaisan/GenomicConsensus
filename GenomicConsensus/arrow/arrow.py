@@ -49,7 +49,7 @@ import GenomicConsensus.arrow.model as M
 import GenomicConsensus.arrow.utils as U
 
 def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
-                                  depthLimit, arrowConfig):
+                                  depthLimit, arrowConfig, clipWindow=None):
     """
     High-level routine for calling the consensus for a
     window of the genome given a cmp.h5.
@@ -146,7 +146,7 @@ def consensusAndVariantsForWindow(alnFile, refWindow, referenceContig,
             elif (options.dumpEvidence == "variants") and (len(filteredVars) > 0):
                 dumpFocusedEvidence(options.evidenceDirectory,
                                     subWin, windowRefSeq,
-                                    clippedAlns, css, filteredVars)
+                                    clippedAlns, css, filteredVars, clipWindow or subWin)
 
         else:
             css = ArrowConsensus.noCallConsensus(arrowConfig.noEvidenceConsensus,
@@ -196,7 +196,8 @@ class ArrowWorker(object):
         #
         css_, variants_ = \
             consensusAndVariantsForWindow(self._inAlnFile, eWindow,
-                                          refContig, options.coverage, self.arrowConfig)
+                                          refContig, options.coverage, self.arrowConfig,
+                                          referenceWindow)
 
         #
         # Restrict the consensus and variants to the reference window.

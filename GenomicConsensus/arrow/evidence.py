@@ -144,7 +144,7 @@ def dumpFullEvidence(evidenceDumpBaseDirectory,
 
 def dumpFocusedEvidence(evidenceDumpBaseDirectory,
                         refWindow, refSequence, alns,
-                        arrowConsensus, variants):
+                        arrowConsensus, variants, clipWindow):
 
     join = os.path.join
     refId, refStart, refEnd = refWindow
@@ -164,38 +164,46 @@ def dumpFocusedEvidence(evidenceDumpBaseDirectory,
 
     # Dump a more streamlined evidence with a focus on variants that
     # were called.
-    def inverseMutation(variant):
-        if len(variant.refSeq) > 1 or len(variant.readSeq1) > 1:
-            raise NotImplementedError
-
-        # Identify the template mutation that "undoes" the variant
-        if variant.variantType == "Insertion":
-            return cc2.Mutation(cc2.MutationType_DELETION,
-                                variant.refStart - refStart)
-        elif variant.variantType == "Deletion":
-            return cc2.Mutation(cc2.MutationType_INSERTION,
-                                variant.refStart - refStart,
-                                variant.refSeq)
-        elif variant.variantType == "Substitution":
-            return cc2.Mutation(cc2.MutationType_SUBSTITUTION,
-                                variant.refStart - refStart,
-                                variant.refSeq)
-        else:
-            raise NotImplementedError
-
-    try:
-        invVars = cc2.MutationVector([inverseMutation(v) for v in variants])
-        refSeqP = cc2.ApplyMutations(arrowConsensus.sequence, invVars)
-        if refSeqP != refSequence:
-            raise Exception, "Consensus + Variants != RefSeq in window %s." % (refWindow,)
-    except NotImplementedError:
-        logging.warn("Unable to verify Consensus + Variants == RefSeq in window %s", refWindow)
-
+    offset = 0
+    variantPairs = []
     for variant in variants:
-        try:
-            inv = inverseMutation(variant)
-        except NotImplementedError:
-            logging.warn("Evidence dump: doesn't support variant `%s`", str(variant))
+        inverse = None
+        # Identify the template mutation that "undoes" the variant
+        if len(variant.refSeq) > 1 or len(variant.readSeq1) > 1:
+            # no ConsensusCore2 Mutation can possibly undo this
+            pass
+        elif variant.variantType == "Insertion":
+            inverse = cc2.Mutation(cc2.MutationType_DELETION,
+                                   variant.refStart - refStart + offset)
+            offset += 1
+        elif variant.variantType == "Deletion":
+            inverse = cc2.Mutation(cc2.MutationType_INSERTION,
+                                   variant.refStart - refStart + offset,
+                                   variant.refSeq)
+            offset -= 1
+        elif variant.variantType == "Substitution":
+            inverse = cc2.Mutation(cc2.MutationType_SUBSTITUTION,
+                                   variant.refStart - refStart + offset,
+                                   variant.refSeq)
+        else: pass  # we saw something impossible
+        if inverse is None:
+            logging.warn("Evidence dump: doesn't support variant `%s`, skipping window %s",
+                         str(variant), refWindow)
+            return
+        variantPairs.append((variant, inverse))
+
+    # verify the mutations to the consensus restore the refseq
+    mutations = [inv for _, inv in variantPairs]
+    refSeqP = cc2.ApplyMutations(arrowConsensus.sequence, cc2.MutationVector(mutations))
+    if refSeqP != refSequence:
+        smuts = [str(m) for m in mutations]
+        logging.error("Consensus + Variants != RefSeq in window %s.\nref: %s\nmut: %s\ncss: %s\nmutations: %s",
+                      refWindow, refSequence, refSeqP, arrowConsensus.sequence, smuts)
+        return
+
+    _,  clipStart, clipEnd = clipWindow
+    for variant, inv in variantPairs:
+        if not (clipStart <= variant.refStart < clipEnd):
             continue
 
         mutName = _shortMutationDescription(inv, arrowConsensus.sequence)
