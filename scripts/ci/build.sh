@@ -20,6 +20,7 @@ pip install --upgrade pip
 pip install numpy cython h5py pysam cram nose jsonschema avro
 pip install --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
 pip install --no-deps git+https://github.com/PacificBiosciences/pbcore.git
+pip install coverage
 
 echo "## Get external dependencies"
 if [ ! -d _deps ] ; then mkdir _deps ; fi
