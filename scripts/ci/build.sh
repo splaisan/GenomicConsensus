@@ -4,7 +4,7 @@ set -euo pipefail
 echo "# DEPENDENCIES"
 echo "## Load modules"
 source /mnt/software/Modules/current/init/bash
-module load git gcc/5.3.0 python/2.7.9 cmake cram swig ccache virtualenv zlib/1.2.5 ninja boost
+module load git gcc/5.3.0 python/2.7.10 cmake cram swig ccache virtualenv zlib/1.2.5 ninja boost
 
 echo "## Get into virtualenv"
 if [ ! -d venv ]
@@ -20,6 +20,7 @@ pip install --upgrade pip
 pip install numpy cython h5py pysam cram nose jsonschema avro
 pip install --no-deps git+https://github.com/PacificBiosciences/pbcommand.git
 pip install --no-deps git+https://github.com/PacificBiosciences/pbcore.git
+pip install coverage
 
 echo "## Get external dependencies"
 if [ ! -d _deps ] ; then mkdir _deps ; fi
