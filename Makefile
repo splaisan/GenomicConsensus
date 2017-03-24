@@ -6,7 +6,7 @@ develop:
 
 tests:
 	# Unit tests
-	nosetests --with-xunit tests/unit
+	nosetests -s --verbose --with-xunit --xunit-file=nosetests.xml --with-coverage --cover-xml --cover-xml-file=coverage.xml --logging-config log_nose.cfg tests/unit
 	# End-to-end tests
 	PATH=`pwd`:$(PATH) cram --xunit-file=gc-cram.xml tests/cram/*.t
 
