@@ -131,7 +131,7 @@ The attributes in the 9th (final) column are as follows:
 
 The attributes may be present in any order.
 
-The four types of variant we support are as follows. *(Recall that the
+The three types of variant we support are as follows. *(Recall that the
 field separator is a tab, not a space.)*
 
 1. Insertion.  Examples::
